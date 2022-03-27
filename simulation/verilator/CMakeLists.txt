@@ -34,5 +34,5 @@ add_executable(riscv ./sim_main.cpp)
 verilate(riscv COVERAGE TRACE
   INCLUDE_DIRS "../rtl"
   VERILATOR_ARGS -f ./input.vc -Os -x-assign 0
-  SOURCES ../rtl/regfile.sv)
+  SOURCES ../../rtl/regfile.sv)
 

@@ -11,15 +11,16 @@ module register (
   rstn,
   in,
   out,
-  wr
+  load
 );
 
   parameter WIDTH=32;
+  parameter INIT=0;
 
   input wire clk;
   input wire rstn;
   input wire [WIDTH-1:0] in;
-  input wire wr;
+  input wire load;
 
   output wire [WIDTH-1:0] out;
 
@@ -33,9 +34,9 @@ module register (
 
   always @ (posedge clk) begin
     if (!rstn) begin
-      data <= 0;
+      data <= INIT;
     end
-    else if (wr) begin
+    else if (load) begin
       data <= in;
     end
     else begin
