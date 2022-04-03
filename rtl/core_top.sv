@@ -5,8 +5,15 @@
 
 module core_top (
   input wire clk,
-  input wire rst_n
+  input wire rst_n,
+  input [31:0] mem_rdata,
+  output [31:0] mem_wdata,
+  output [31:0] mem_addr,
+  input rvalid,
+  output wvalid
 );
+
+
 
 wire [31:0] databus;
 wire [31:0] ir_out;
@@ -17,7 +24,7 @@ wire load_ir;
 wire load_pc;
 wire pc_mux_sel;
 wire mdr_mux_sel;
-wire databus_mux_sel;
+wire [1:0] databus_mux_sel;
 
 register #(.WIDTH(32), .INIT(0)) u_ir (.clk(clk), .rstn(rst_n), .in(databus), .out(ir_out), .load(load_ir));
 register #(.WIDTH(32), .INIT('h3000)) u_pc (.clk(clk), .rstn(rst_n), .in(pc_in), .out(pc_out), .load(load_pc));
@@ -48,9 +55,7 @@ mux2 #(.WIDTH(32)) u_pc_mux (
   .b(),
   .y(pc_in));
 
-
-
 assign pc_incr = pc_out + 1;
-assign pc_in = (pc_mux_sel ? pc_incr : databus)
+assign pc_in = (pc_mux_sel ? pc_incr : databus);
 
 endmodule : core_top

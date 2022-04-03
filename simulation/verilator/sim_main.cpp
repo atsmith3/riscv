@@ -12,7 +12,7 @@
 #include <verilated.h>
 
 // Include model header, generated from Verilating "top.v"
-#include "Vregfile.h"
+#include "Vcore_top.h"
 
 // Legacy function required only so linking works on Cygwin and MSVC++
 double sc_time_stamp() { return 0; }
@@ -53,16 +53,13 @@ int main(int argc, char** argv, char** env) {
     // Construct the Verilated model, from Vtop.h generated from Verilating "top.v".
     // Using unique_ptr is similar to "Vtop* top = new Vtop" then deleting at end.
     // "TOP" will be the hierarchical name of the module.
-    const std::unique_ptr<Vregfile> top{new Vregfile{contextp.get(), "TOP"}};
+    const std::unique_ptr<Vcore_top> top{new Vcore_top{contextp.get(), "TOP"}};
 
     // Set Vtop's input signals
-    top->rstn = !0;
+    top->rst_n = !0;
     top->clk = 0;
-    top->a_idx = 0;
-    top->b_idx = 0;
-    top->c_idx = 0;
-    top->c = 0xa5a5a5a5;
-    top->wr = 0;
+    top->mem_rdata = 0;
+    top->rvalid = 0;
 
     // Simulate until $finish
     while (contextp->time() < 300) {
@@ -88,28 +85,28 @@ int main(int argc, char** argv, char** env) {
         // reset is not sampled there.
         if (!top->clk) {
             if (contextp->time() > 1 && contextp->time() < 10) {
-                top->rstn = !1;  // Assert reset
+                top->rst_n = !1;  // Assert reset
             } else {
-                top->rstn = !0;  // Deassert reset
+                top->rst_n = !0;  // Deassert reset
             }
-            // Assign some other inputs
-            if (contextp->time() >= 10 && contextp->time() < 10+(32*2)) {
-              top->wr = 1;
-              top->c_idx += 1;
-              top->c += 10;
-            }
-            else {
-              top->wr = 0;
-            }
+            //// Assign some other inputs
+            //if (contextp->time() >= 10 && contextp->time() < 10+(32*2)) {
+            //  top->wr = 1;
+            //  top->c_idx += 1;
+            //  top->c += 10;
+            //}
+            //else {
+            //  top->wr = 0;
+            //}
 
-            if (contextp->time() == 100) {
-              top->a_idx = 32;
-              top->b_idx = -1;
-            }
-            if (contextp->time() >= 100 && contextp->time() < 100+(32*2)) {
-              top->a_idx -= 1;
-              top->b_idx += 1;
-            }
+            //if (contextp->time() == 100) {
+            //  top->a_idx = 32;
+            //  top->b_idx = -1;
+            //}
+            //if (contextp->time() >= 100 && contextp->time() < 100+(32*2)) {
+            //  top->a_idx -= 1;
+            //  top->b_idx += 1;
+            //}
         }
 
         // Evaluate model
@@ -119,7 +116,7 @@ int main(int argc, char** argv, char** env) {
         top->eval();
 
         // Read outputs
-        VL_PRINTF("[%" VL_PRI64 "d] clk=%x rstn=%x a=%" VL_PRI64 "x b=%" VL_PRI64 "x c=%" VL_PRI64 "x a_idx=%" VL_PRI64 "x b_idx=%" VL_PRI64 "x c_idx=%" VL_PRI64 "x wr=%x\n", contextp->time(), top->clk, top->rstn, top->a, top->b, top->c, top->a_idx, top->b_idx, top->c_idx, top->wr);
+        VL_PRINTF("[%" VL_PRI64 "d] clk=%x rstn=%x a=%" VL_PRI64 "x b=%" VL_PRI64 "x c=%" VL_PRI64 "x a_idx=%" VL_PRI64 "x b_idx=%" VL_PRI64 "x c_idx=%" VL_PRI64 "x wr=%x\n", contextp->time(), top->clk, top->rst_n, top->mem_rdata, top->mem_wdata, top->mem_addr, top->rvalid, top->wvalid, top->dvalid, top->databus);
     }
 
     // Final model cleanup
