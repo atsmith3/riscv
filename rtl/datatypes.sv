@@ -1,6 +1,9 @@
 /* datatypes.sv
 */
 
+`ifndef __DATATYPES_SV__
+`define __DATATYPES_SV__
+
 typedef enum bit [1:0] {
   DATABUS_PC=0,
   DATABUS_MDR,
@@ -19,3 +22,5 @@ typedef enum bit [3:0] {
   ALU_SUB,
   ALU_SRA=13
 } alu_op_t;
+
+`endif

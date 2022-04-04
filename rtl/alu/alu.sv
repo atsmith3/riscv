@@ -2,62 +2,50 @@
  * Interger ALU
  */
 
-`include datatypes.sv
+`include "datatypes.sv"
 
-module #(parameter WIDTH=32) alu (
-  input logic [WIDTH-1:0] a,
-  input logic [WIDTH-1:0] b,
-  input logic [4:0] op,
-  output logic [WIDTH-1:0] out,
-  input logic valid,
-  output logic ready);
-
-logic [WIDTH-1:0] or_out;
-logic [WIDTH-1:0] xor_out;
-logic [WIDTH-1:0] and_out;
-logic [WIDTH-1:0] sub_out;
-logic [WIDTH-1:0] add_out;
-logic [WIDTH-1:0] sll_out; // Shift Left Logical
-logic [WIDTH-1:0] slt_out; // Store Lower Than
-logic [WIDTH-1:0] sltu_out; // Store Lower Than Unsigned
-logic [WIDTH-1:0] srl_out; // Shift Right Logical
-logic [WIDTH-1:0] sra_out; // Shift Right Arithmatic
-logic [WIDTH-1:0] out;
+module alu #(parameter WIDTH=32) (
+  input logic [WIDTH-1:0] rs1,
+  input logic [WIDTH-1:0] rs2,
+  input logic [3:0] op,
+  output logic [WIDTH-1:0] rd);
 
 always_comb begin
-case (op)
+  case (op)
     ALU_ADD: begin
-      out = add_out;
+      rd = rs1 + rs2;
     end
     ALU_SLL: begin
-      out = sll_out;
+      rd = rs1 << rs2[4:0];
     end
     ALU_SLT: begin
-      out = slt_out;
+      // STORE LESS THAN - RS1 < RS2/IMM
+      rd = ( $signed(rs1) < $signed(rs2) ) ? 1 : 0;
     end
     ALU_SLTU: begin
-      out = sltu_out;
+      // STORE LESS THAN UNSIGNED - RS1 < RS2/IMM
+      rd = (rs1 < rs2) ? 1 : 0;
     end
     ALU_XOR: begin
-      out = xor_out;
+      rd = rs1 ^ rs2;
     end
     ALU_SRL: begin
-      out = srl_out;
+      rd = rs1 >> rs2[4:0];
     end
     ALU_OR: begin
-      out = or_out;
+      rd = rs1 | rs2;
     end
     ALU_AND: begin
-      out = and_out;
+      rd = rs1 & rs2;
     end
     ALU_SUB: begin
-      out = sub_out;
+      rd = rs1 - rs2;
     end
     ALU_SRA: begin
-      out = sra_out;
+      rd = rs1 >>> rs2[4:0];
     end
     default: begin
-      out = add_out;
+      rd = 0;
     end
   endcase
 end

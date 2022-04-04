@@ -1,4 +1,6 @@
 build/
 
+*_test
+
 .*.swo
 .*.swp
