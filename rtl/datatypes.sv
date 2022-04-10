@@ -23,4 +23,24 @@ typedef enum bit [3:0] {
   ALU_SRA=13
 } alu_op_t;
 
+typedef enum bit [2:0] {
+  BEQ=0,
+  BNE,
+  BRANCH_RESERVED_1,
+  BRANCH_RESERVED_2,
+  BLT,
+  BGE,
+  BLTU,
+  BGEU
+} branch_t;
+
+typedef enum bit [2:0] {
+  INSTR_R,
+  INSTR_I,
+  INSTR_S,
+  INSTR_B,
+  INSTR_U,
+  INSTR_J
+} instr_format_t;
+
 `endif
