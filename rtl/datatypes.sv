@@ -43,4 +43,18 @@ typedef enum bit [2:0] {
   INSTR_J
 } instr_format_t;
 
+typedef enum bit [6:0] {
+  LUI    = 7'b0110111,
+  AUIPC  = 7'b0010111,
+  JAL    = 7'b1101111,
+  JALR   = 7'b1100111,
+  BRANCH = 7'b1100011,
+  LD     = 7'b0000011,
+  ST     = 7'b0100011,
+  ALUI   = 7'b0010011,
+  ALU    = 7'b0110011,
+  FENCE  = 7'b0001111,
+  ECSR   = 7'b1110011
+} opcode_t;
+
 `endif
