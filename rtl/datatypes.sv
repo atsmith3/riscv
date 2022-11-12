@@ -6,9 +6,17 @@
 
 typedef enum bit [1:0] {
   DATABUS_PC=0,
+  DATABUS_ALU,
   DATABUS_MDR,
-  DATABUS_ALU
+  DATABUS_MAR
 } databus_mux_sel_t;
+
+typedef enum bit [1:0] {
+  RS2_PC=0,
+  RS2_ALU,
+  RS2_MDR,
+  RS2_MAR
+} rs2_mux_sel_t;
 
 typedef enum bit [3:0] {
   ALU_ADD=0,

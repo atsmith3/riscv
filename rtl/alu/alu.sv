@@ -8,7 +8,8 @@ module alu #(parameter WIDTH=32) (
   input logic [WIDTH-1:0] rs1,
   input logic [WIDTH-1:0] rs2,
   input logic [3:0] op,
-  output logic [WIDTH-1:0] rd);
+  output logic [WIDTH-1:0] rd,
+  output logic [2:0] bsr);
 
 always_comb begin
   case (op)

@@ -12,6 +12,7 @@ module control
   output logic load_pc,
   output logic load_ir,
   output logic load_mdr,
+  output logic load_bsr,
   output logic pc_mux_sel,
   output logic mdr_mux_sel,
   output logic [1:0] databus_mux_sel,
@@ -63,6 +64,7 @@ module control
     load_mdr = 1'b0;
     load_pc = 1'b0;
     load_ir = 1'b0;
+    load_bsr = 1'b0;
     pc_mux_sel = 0;
     mdr_mux_sel = 0;
     databus_mux_sel = DATABUS_PC;
