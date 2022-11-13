@@ -4,15 +4,14 @@
  */
 
 module core_top (
-  input wire clk,
-  input wire rst_n,
-  input [31:0] mem_rdata,
-  output [31:0] mem_wdata,
-  output [31:0] mem_addr,
-  input rvalid,
-  output rready,
-  input wready,
-  output wvalid
+  input logic clk,
+  input logic rst_n,
+  input logic [31:0] mem_rdata,
+  input logic mem_resp,
+  output logic [31:0] mem_wdata,
+  output logic [31:0] mem_addr,
+  output logic mem_read,
+  output logic mem_write,
 );
 
 wire [31:0] databus;
@@ -38,6 +37,9 @@ register #(.WIDTH(3), .INIT('h0)) u_bsr (.clk(clk), .rstn(rst_n), .in({beq_in, b
 register #(.WIDTH(32), .INIT(0)) u_mar (.clk(clk), .rstn(rst_n), .in(databus), .out(mar_out), .load(load_mar));
 register #(.WIDTH(32), .INIT(0)) u_mdr (.clk(clk), .rstn(rst_n), .in(databus), .out(mdr_out), .load(load_mdr));
 
+assign mem_addr = mar_out;
+assign mem_wdata = mdr_out;
+
 control u_control (
   .clk(clk),
   .rst_n(rst_n), 
@@ -46,6 +48,9 @@ control u_control (
   .load_ir(load_ir),
   .load_mdr(load_mdr),
   .load_bsr(load_bsr),
+  .mem_write(mem_write),
+  .mem_read(mem_write),
+  .mem_resp(mem_resp),
   .pc_mux_sel(pc_mux_sel),
   .databus_mux_sel(databus_mux_sel),
   .mdr_mux_sel(mdr_mux_sel),
