@@ -22,7 +22,8 @@ module control
   enum {
     FETCH_0 = 0,                  // MAR <- PC; PC <- PC+1
     FETCH_1,                      // wait on mem
-    FETCH_2                       // IR <- MDR
+    FETCH_2,                      // IR <- MDR
+    DECODE,                       // Dispatch based on OpCode
   } state, next_state;
 
   always_ff @ (posedge clk) begin
