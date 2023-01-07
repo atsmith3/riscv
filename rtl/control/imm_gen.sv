@@ -21,7 +21,7 @@ always_comb begin
   case (instr_type)
     INSTR_I: begin
       // Sign Extended Immediate[11:0]
-      imm = {{20{ir[31]}},ir[31:20};
+      imm = {{20{ir[31]}},ir[31:20]};
     end
     INSTR_S: begin
       // Sign Extended Immediate[11:0]

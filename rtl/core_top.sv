@@ -11,25 +11,35 @@ module core_top (
   output logic [31:0] mem_wdata,
   output logic [31:0] mem_addr,
   output logic mem_read,
-  output logic mem_write,
+  output logic mem_write
 );
 
+databus_mux_sel_t databus_mux_sel;
+rs2_mux_sel_t rs2_mux_sel;
+wire [31:0] alu_out;
 wire [31:0] databus;
 wire [31:0] ir_out;
-wire [31:0] pc_out;
+wire [31:0] mar_out;
+wire [31:0] mdr_out;
+wire [31:0] mdr_in;
 wire [31:0] pc_in;
 wire [31:0] pc_incr;
-wire [31:0] mdr_out;
-wire [31:0] mar_out;
+wire [31:0] pc_out;
+wire [31:0] rd;
+wire [31:0] rs1_out;
+wire [31:0] rs2_mux_out;
+wire [31:0] rs2_out;
+wire [3:0] op;
+wire beq, blt, bltu;
+wire beq_in, blt_in, bltu_in;
+wire load_bsr;
 wire load_ir;
 wire load_pc;
-wire load_bsr;
-wire beq_in, blt_in, bltu_in;
-wire beq, blt, bltu;
-wire pc_mux_sel;
 wire mdr_mux_sel;
-rs2_mux_sel_t rs2_mux_sel;
-databus_mux_sel_t databus_mux_sel;
+wire pc_mux_sel;
+wire [31:0] imm;
+wire [31:0] rs2_sel;
+
 
 register #(.WIDTH(32), .INIT(0)) u_ir (.clk(clk), .rstn(rst_n), .in(databus), .out(ir_out), .load(load_ir));
 register #(.WIDTH(32), .INIT('h0)) u_pc (.clk(clk), .rstn(rst_n), .in(pc_in), .out(pc_out), .load(load_pc));
@@ -49,12 +59,11 @@ control u_control (
   .load_mdr(load_mdr),
   .load_bsr(load_bsr),
   .mem_write(mem_write),
-  .mem_read(mem_write),
+  .mem_read(mem_read),
   .mem_resp(mem_resp),
   .pc_mux_sel(pc_mux_sel),
   .databus_mux_sel(databus_mux_sel),
-  .mdr_mux_sel(mdr_mux_sel),
-  .mdr_valid(1'b1));
+  .mdr_mux_sel(mdr_mux_sel));
 
 alu #(.WIDTH(32)) u_alu (
   .rs1(rs1_out),

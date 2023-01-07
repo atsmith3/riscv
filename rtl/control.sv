@@ -16,14 +16,16 @@ module control
   output logic pc_mux_sel,
   output logic mdr_mux_sel,
   output logic [1:0] databus_mux_sel,
-  input logic mdr_valid
+  output logic mem_write,
+  output logic mem_read,
+  input logic mem_resp
 );
 
   enum {
     FETCH_0 = 0,                  // MAR <- PC; PC <- PC+1
     FETCH_1,                      // wait on mem
     FETCH_2,                      // IR <- MDR
-    DECODE,                       // Dispatch based on OpCode
+    DECODE                        // Dispatch based on OpCode
   } state, next_state;
 
   always_ff @ (posedge clk) begin
@@ -46,7 +48,7 @@ module control
       end
       FETCH_1 : begin
         next_state = FETCH_1;
-        if (mdr_valid) begin
+        if (mem_resp) begin
           next_state = FETCH_2;
         end
       end
@@ -69,11 +71,14 @@ module control
     pc_mux_sel = 0;
     mdr_mux_sel = 0;
     databus_mux_sel = DATABUS_PC;
+    mem_read = 0;
+    mem_write = 0;
 
     case (state)
       FETCH_0: begin
         load_mar = 1'b1;
         load_pc = 1'b1;
+        mem_read = 1'b1;
       end
       FETCH_1: begin
 

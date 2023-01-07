@@ -30,9 +30,10 @@ module tb ();
   memory_model #(
     .ADDR_WIDTH(ADDR_WIDTH),
     .DATA_WIDTH(WIDTH),
-    .DELAY(0),
+    .DELAY(4),
     .MEM_INIT_FILE("/home/andrew/proj/riscv/rtl/tb/test_roms/test.mem")) mem (
     .clk(clk),
+    .rst_n(rst_n),
     .read(read),
     .write(write),
     .resp(resp),
