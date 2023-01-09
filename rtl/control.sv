@@ -24,7 +24,8 @@ module control
   enum {
     FETCH_0 = 0,                  // MAR <- PC; PC <- PC+1
     FETCH_1,                      // wait on mem
-    FETCH_2,                      // IR <- MDR
+    FETCH_2,                      // MDR <- M[MAR]
+    FETCH_3,                      // IR <- MDR
     DECODE                        // Dispatch based on OpCode
   } state, next_state;
 
@@ -51,6 +52,9 @@ module control
         if (mem_resp) begin
           next_state = FETCH_2;
         end
+      end
+      FETCH_2 : begin
+        next_state = FETCH_3;
       end
       FETCH_2 : begin
         next_state = FETCH_0;
@@ -81,9 +85,13 @@ module control
         mem_read = 1'b1;
       end
       FETCH_1: begin
-
+        mem_read = 1'b1;
       end
       FETCH_2: begin
+        mem_read = 1'b1;
+        load_mdr = 1'b1;
+      end
+      FETCH_3: begin
         load_ir = 1'b1;
         databus_mux_sel = DATABUS_MDR;
       end

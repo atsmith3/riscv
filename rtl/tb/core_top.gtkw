@@ -1,0 +1,66 @@
+[*]
+[*] GTKWave Analyzer v3.3.104 (w)1999-2020 BSI
+[*] Mon Jan  9 06:19:44 2023
+[*]
+[dumpfile] "/home/andrew/proj/riscv/rtl/tb/core.vcd"
+[dumpfile_mtime] "Mon Jan  9 06:19:24 2023"
+[dumpfile_size] 94310
+[savefile] "/home/andrew/proj/riscv/rtl/tb/core_top.gtkw"
+[timestart] 0
+[size] 3836 2121
+[pos] -1 -1
+*-5.226146 124 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] tb.
+[treeopen] tb.u_POTATO.
+[sst_width] 655
+[signals_width] 428
+[sst_expanded] 1
+[sst_vpaned_height] 685
+@28
+tb.u_POTATO.clk
+@200
+-IR
+@22
+tb.u_POTATO.u_ir.out[31:0]
+@28
+tb.u_POTATO.u_ir.load
+@200
+-PC
+@22
+tb.u_POTATO.u_pc.data[31:0]
+@28
+tb.u_POTATO.u_pc.load
+@200
+-MAR
+@22
+tb.u_POTATO.u_mar.data[31:0]
+@28
+tb.u_POTATO.u_mar.load
+@200
+-MDR
+@22
+tb.u_POTATO.u_mdr.data[31:0]
+@28
+tb.u_POTATO.u_mdr.load
+@200
+-CONTROL
+@2024
+^1 /home/andrew/proj/riscv/rtl/tb/state.flt
+tb.u_POTATO.u_control.state
+^1 /home/andrew/proj/riscv/rtl/tb/state.flt
+tb.u_POTATO.u_control.next_state
+@200
+-
+@22
+tb.mem.addr[3:0]
+tb.mem.data_out[31:0]
+@421
+tb.mem.state
+@420
+tb.mem.next_state
+@28
+tb.mem.resp
+@22
+tb.mem.count[31:0]
+[pattern_trace] 1
+[pattern_trace] 0

@@ -21,13 +21,14 @@ module memory_model #(
   input logic [ADDR_WIDTH-1:0] addr,
   output logic resp);
 
-  reg [DATA_WIDTH-1:0] mem [2**ADDR_WIDTH];
+  reg [7:0] mem [2**ADDR_WIDTH-1:0];
   reg [31:0] count;
+  reg [DATA_WIDTH-1:0] out_buffer;
   reg old_read;
   reg old_write;
 
   initial begin
-    $readmemh(MEM_INIT_FILE,mem);
+    $readmemh(MEM_INIT_FILE,mem,0,2**ADDR_WIDTH-1);
   end
 
   enum {
@@ -51,17 +52,24 @@ module memory_model #(
       if (state == WAIT_READ || state == WAIT_WRITE) begin
         count <= count + 1;
       end
+      out_buffer <= out_buffer;
+      if (state == DONE) begin
+        if (read) begin 
+          out_buffer <= {mem[addr+3],mem[addr+2],mem[addr+1],mem[addr]};
+        end
+        if (write) begin
+          //out_buffer <= {mem[addr+3],mem[addr+2],mem[addr+1],mem[addr]};
+        end
+      end
     end
   end
 
   // Output Logic
   always_comb begin
-    data_out = 0;
     resp = 0;
     case (state)
       DONE : begin
         resp = 1'b1;
-        data_out = read ? mem[addr] : 'b0;
       end
       default : begin
 
@@ -101,6 +109,8 @@ module memory_model #(
       end
     endcase
   end
+
+  assign data_out = out_buffer;
 
 endmodule
 

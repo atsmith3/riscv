@@ -45,7 +45,7 @@ register #(.WIDTH(32), .INIT(0)) u_ir (.clk(clk), .rstn(rst_n), .in(databus), .o
 register #(.WIDTH(32), .INIT('h0)) u_pc (.clk(clk), .rstn(rst_n), .in(pc_in), .out(pc_out), .load(load_pc));
 register #(.WIDTH(3), .INIT('h0)) u_bsr (.clk(clk), .rstn(rst_n), .in({beq_in, blt_in, bltu_in}), .out({beq, blt, bltu}), .load(load_bsr));
 register #(.WIDTH(32), .INIT(0)) u_mar (.clk(clk), .rstn(rst_n), .in(databus), .out(mar_out), .load(load_mar));
-register #(.WIDTH(32), .INIT(0)) u_mdr (.clk(clk), .rstn(rst_n), .in(databus), .out(mdr_out), .load(load_mdr));
+register #(.WIDTH(32), .INIT(0)) u_mdr (.clk(clk), .rstn(rst_n), .in(mdr_in), .out(mdr_out), .load(load_mdr));
 
 assign mem_addr = mar_out;
 assign mem_wdata = mdr_out;
@@ -69,7 +69,7 @@ alu #(.WIDTH(32)) u_alu (
   .rs1(rs1_out),
   .rs2(rs2_mux_out),
   .op(op),
-  .bsr({blq_in, blt_in, bltu_in}),
+  .bsr({beq_in, blt_in, bltu_in}),
   .rd(alu_out));
 
 mux4 #(.WIDTH(32)) u_databus_mux (
