@@ -91,13 +91,13 @@ module memory_model #(
       end
       WAIT_READ : begin
         next_state = WAIT_READ;
-        if (count >= DELAY) begin
+        if (count >= DELAY-1) begin
           next_state = DONE;
         end
       end
       WAIT_WRITE : begin
         next_state = WAIT_WRITE;
-        if (count >= DELAY) begin
+        if (count >= DELAY-1) begin
           next_state = DONE;
         end
       end

@@ -48,7 +48,8 @@ typedef enum bit [2:0] {
   INSTR_S,
   INSTR_B,
   INSTR_U,
-  INSTR_J
+  INSTR_J,
+  INSTR_ERR
 } instr_format_t;
 
 typedef enum bit [6:0] {
