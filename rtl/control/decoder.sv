@@ -53,13 +53,13 @@ always_comb begin
   end
   else if ((opcode==JALR) ||
     (opcode==LD) ||
-    (opcode==ALUI && (funct3 != 3'b001 or funct3 != 3'b101)) ||
+    (opcode==ALUI && (funct3 != 3'b001 || funct3 != 3'b101)) ||
     (opcode==ECSR) ||
     (opcode==FENCE)) begin
     instr_type = INSTR_I;
   end
   else if ((opcode==ALU)||
-    (opcode==ALUI && (funct3 != 3'b001 or funct3 != 3'b101))) begin
+    (opcode==ALUI && (funct3 != 3'b001 || funct3 != 3'b101))) begin
     instr_type = INSTR_R;
   end
   else if (opcode==ST) begin

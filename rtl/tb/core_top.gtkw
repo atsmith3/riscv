@@ -1,17 +1,19 @@
 [*]
 [*] GTKWave Analyzer v3.3.104 (w)1999-2020 BSI
-[*] Mon Jan  9 06:19:44 2023
+[*] Tue Jan 10 06:18:14 2023
 [*]
 [dumpfile] "/home/andrew/proj/riscv/rtl/tb/core.vcd"
-[dumpfile_mtime] "Mon Jan  9 06:19:24 2023"
-[dumpfile_size] 94310
+[dumpfile_mtime] "Tue Jan 10 06:14:16 2023"
+[dumpfile_size] 135435
 [savefile] "/home/andrew/proj/riscv/rtl/tb/core_top.gtkw"
 [timestart] 0
 [size] 3836 2121
 [pos] -1 -1
-*-5.226146 124 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+*-5.226146 184 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] tb.
 [treeopen] tb.u_POTATO.
+[treeopen] tb.u_POTATO.u_control.
+[treeopen] tb.u_POTATO.u_control.u_ir_decoder.
 [sst_width] 655
 [signals_width] 428
 [sst_expanded] 1
@@ -22,45 +24,69 @@ tb.u_POTATO.clk
 -IR
 @22
 tb.u_POTATO.u_ir.out[31:0]
-@28
-tb.u_POTATO.u_ir.load
 @200
 -PC
 @22
 tb.u_POTATO.u_pc.data[31:0]
-@28
-tb.u_POTATO.u_pc.load
 @200
 -MAR
 @22
 tb.u_POTATO.u_mar.data[31:0]
-@28
-tb.u_POTATO.u_mar.load
 @200
 -MDR
 @22
 tb.u_POTATO.u_mdr.data[31:0]
-@28
-tb.u_POTATO.u_mdr.load
 @200
 -CONTROL
 @2024
 ^1 /home/andrew/proj/riscv/rtl/tb/state.flt
 tb.u_POTATO.u_control.state
+@2025
 ^1 /home/andrew/proj/riscv/rtl/tb/state.flt
 tb.u_POTATO.u_control.next_state
+@28
+tb.u_POTATO.u_control.load_bsr
+tb.u_POTATO.u_control.load_ir
+tb.u_POTATO.u_control.load_mar
+tb.u_POTATO.u_control.load_mdr
+tb.u_POTATO.u_control.load_pc
+tb.u_POTATO.u_control.databus_mux_sel[1:0]
+tb.u_POTATO.u_control.mdr_mux_sel
+tb.u_POTATO.u_control.pc_mux_sel
 @200
 -
 @22
 tb.mem.addr[3:0]
 tb.mem.data_out[31:0]
-@421
-tb.mem.state
 @420
+tb.mem.state
 tb.mem.next_state
 @28
 tb.mem.resp
 @22
 tb.mem.count[31:0]
+@200
+-
+-DECODE
+@28
+tb.u_POTATO.u_control.u_ir_decoder.arithmatic
+tb.u_POTATO.u_control.u_ir_decoder.ebreak
+@22
+tb.u_POTATO.u_control.u_ir_decoder.fm[3:0]
+@28
+tb.u_POTATO.u_control.u_ir_decoder.funct3[2:0]
+@22
+tb.u_POTATO.u_control.u_ir_decoder.funct7[6:0]
+tb.u_POTATO.u_control.u_ir_decoder.immediate[31:0]
+@28
+tb.u_POTATO.u_control.u_ir_decoder.instr_type[2:0]
+@22
+tb.u_POTATO.u_control.u_ir_decoder.ir[31:0]
+tb.u_POTATO.u_control.u_ir_decoder.opcode[6:0]
+tb.u_POTATO.u_control.u_ir_decoder.pred[3:0]
+tb.u_POTATO.u_control.u_ir_decoder.rd[4:0]
+tb.u_POTATO.u_control.u_ir_decoder.rs1[4:0]
+tb.u_POTATO.u_control.u_ir_decoder.rs2[4:0]
+tb.u_POTATO.u_control.u_ir_decoder.succ[3:0]
 [pattern_trace] 1
 [pattern_trace] 0

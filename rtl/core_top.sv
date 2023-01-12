@@ -25,10 +25,13 @@ wire [31:0] mdr_in;
 wire [31:0] pc_in;
 wire [31:0] pc_incr;
 wire [31:0] pc_out;
-wire [31:0] rd;
+wire [31:0] rd_in;
 wire [31:0] rs1_out;
 wire [31:0] rs2_mux_out;
 wire [31:0] rs2_out;
+wire [4:0] rd;
+wire [4:0] rs1;
+wire [4:0] rs2;
 wire [3:0] op;
 wire beq, blt, bltu;
 wire beq_in, blt_in, bltu_in;
@@ -63,7 +66,14 @@ control u_control (
   .mem_resp(mem_resp),
   .pc_mux_sel(pc_mux_sel),
   .databus_mux_sel(databus_mux_sel),
-  .mdr_mux_sel(mdr_mux_sel));
+  .mdr_mux_sel(mdr_mux_sel),
+  .alu_op(),
+  .ir(ir_out),
+  .rs1_val(rs1_out),
+  .rs2_val(rs1_out),
+  .rs1(rs1),
+  .rs2(rs2),
+  .rd(rd));
 
 alu #(.WIDTH(32)) u_alu (
   .rs1(rs1_out),

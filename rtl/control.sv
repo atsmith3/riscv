@@ -19,18 +19,18 @@ module control
   output logic [1:0] databus_mux_sel,
   output logic mem_write,
   output logic mem_read,
+  output logic [4:0] rs1,
+  output logic [4:0] rs2,
+  output logic [4:0] rd,
   input logic mem_resp,
   input logic [31:0] ir,
-  input logic [31:0] rs1,
-  input logic [31:0] rs2,
+  input logic [31:0] rs1_val,
+  input logic [31:0] rs2_val,
   output logic [31:0] immediate
 );
 
   logic [2:0] instr_type;
   logic [6:0] opcode;
-  logic [4:0] rs1;
-  logic [4:0] rs2;
-  logic [4:0] rd;
   logic [6:0] funct7;
   logic [2:0] funct3;
   logic [3:0] fm;
@@ -38,7 +38,6 @@ module control
   logic [3:0] succ;
   logic arithmatic;
   logic ebreak;
-  logic [31:0] immediate;
   logic branch;
 
   enum {
@@ -49,7 +48,7 @@ module control
     DECODE,                       // Dispatch based on OpCode
     BRANCH,
     BRANCH_T,
-    BRANCH_N,
+    BRANCH_N
   } state, next_state;
 
   always_ff @ (posedge clk) begin
