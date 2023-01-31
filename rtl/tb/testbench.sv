@@ -6,7 +6,7 @@
 
 module tb ();
   localparam WIDTH=32;
-  localparam ADDR_WIDTH=4;
+  localparam ADDR_WIDTH=32;
 
   reg clk;
   reg rst_n;
@@ -31,7 +31,7 @@ module tb ();
     .ADDR_WIDTH(ADDR_WIDTH),
     .DATA_WIDTH(WIDTH),
     .DELAY(4),
-    .MEM_INIT_FILE("/home/andrew/proj/riscv/rtl/tb/test_roms/test.mem")) mem (
+    .MEM_INIT_FILE("/home/andrew/prj/rtl/riscv/test/subtract/subtract.ini")) mem (
     .clk(clk),
     .rst_n(rst_n),
     .read(read),
