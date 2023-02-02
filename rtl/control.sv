@@ -13,10 +13,13 @@ module control
   output logic load_ir,
   output logic load_mdr,
   output logic load_bsr,
+  output logic load_reg,
   output logic pc_mux_sel,
   output logic mdr_mux_sel,
-  output logic [3:0] alu_op,
-  output logic [1:0] databus_mux_sel,
+  output rs1_mux_sel_t  rs1_mux_sel,
+  output rs2_mux_sel_t  rs2_mux_sel,
+  output alu_op_t alu_op,
+  output databus_mux_sel_t databus_mux_sel,
   output logic mem_write,
   output logic mem_read,
   output logic [4:0] rs1,
@@ -41,14 +44,30 @@ module control
   logic branch;
 
   enum {
-    FETCH_0 = 0,                  // MAR <- PC; PC <- PC+1
+    FETCH_0 = 0,                  // MAR <- PC
     FETCH_1,                      // wait on mem
     FETCH_2,                      // MDR <- M[MAR]
     FETCH_3,                      // IR <- MDR
     DECODE,                       // Dispatch based on OpCode
-    BRANCH,
-    BRANCH_T,
-    BRANCH_N
+    BRANCH_0,                     // Determine if Branch Taken/Not Taken
+    BRANCH_T,                     // PC <- PC + IMM
+    PC_INC,                       // PC <- PC + 4
+    SAVE_PC,                      // RD <- PC + 4
+    JAL_0,                        // PC <- PC + IMM
+    REG_REG,                      // RD <- RS1 op RS2
+    REG_IMM,                      // RD <- RS1 op IMM
+    LUI_0,                        // RD <- IMM
+    JALR_0,                       // PC <- RS1 + IMM
+    LD_0,                         // MAR <- RS1 + IMM
+    LD_1,                         // MDR <- M[MAR]
+    LD_2,                         
+    LD_3,                         // RD <- MDR
+    ST_0,                         // MAR <- RS1 + IMM
+    ST_1,                         // MDR <- RS2
+    ST_2,                         
+    ST_3,                         // M[MAR] <- MDR
+    ERROR_INVALID_OPCODE,
+    ERROR_OPCODE_NOT_IMPLEMENTED
   } state, next_state;
 
   always_ff @ (posedge clk) begin
@@ -76,12 +95,6 @@ module control
     .ebreak(ebreak),
     .immediate(immediate));
 
-  always_comb begin
-    alu_op = {1'b0,funct3};
-    if (opcode==ALUI && (funct3 == 3'b001 || funct3 == 3'b101)) begin
-      alu_op = {arithmatic,funct3};
-    end
-  end
 
   // Next State Logic
   always_comb begin
@@ -101,8 +114,109 @@ module control
       FETCH_2 : begin
         next_state = FETCH_3;
       end
-      FETCH_2 : begin
+      FETCH_3 : begin
+        next_state = DECODE;
+      end
+      DECODE : begin                       // Dispatch based on OpCode
+        next_state = ERROR_INVALID_OPCODE;
+        case (opcode)
+          LUI : begin
+            next_state = LUI_0;
+          end
+          AUIPC : begin
+            next_state = ERROR_OPCODE_NOT_IMPLEMENTED;
+          end
+          JAL : begin
+            next_state = JAL_0;
+          end
+          JALR : begin 
+            next_state = JALR_0;
+          end
+          BRANCH : begin
+            next_state = BRANCH_0;
+          end
+          LD : begin 
+            next_state = LD_0;
+          end
+          ST : begin
+            next_state = ST_0;
+          end
+          ALUI : begin
+            next_state = REG_IMM;
+          end
+          ALU : begin 
+            next_state = REG_REG;
+          end
+          FENCE : begin 
+            next_state = ERROR_OPCODE_NOT_IMPLEMENTED;
+          end
+          ECSR : begin 
+            next_state = ERROR_OPCODE_NOT_IMPLEMENTED;
+          end
+        endcase
+      end
+      BRANCH_0 : begin                       // Determine if Branch Taken/Not Taken
+      end
+      BRANCH_T : begin                     // PC <- PC + IMM
+      end
+      PC_INC : begin                       // PC <- PC + 4
         next_state = FETCH_0;
+      end
+      SAVE_PC : begin                      // RD <- PC + 4
+        next_state = FETCH_0;
+      end
+      JAL_0 : begin                          // PC <- PC + IMM
+        next_state = SAVE_PC;
+      end
+      REG_REG : begin                      // RD <- RS1 op RS2
+        next_state = PC_INC;
+      end
+      REG_IMM : begin                      // RD <- RS1 op IMM
+        next_state = PC_INC;
+      end
+      LUI_0 : begin                          // RD <- IMM
+        next_state = PC_INC;
+      end
+      JALR_0 : begin                         // PC <- RS1 + IMM
+        next_state = SAVE_PC;
+      end
+      LD_0 : begin                         // MAR <- RS1 + IMM
+        next_state = LD_1;
+      end
+      LD_1 : begin                         // MDR <- M[MAR]
+        next_state = LD_2;
+      end
+      LD_2 : begin                         
+        next_state = LD_2;
+        if (mem_resp) begin
+          next_state = LD_3;
+        end
+      end
+      LD_3 : begin                         // RD <- MDR
+        next_state = PC_INC;
+      end
+      ST_0 : begin                         // MAR <- RS1 + IMM
+        next_state = ST_1;
+      end
+      ST_1 : begin                         // MDR <- RS2
+        next_state = ST_2;
+      end
+      ST_2 : begin                         
+        next_state = ST_3;
+      end
+      ST_3 : begin                         // M[MAR] <- MDR
+        next_state = ST_3;
+        if (mem_resp) begin
+          next_state = PC_INC;
+        end
+      end
+      ERROR_INVALID_OPCODE : begin
+        // Catch CPU Here
+        next_state = ERROR_INVALID_OPCODE;
+      end
+      ERROR_OPCODE_NOT_IMPLEMENTED : begin
+        // Catch CPU Here
+        next_state = ERROR_OPCODE_NOT_IMPLEMENTED;
       end
       default:
         next_state = FETCH_0;
@@ -120,13 +234,15 @@ module control
     pc_mux_sel = 0;
     mdr_mux_sel = 0;
     databus_mux_sel = DATABUS_PC;
+    rs1_mux_sel = RS1_OUT;
+    rs2_mux_sel = RS2_OUT;
     mem_read = 0;
     mem_write = 0;
+    alu_op = ALU_ADD;
 
     case (state)
       FETCH_0: begin
         load_mar = 1'b1;
-        load_pc = 1'b1;
         mem_read = 1'b1;
       end
       FETCH_1: begin
@@ -142,6 +258,71 @@ module control
       end
       DECODE: begin
 
+      end
+      BRANCH_0 : begin
+      end
+      BRANCH_T : begin
+      end
+      PC_INC : begin
+        load_pc = 1'b1;
+        databus_mux_sel = DATABUS_ALU;
+        rs1_mux_sel = RS1_4;
+        rs2_mux_sel = RS2_PC;
+      end
+      SAVE_PC : begin
+        load_reg = 1'b1;
+        databus_mux_sel = DATABUS_ALU;
+        rs1_mux_sel = RS1_4;
+        rs2_mux_sel = RS2_PC;
+      end
+      JAL_0 : begin
+        pc_mux_sel = 1'b1;
+        load_pc = 1'b1;
+        databus_mux_sel = DATABUS_ALU;
+        rs1_mux_sel = RS1_PC;
+        rs2_mux_sel = RS2_IMM;
+      end
+      REG_REG : begin
+      end
+      REG_IMM : begin
+      end
+      LUI_0 : begin
+      end
+      JALR_0 : begin
+        load_pc = 1'b1;
+        rs2_mux_sel = RS2_IMM;
+        databus_mux_sel = DATABUS_ALU;
+      end
+      LD_0 : begin
+        load_mar = 1'b1;
+        databus_mux_sel = DATABUS_ALU;
+        rs2_mux_sel = RS2_IMM;
+      end
+      LD_1 : begin
+        load_mdr = 1'b1;
+        mem_read = 1'b1;
+      end
+      LD_2 : begin
+      end
+      LD_3 : begin
+        databus_mux_sel = DATABUS_MDR;
+        load_reg = 1;
+      end
+      ST_0 : begin
+        load_mar = 1'b1;
+        databus_mux_sel = DATABUS_ALU;
+        rs2_mux_sel = RS2_IMM;
+      end
+      ST_1 : begin
+        load_mdr = 1'b1;
+        databus_mux_sel = DATABUS_ALU;
+        mdr_mux_sel = 1'b1;
+        alu_op = ALU_PASS_RS2;
+      end
+      ST_2 : begin
+        mem_write = 1'b1;
+      end
+      ST_3 : begin
       end
     endcase
   end

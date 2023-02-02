@@ -5,51 +5,57 @@
 `include "datatypes.sv"
 
 module alu #(parameter WIDTH=32) (
-  input logic [WIDTH-1:0] rs1,
-  input logic [WIDTH-1:0] rs2,
-  input logic [3:0] op,
-  output logic [WIDTH-1:0] rd,
+  input logic [WIDTH-1:0] a,
+  input logic [WIDTH-1:0] b,
+  input alu_op_t op,
+  output logic [WIDTH-1:0] y,
   output logic [2:0] bsr);
 
 logic [4:0] shift;
-assign shift = rs2[4:0];
+assign shift = b[4:0];
 
 always_comb begin
   case (op)
     ALU_ADD: begin
-      rd = rs1 + rs2;
+      y = a + b;
     end
     ALU_SLL: begin
-      rd = rs1 << shift;
+      y = a << shift;
     end
     ALU_SLT: begin
       // STORE LESS THAN - RS1 < RS2/IMM
-      rd = ( $signed(rs1) < $signed(rs2) ) ? 1 : 0;
+      y = ( $signed(a) < $signed(b) ) ? 1 : 0;
     end
     ALU_SLTU: begin
       // STORE LESS THAN UNSIGNED - RS1 < RS2/IMM
-      rd = (rs1 < rs2) ? 1 : 0;
+      y = (a < b) ? 1 : 0;
     end
     ALU_XOR: begin
-      rd = rs1 ^ rs2;
+      y = a ^ b;
     end
     ALU_SRL: begin
-      rd = rs1 >> shift;
+      y = a >> shift;
     end
     ALU_OR: begin
-      rd = rs1 | rs2;
+      y = a | b;
     end
     ALU_AND: begin
-      rd = rs1 & rs2;
+      y = a & b;
     end
     ALU_SUB: begin
-      rd = rs1 - rs2;
+      y = a - b;
+    end
+    ALU_PASS_RS1: begin
+      y = a;
+    end
+    ALU_PASS_RS2: begin
+      y = b;
     end
     ALU_SRA: begin
-      rd = rs1 >>> shift;
+      y = a >>> shift;
     end
     default: begin
-      rd = 0;
+      y = 0;
     end
   endcase
 end
