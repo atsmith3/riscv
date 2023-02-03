@@ -68,7 +68,7 @@ tokens = (
   'CSRRCI',
   'COMMA',
   'NUMBER',
-  'HEX_NUMBER', #TODO: Add for Byte, 2Byte(Half,Short), Word(Long), 8Byte(Dword,Quad)
+#  'HEX_NUMBER', #TODO: Add for Byte, 2Byte(Half,Short), Word(Long), 8Byte(Dword,Quad)
   'LPAREN',
   'RPAREN',
   'X0',
@@ -163,8 +163,8 @@ t_CSRRWI = r'(CSRRWI|csrrwi)'
 t_CSRRSI = r'(CSRRSI|csrrsi)'
 t_CSRRCI = r'(CSRRCI|csrrci)'
 t_COMMA = r','
-t_NUMBER = r'-?[0-9]+'
-t_HEX_NUMBER = r'0x[0-9]+'
+#t_NUMBER = r'-?[0-9]+'
+#t_HEX_NUMBER = r'0x[0-9]+'
 t_LPAREN = r'\('
 t_RPAREN = r'\)'
 t_X0 = r'(X0|x0|ZERO|zero)'
@@ -201,7 +201,16 @@ t_X30 = r'(X30|x30|T5|t5)'
 t_X31 = r'(X31|x31|T6|t6)'
 t_OLABEL = r'[A-Za-z_0-9]+:'
 t_RETURN = r'ret'
-t_COMMENT = r'(\#|;).*'
+t_ignore_COMMENT = r'(\#|;).*'
+
+def t_NUMBER(t):
+  r'-?\d+'
+  try:
+    t.value = int(t.value)
+  except:
+    print("ERROR in parsing integer %d", t.value)
+    t.value = 0
+  return t
 
 # NewLine rule:
 def t_newline(t):
@@ -215,10 +224,24 @@ def t_error(t):
   print("Illegal character '%s'" % t.value[0])
   t.lexer.skip(1)
 
+# Byte Array
+binary = []
+address = 0x4000 # start address of program
+current_section = "none"
+
 # Build the lexer
 lexer = lex.lex()
 
-data = '''main:                                   # @main
+def d_statement_addi(t):
+  'statement : ADDI COMMA ' 
+  print(t[1])
+
+
+data = '''
+  .data
+
+  .text
+  main:                                   # @main
         addi    sp, sp, -16
         sw      ra, 12(sp)                      # 4-byte Folded Spill
         sw      s0, 8(sp)                       # 4-byte Folded Spill

@@ -24,17 +24,4 @@ main:
 	addi	sp,sp,32
 	jr	ra
 	.size	main, .-main
-	.section	.text.boot,"ax",@progbits
-	.align	2
-	.globl	__start
-	.type	__start, @function
-__start:
-	addi	sp,sp,-16
-	sw	ra,12(sp)
-	sw	s0,8(sp)
-	addi	s0,sp,16
-	call	main
-.L3:
-	j	.L3
-	.size	__start, .-__start
 	.ident	"GCC: () 9.3.0"

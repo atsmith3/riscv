@@ -1,20 +1,20 @@
 [*]
 [*] GTKWave Analyzer v3.3.104 (w)1999-2020 BSI
-[*] Tue Jan 10 06:18:14 2023
+[*] Fri Feb  3 06:50:30 2023
 [*]
 [dumpfile] "/home/andrew/proj/riscv/rtl/tb/core.vcd"
-[dumpfile_mtime] "Tue Jan 10 06:14:16 2023"
-[dumpfile_size] 135435
+[dumpfile_mtime] "Fri Feb  3 06:47:41 2023"
+[dumpfile_size] 120702
 [savefile] "/home/andrew/proj/riscv/rtl/tb/core_top.gtkw"
 [timestart] 0
 [size] 3836 2121
-[pos] -1 -1
+[pos] -1281 -1
 *-5.226146 184 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] tb.
 [treeopen] tb.u_POTATO.
 [treeopen] tb.u_POTATO.u_control.
 [treeopen] tb.u_POTATO.u_control.u_ir_decoder.
-[sst_width] 655
+[sst_width] 251
 [signals_width] 428
 [sst_expanded] 1
 [sst_vpaned_height] 685
@@ -41,7 +41,6 @@ tb.u_POTATO.u_mdr.data[31:0]
 @2024
 ^1 /home/andrew/proj/riscv/rtl/tb/state.flt
 tb.u_POTATO.u_control.state
-@2025
 ^1 /home/andrew/proj/riscv/rtl/tb/state.flt
 tb.u_POTATO.u_control.next_state
 @28
@@ -56,7 +55,6 @@ tb.u_POTATO.u_control.pc_mux_sel
 @200
 -
 @22
-tb.mem.addr[3:0]
 tb.mem.data_out[31:0]
 @420
 tb.mem.state
@@ -88,5 +86,27 @@ tb.u_POTATO.u_control.u_ir_decoder.rd[4:0]
 tb.u_POTATO.u_control.u_ir_decoder.rs1[4:0]
 tb.u_POTATO.u_control.u_ir_decoder.rs2[4:0]
 tb.u_POTATO.u_control.u_ir_decoder.succ[3:0]
+@200
+-
+-REGFILE
+@22
+tb.u_POTATO.u_regfile.a[31:0]
+tb.u_POTATO.u_regfile.b[31:0]
+tb.u_POTATO.u_regfile.c[31:0]
+@28
+tb.u_POTATO.u_regfile.wr
+@200
+-
+-ALU
+@23
+tb.u_POTATO.u_alu.a[31:0]
+@22
+tb.u_POTATO.u_alu.b[31:0]
+@28
+tb.u_POTATO.u_alu.bsr[2:0]
+@22
+tb.u_POTATO.u_alu.op[3:0]
+tb.u_POTATO.u_alu.shift[4:0]
+tb.u_POTATO.u_alu.y[31:0]
 [pattern_trace] 1
 [pattern_trace] 0

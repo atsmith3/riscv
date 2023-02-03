@@ -32,6 +32,7 @@ module tb ();
     .DATA_WIDTH(WIDTH),
     .DELAY(4),
     .MEM_INIT_FILE("../../test/subtract/subtract.ini")) mem (
+    //.MEM_INIT_FILE("../../test/add/add.ini")) mem (
     .clk(clk),
     .rst_n(rst_n),
     .read(read),
