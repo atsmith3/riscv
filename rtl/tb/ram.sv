@@ -35,7 +35,8 @@ module memory_model #(
     IDLE = 0,
     WAIT_READ,
     WAIT_WRITE,
-    DONE
+    DONE_READ,
+    DONE_WRITE
   } state, next_state;
 
   always_ff @ ( posedge clk ) begin
@@ -53,13 +54,14 @@ module memory_model #(
         count <= count + 1;
       end
       out_buffer <= out_buffer;
-      if (state == DONE) begin
-        if (read) begin 
-          out_buffer <= {mem[addr+3],mem[addr+2],mem[addr+1],mem[addr]};
-        end
-        if (write) begin
-          //out_buffer <= {mem[addr+3],mem[addr+2],mem[addr+1],mem[addr]};
-        end
+      if (state == DONE_READ) begin
+        out_buffer <= {mem[addr+3],mem[addr+2],mem[addr+1],mem[addr]};
+      end
+      if (state == DONE_WRITE) begin
+        mem[addr+3] <= data_in[31:24];
+        mem[addr+2] <= data_in[23:16];
+        mem[addr+1] <= data_in[15:8];
+        mem[addr+0] <= data_in[7:0];
       end
     end
   end
@@ -68,7 +70,10 @@ module memory_model #(
   always_comb begin
     resp = 0;
     case (state)
-      DONE : begin
+      DONE_WRITE : begin
+        resp = 1'b1;
+      end
+      DONE_READ : begin
         resp = 1'b1;
       end
       default : begin
@@ -92,16 +97,19 @@ module memory_model #(
       WAIT_READ : begin
         next_state = WAIT_READ;
         if (count >= DELAY-1) begin
-          next_state = DONE;
+          next_state = DONE_READ;
         end
       end
       WAIT_WRITE : begin
         next_state = WAIT_WRITE;
         if (count >= DELAY-1) begin
-          next_state = DONE;
+          next_state = DONE_WRITE;
         end
       end
-      DONE: begin
+      DONE_READ: begin
+        next_state = IDLE;
+      end
+      DONE_WRITE: begin
         next_state = IDLE;
       end
       default: begin
