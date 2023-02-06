@@ -37,7 +37,6 @@ wire [4:0] rs2;
 alu_op_t op;
 wire beq, blt, bltu;
 wire beq_in, blt_in, bltu_in;
-wire load_bsr;
 wire load_ir;
 wire load_pc;
 wire load_reg;
@@ -48,7 +47,6 @@ wire [31:0] rs2_sel;
 
 register #(.WIDTH(32), .INIT(0)) u_ir (.clk(clk), .rstn(rst_n), .in(databus), .out(ir_out), .load(load_ir));
 register #(.WIDTH(32), .INIT('h1000)) u_pc (.clk(clk), .rstn(rst_n), .in(databus), .out(pc_out), .load(load_pc));
-register #(.WIDTH(3), .INIT('h0)) u_bsr (.clk(clk), .rstn(rst_n), .in({beq_in, blt_in, bltu_in}), .out({beq, blt, bltu}), .load(load_bsr));
 register #(.WIDTH(32), .INIT(0)) u_mar (.clk(clk), .rstn(rst_n), .in(databus), .out(mar_out), .load(load_mar));
 register #(.WIDTH(32), .INIT(0)) u_mdr (.clk(clk), .rstn(rst_n), .in(mdr_in), .out(mdr_out), .load(load_mdr));
 
@@ -73,7 +71,6 @@ control u_control (
   .load_pc(load_pc),
   .load_ir(load_ir),
   .load_mdr(load_mdr),
-  .load_bsr(load_bsr),
   .load_reg(load_reg),
   .mem_write(mem_write),
   .mem_read(mem_read),
@@ -84,6 +81,7 @@ control u_control (
   .databus_mux_sel(databus_mux_sel),
   .mdr_mux_sel(mdr_mux_sel),
   .alu_op(op),
+  .bsr({beq, blt, bltu}),
   .ir(ir_out),
   .immediate(imm),
   .rs1_val(rs1_out),
@@ -96,7 +94,7 @@ alu #(.WIDTH(32)) u_alu (
   .a(rs1_mux_out),
   .b(rs2_mux_out),
   .op(op),
-  .bsr({beq_in, blt_in, bltu_in}),
+  .bsr({beq, blt, bltu}),
   .y(alu_out));
 
 mux4 #(.WIDTH(32)) u_databus_mux (

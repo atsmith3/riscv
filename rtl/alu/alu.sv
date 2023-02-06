@@ -58,6 +58,12 @@ always_comb begin
       y = 0;
     end
   endcase
+
+
+  bsr[1] = ($signed(a) < $signed(b)) ? 1 : 0;
+  bsr[0] = (a < b) ? 1 : 0;
+  bsr[2] = (a == b) ? 1 : 0;
+
 end
 
 endmodule : alu

@@ -21,7 +21,7 @@ assign imm_i = {{20{ir[31]}},ir[31:20]};
 assign imm_s = {{20{ir[31]}},{ir[31:25],ir[11:7]}};
 assign imm_b = {{19{ir[31]}},{ir[12],ir[7],ir[30:25],ir[11:8],1'b0}};
 assign imm_u = {ir[31:12],12'b0};
-assign imm_j = {{11{ir[31]}},{ir[19:12],ir[20],ir[30:21],1'b0}};
+assign imm_j = {{12{ir[31]}},{ir[19:12],ir[20],ir[30:21],1'b0}};
 
 always_comb begin
   imm = 0;

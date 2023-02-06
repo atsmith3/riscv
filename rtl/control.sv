@@ -12,7 +12,6 @@ module control
   output logic load_pc,
   output logic load_ir,
   output logic load_mdr,
-  output logic load_bsr,
   output logic load_reg,
   output logic pc_mux_sel,
   output logic mdr_mux_sel,
@@ -26,6 +25,7 @@ module control
   output logic [4:0] rs2,
   output logic [4:0] rd,
   input logic mem_resp,
+  input logic [2:0] bsr,
   input logic [31:0] ir,
   input logic [31:0] rs1_val,
   input logic [31:0] rs2_val,
@@ -42,6 +42,11 @@ module control
   logic arithmatic;
   logic ebreak;
   logic branch;
+  logic beq, blt, bltu;
+
+  assign beq = bsr[2];
+  assign blt = bsr[1];
+  assign bltu = bsr[0];
 
   enum {
     FETCH_0 = 0,                  // MAR <- PC
@@ -159,8 +164,32 @@ module control
         endcase
       end
       BRANCH_0 : begin                       // Determine if Branch Taken/Not Taken
+        next_state = PC_INC;
+        case (funct3)
+          BEQ : begin
+            if ( beq ) next_state = BRANCH_T;
+          end
+          BNE : begin
+            if ( ~beq ) next_state = BRANCH_T;
+          end
+          BLT : begin
+            if ( blt ) next_state = BRANCH_T;
+          end
+          BGE : begin
+            if ( ~blt ) next_state = BRANCH_T;
+          end
+          BLTU : begin
+            if ( bltu ) next_state = BRANCH_T;
+          end
+          BGEU : begin
+            if ( ~bltu ) next_state = BRANCH_T;
+          end
+          default : begin
+          end
+        endcase
       end
       BRANCH_T : begin                     // PC <- PC + IMM
+        next_state = FETCH_0;
       end
       PC_INC : begin                       // PC <- PC + 4
         next_state = FETCH_0;
@@ -242,7 +271,6 @@ module control
     load_mdr = 1'b0;
     load_pc = 1'b0;
     load_ir = 1'b0;
-    load_bsr = 1'b0;
     load_reg = 1'b0;
     pc_mux_sel = 0;
     mdr_mux_sel = 0;
@@ -273,6 +301,10 @@ module control
       BRANCH_0 : begin
       end
       BRANCH_T : begin
+        load_pc = 1'b1;
+        databus_mux_sel = DATABUS_ALU;
+        rs1_mux_sel = RS1_PC;
+        rs2_mux_sel = RS2_IMM;
       end
       PC_INC : begin
         load_pc = 1'b1;

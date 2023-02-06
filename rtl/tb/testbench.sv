@@ -31,7 +31,8 @@ module tb ();
     .ADDR_WIDTH(ADDR_WIDTH),
     .DATA_WIDTH(WIDTH),
     .DELAY(4),
-    .MEM_INIT_FILE("../../test/subtract/subtract.ini")) mem (
+    //.MEM_INIT_FILE("../../test/subtract/subtract.ini")) mem (
+    .MEM_INIT_FILE("../../test/gcd/gcd.ini")) mem (
     //.MEM_INIT_FILE("../../test/add/add.ini")) mem (
     .clk(clk),
     .rst_n(rst_n),
@@ -52,6 +53,6 @@ module tb ();
     rst_n <= 0;
 
     #10 rst_n <= 1;
-    #1000 $finish;
+    #10000 $finish;
   end
 endmodule
