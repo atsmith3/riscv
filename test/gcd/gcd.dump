@@ -44,8 +44,8 @@ Disassembly of section .text:
     1078:	00112e23          	sw	ra,28(sp)
     107c:	00812c23          	sw	s0,24(sp)
     1080:	02010413          	addi	s0,sp,32
-    1084:	00400593          	li	a1,4
-    1088:	00600513          	li	a0,6
+    1084:	01a00593          	li	a1,26
+    1088:	01600513          	li	a0,22
     108c:	f81ff0ef          	jal	ra,100c <gcd>
     1090:	fea42623          	sw	a0,-20(s0)
     1094:	fec42703          	lw	a4,-20(s0)

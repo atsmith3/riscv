@@ -12,7 +12,8 @@ int gcd(int a, int b) {
 
 int main() {
   //int result = gcd(272,1479); // 17
-  int result = gcd(6,4);
+  int result = gcd(22,26); // 2
+  //int result = gcd(6,4); // 2
   if(result == 2) {
     while(1);
   }

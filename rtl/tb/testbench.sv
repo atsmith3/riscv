@@ -53,6 +53,6 @@ module tb ();
     rst_n <= 0;
 
     #10 rst_n <= 1;
-    #10000 $finish;
+    #100000 $finish;
   end
 endmodule
