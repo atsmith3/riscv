@@ -337,7 +337,7 @@ module control
         rs2_mux_sel = RS2_IMM;
         load_reg = 1'b1;
         alu_op = {1'b0,funct3};
-        if (funct3 == 3'b001 || funct3 == 3'b101 || funct3 == 3'b000) begin
+        if (funct3 == 3'b001 || funct3 == 3'b101) begin
           alu_op = {arithmatic,funct3};
         end
       end
