@@ -12,3 +12,5 @@ riscv64-unknown-elf-objdump -d gcd.elf > gcd.dump
 hexdump -v -e '/1 "%02X "' gcd.elf > gcd.ini
 
 ../pad.py gcd.ini 16
+
+gcc -DLOCAL_COMPILE gcd.c -o gcd_debug
