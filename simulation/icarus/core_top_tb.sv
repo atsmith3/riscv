@@ -5,8 +5,7 @@
 module tb;
   reg clk;
   reg rst_n;
-  reg mem_rvalid;
-  reg mem_wvalid;
+  reg mem_resp;
   reg [31:0] mem_rdata;
   reg [31:0] mem_wdata;
   reg [31:0] mem_addr;
@@ -14,12 +13,12 @@ module tb;
   initial begin
     rst_n <= 1;
     clk <= 1;
-    mem_rvalid <= 1;
+    mem_resp <= 1;
     mem_rdata <= 1000;
     forever begin
       #1;
       clk <= ~clk;
-      $display("[%d] %x,%x,%x,%x,%x",$time,clk,rst_n,mem_addr,mem_rdata,mem_rvalid,mem_wdata,mem_wvalid);
+      $display("[%d] %x,%x,%x,%x",$time,clk,rst_n,mem_addr,mem_rdata,mem_wdata,mem_resp);
     end
   end
 
@@ -38,7 +37,6 @@ module tb;
     .mem_rdata(mem_rdata),
     .mem_wdata(mem_wdata),
     .mem_addr(mem_addr),
-    .rvalid(mem_rvalid),
-    .wvalid(mem_wvalid)
+    .mem_resp(mem_rvalid)
   );
 endmodule

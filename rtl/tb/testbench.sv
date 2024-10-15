@@ -6,7 +6,7 @@
 
 module tb ();
   localparam WIDTH=32;
-  localparam ADDR_WIDTH=4;
+  localparam ADDR_WIDTH=16;
 
   reg clk;
   reg rst_n;
@@ -30,9 +30,12 @@ module tb ();
   memory_model #(
     .ADDR_WIDTH(ADDR_WIDTH),
     .DATA_WIDTH(WIDTH),
-    .DELAY(0),
-    .MEM_INIT_FILE("/home/andrew/proj/riscv/rtl/tb/test_roms/test.mem")) mem (
+    .DELAY(4),
+    //.MEM_INIT_FILE("../../test/subtract/subtract.ini")) mem (
+    .MEM_INIT_FILE("../../test/gcd/gcd.ini")) mem (
+    //.MEM_INIT_FILE("../../test/add/add.ini")) mem (
     .clk(clk),
+    .rst_n(rst_n),
     .read(read),
     .write(write),
     .resp(resp),
@@ -50,6 +53,6 @@ module tb ();
     rst_n <= 0;
 
     #10 rst_n <= 1;
-    #1000 $finish;
+    #100000 $finish;
   end
 endmodule

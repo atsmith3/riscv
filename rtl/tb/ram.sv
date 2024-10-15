@@ -15,27 +15,113 @@ module memory_model #(
 ( input clk,
   input read,
   input write,
+  input logic rst_n,
   input logic [DATA_WIDTH-1:0] data_in,
   output logic [DATA_WIDTH-1:0] data_out,
   input logic [ADDR_WIDTH-1:0] addr,
   output logic resp);
 
-  reg [DATA_WIDTH-1:0] mem [2**ADDR_WIDTH];
+  reg [7:0] mem [2**ADDR_WIDTH-1:0];
+  reg [31:0] count;
+  reg [DATA_WIDTH-1:0] out_buffer;
+  reg old_read;
+  reg old_write;
 
   initial begin
-    $readmemh(MEM_INIT_FILE,mem);
+    $readmemh(MEM_INIT_FILE,mem,0,2**ADDR_WIDTH-1);
   end
 
+  enum {
+    IDLE = 0,
+    WAIT_READ,
+    WAIT_WRITE,
+    DONE_READ,
+    DONE_WRITE
+  } state, next_state;
+
   always_ff @ ( posedge clk ) begin
-    if (write) begin
-      mem[addr] <= data_in;
+    if (!rst_n) begin
+      state <= IDLE;
+      old_read <= 0;
+      old_write <= 0;
+    end
+    else begin
+      state <= next_state;
+      old_read <= read;
+      old_write <= write;
+      count <= 0;
+      if (state == WAIT_READ || state == WAIT_WRITE) begin
+        count <= count + 1;
+      end
+      out_buffer <= out_buffer;
+      if (state == DONE_READ) begin
+        out_buffer <= {mem[addr+3],mem[addr+2],mem[addr+1],mem[addr]};
+      end
+      if (state == DONE_WRITE) begin
+        mem[addr+3] <= data_in[31:24];
+        mem[addr+2] <= data_in[23:16];
+        mem[addr+1] <= data_in[15:8];
+        mem[addr+0] <= data_in[7:0];
+      end
     end
   end
 
-  assign data_out = read ? mem[addr] : 'b0;
-  assign resp = 1'b1;
+  // Output Logic
+  always_comb begin
+    resp = 0;
+    case (state)
+      DONE_WRITE : begin
+        resp = 1'b1;
+      end
+      DONE_READ : begin
+        resp = 1'b1;
+      end
+      default : begin
+
+      end
+    endcase
+  end
+
+  // Next State Logic
+  always_comb begin
+    next_state = IDLE;
+    case (state)
+      IDLE : begin
+        if (~old_read & read) begin
+          next_state = WAIT_READ;
+        end
+        if (~old_write & write) begin
+          next_state = WAIT_WRITE;
+        end
+      end
+      WAIT_READ : begin
+        next_state = WAIT_READ;
+        if (count >= DELAY-1) begin
+          next_state = DONE_READ;
+        end
+      end
+      WAIT_WRITE : begin
+        next_state = WAIT_WRITE;
+        if (count >= DELAY-1) begin
+          next_state = DONE_WRITE;
+        end
+      end
+      DONE_READ: begin
+        next_state = IDLE;
+      end
+      DONE_WRITE: begin
+        next_state = IDLE;
+      end
+      default: begin
+
+      end
+    endcase
+  end
+
+  assign data_out = out_buffer;
 
 endmodule
+
 
 `ifdef TESTBENCH
 module tb ();
@@ -80,4 +166,4 @@ module tb ();
     #100 $finish;
   end
 endmodule
-`endf
+`endif

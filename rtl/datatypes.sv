@@ -12,10 +12,17 @@ typedef enum bit [1:0] {
 } databus_mux_sel_t;
 
 typedef enum bit [1:0] {
-  RS2_PC=0,
-  RS2_ALU,
-  RS2_MDR,
-  RS2_MAR
+  RS1_OUT=0,
+  RS1_PC,
+  RS1_2,
+  RS1_4
+} rs1_mux_sel_t;
+
+typedef enum bit [1:0] {
+  RS2_OUT=0,
+  RS2_SEL,
+  RS2_IMM,
+  RS2_PC
 } rs2_mux_sel_t;
 
 typedef enum bit [3:0] {
@@ -28,6 +35,8 @@ typedef enum bit [3:0] {
   ALU_OR,
   ALU_AND,
   ALU_SUB,
+  ALU_PASS_RS1,
+  ALU_PASS_RS2,
   ALU_SRA=13
 } alu_op_t;
 
@@ -48,7 +57,8 @@ typedef enum bit [2:0] {
   INSTR_S,
   INSTR_B,
   INSTR_U,
-  INSTR_J
+  INSTR_J,
+  INSTR_ERR
 } instr_format_t;
 
 typedef enum bit [6:0] {

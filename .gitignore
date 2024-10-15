@@ -4,5 +4,7 @@ build/
 
 *_test
 
+.venv/
+
 .*.swo
 .*.swp

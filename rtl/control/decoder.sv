@@ -20,6 +20,8 @@ module ir_decoder (
   output logic [3:0] fm,
   output logic [3:0] pred,
   output logic [3:0] succ,
+  output logic arithmatic,
+  output logic ebreak,
   output logic [31:0] immediate
 );
 
@@ -32,19 +34,39 @@ assign fm = ir[31:28];
 assign pred = ir[27:24];
 assign succ = ir[23:20];
 assign opcode = ir[6:0];
+assign arithmatic = ir[30];
+assign ebreak = ir[20];
+
+imm_gen_32 u_imm_gen (
+  .ir(ir),
+  .instr_type(instr_type),
+  .imm(immediate)
+);
 
 always_comb begin
-  instr_type=0;
-  // U-TYPE
+  instr_type=INSTR_ERR;
   if ((opcode==LUI)||(opcode==AUIPC)) begin
     instr_type = INSTR_U;
   end
-  // J-TYPE
-  if (opcode==JAL) begin
+  else if (opcode==JAL) begin
     instr_type = INSTR_J;
   end
-  if ((opcode==LUI)||(opcode==AUIPC)) begin
-
+  else if ((opcode==JALR) ||
+    (opcode==LD) ||
+    (opcode==ALUI && (funct3 != 3'b001 || funct3 != 3'b101)) ||
+    (opcode==ECSR) ||
+    (opcode==FENCE)) begin
+    instr_type = INSTR_I;
+  end
+  else if ((opcode==ALU)||
+    (opcode==ALUI && (funct3 != 3'b001 || funct3 != 3'b101))) begin
+    instr_type = INSTR_R;
+  end
+  else if (opcode==ST) begin
+    instr_type = INSTR_S;
+  end
+  else if (opcode==BRANCH) begin
+    instr_type = INSTR_B;
   end
 end
 

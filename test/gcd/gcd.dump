@@ -1,0 +1,60 @@
+
+gcd.elf:     file format elf32-littleriscv
+
+
+Disassembly of section .text:
+
+00001000 <__start>:
+    1000:	00005137          	lui	sp,0x5
+    1004:	070000ef          	jal	ra,1074 <main>
+
+00001008 <LOOP>:
+    1008:	0000006f          	j	1008 <LOOP>
+
+0000100c <gcd>:
+    100c:	fe010113          	addi	sp,sp,-32 # 4fe0 <main+0x3f6c>
+    1010:	00812e23          	sw	s0,28(sp)
+    1014:	02010413          	addi	s0,sp,32
+    1018:	fea42623          	sw	a0,-20(s0)
+    101c:	feb42423          	sw	a1,-24(s0)
+    1020:	0340006f          	j	1054 <gcd+0x48>
+    1024:	fec42703          	lw	a4,-20(s0)
+    1028:	fe842783          	lw	a5,-24(s0)
+    102c:	00e7dc63          	bge	a5,a4,1044 <gcd+0x38>
+    1030:	fec42703          	lw	a4,-20(s0)
+    1034:	fe842783          	lw	a5,-24(s0)
+    1038:	40f707b3          	sub	a5,a4,a5
+    103c:	fef42623          	sw	a5,-20(s0)
+    1040:	0140006f          	j	1054 <gcd+0x48>
+    1044:	fe842703          	lw	a4,-24(s0)
+    1048:	fec42783          	lw	a5,-20(s0)
+    104c:	40f707b3          	sub	a5,a4,a5
+    1050:	fef42423          	sw	a5,-24(s0)
+    1054:	fec42703          	lw	a4,-20(s0)
+    1058:	fe842783          	lw	a5,-24(s0)
+    105c:	fcf714e3          	bne	a4,a5,1024 <gcd+0x18>
+    1060:	fec42783          	lw	a5,-20(s0)
+    1064:	00078513          	mv	a0,a5
+    1068:	01c12403          	lw	s0,28(sp)
+    106c:	02010113          	addi	sp,sp,32
+    1070:	00008067          	ret
+
+00001074 <main>:
+    1074:	fe010113          	addi	sp,sp,-32
+    1078:	00112e23          	sw	ra,28(sp)
+    107c:	00812c23          	sw	s0,24(sp)
+    1080:	02010413          	addi	s0,sp,32
+    1084:	11000593          	li	a1,272
+    1088:	5c700513          	li	a0,1479
+    108c:	f81ff0ef          	jal	ra,100c <gcd>
+    1090:	fea42623          	sw	a0,-20(s0)
+    1094:	fec42703          	lw	a4,-20(s0)
+    1098:	01100793          	li	a5,17
+    109c:	00f71463          	bne	a4,a5,10a4 <main+0x30>
+    10a0:	0000006f          	j	10a0 <main+0x2c>
+    10a4:	00000793          	li	a5,0
+    10a8:	00078513          	mv	a0,a5
+    10ac:	01c12083          	lw	ra,28(sp)
+    10b0:	01812403          	lw	s0,24(sp)
+    10b4:	02010113          	addi	sp,sp,32
+    10b8:	00008067          	ret

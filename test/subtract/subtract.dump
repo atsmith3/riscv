@@ -1,0 +1,29 @@
+
+subtract.elf:     file format elf32-littleriscv
+
+
+Disassembly of section .text:
+
+00001000 <__start>:
+    1000:	00005137          	lui	sp,0x5
+    1004:	008000ef          	jal	ra,100c <main>
+
+00001008 <LOOP>:
+    1008:	0000006f          	j	1008 <LOOP>
+
+0000100c <main>:
+    100c:	fe010113          	addi	sp,sp,-32 # 4fe0 <main+0x3fd4>
+    1010:	00812e23          	sw	s0,28(sp)
+    1014:	02010413          	addi	s0,sp,32
+    1018:	02000793          	li	a5,32
+    101c:	fef42623          	sw	a5,-20(s0)
+    1020:	04000793          	li	a5,64
+    1024:	fef42423          	sw	a5,-24(s0)
+    1028:	fe842703          	lw	a4,-24(s0)
+    102c:	fec42783          	lw	a5,-20(s0)
+    1030:	40f707b3          	sub	a5,a4,a5
+    1034:	fef42223          	sw	a5,-28(s0)
+    1038:	00000013          	nop
+    103c:	01c12403          	lw	s0,28(sp)
+    1040:	02010113          	addi	sp,sp,32
+    1044:	00008067          	ret
