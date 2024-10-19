@@ -41,9 +41,7 @@ wire load_ir;
 wire load_pc;
 wire load_reg;
 wire mdr_mux_sel;
-wire pc_mux_sel;
 wire [31:0] imm;
-wire [31:0] rs2_sel;
 
 register #(.WIDTH(32), .INIT(0)) u_ir (.clk(clk), .rstn(rst_n), .in(databus), .out(ir_out), .load(load_ir));
 register #(.WIDTH(32), .INIT('h1000)) u_pc (.clk(clk), .rstn(rst_n), .in(databus), .out(pc_out), .load(load_pc));
@@ -75,7 +73,6 @@ control u_control (
   .mem_write(mem_write),
   .mem_read(mem_read),
   .mem_resp(mem_resp),
-  .pc_mux_sel(pc_mux_sel),
   .rs1_mux_sel(rs1_mux_sel),
   .rs2_mux_sel(rs2_mux_sel),
   .databus_mux_sel(databus_mux_sel),
@@ -102,14 +99,8 @@ mux4 #(.WIDTH(32)) u_databus_mux (
   .a(pc_out),
   .b(alu_out),
   .c(mdr_out),
-  .d(mar_out),
+  .d('b0 /* mar_out */),
   .y(databus));
-
-mux2 #(.WIDTH(32)) u_pc_mux (
-  .sel(pc_mux_sel),
-  .a(pc_incr),
-  .b(databus),
-  .y(pc_in));
 
 mux2 #(.WIDTH(32)) u_mdr_mux (
   .sel(mdr_mux_sel),
@@ -128,11 +119,9 @@ mux4 #(.WIDTH(32)) u_rs1_mux (
 mux4 #(.WIDTH(32)) u_rs2_mux (
   .sel(rs2_mux_sel),
   .a(rs2_out),
-  .b(rs2_sel),
+  .b('b0),
   .c(imm),
   .d(pc_out),
   .y(rs2_mux_out));
-
-assign pc_incr = pc_out + 4;
 
 endmodule : core_top
