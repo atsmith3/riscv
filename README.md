@@ -1,4 +1,4 @@
-# POTATO RISCV31I
+# POTATO RISCV32I
 
 Single issue atomic execution RV32I core.
 
