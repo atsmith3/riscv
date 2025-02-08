@@ -1,18 +1,39 @@
 #!/bin/bash
+#
+# Uses Icarus to simulate the testbench of the ALU.
+#
+# 2025-02-08
+
+if [ -z ${WORKSPACE} ]; then
+  echo "ERROR: WORKSPACE environment variable is not set"
+  exit 1
+fi
+
+FILELIST="${WORKSPACE}/rtl/program_register.sv \
+  ${WORKSPACE}/rtl/regfile.sv \
+  ${WORKSPACE}/rtl/mux4.sv \
+  ${WORKSPACE}/rtl/control.sv \
+  ${WORKSPACE}/rtl/core_top.sv \
+  ${WORKSPACE}/rtl/alu/alu.sv \
+  ${WORKSPACE}/rtl/control/imm_gen.sv \
+  ${WORKSPACE}/rtl/control/decoder.sv \
+  ${WORKSPACE}/rtl/control/branch_eval.sv \
+  ${WORKSPACE}/rtl/tb/testbench.sv \
+  ${WORKSPACE}/rtl/tb/ram.sv"
+
+INCLUDES="${WORKSPACE}/rtl"
+
+if [ -e ./tb ]; then
+  rm ./tb
+fi
 
 iverilog -g2005-sv \
-  ../../rtl/program_register.sv \
-  ../../rtl/regfile.sv \
-  ../../rtl/mux4.sv \
-  ../../rtl/control.sv \
-  ../../rtl/core_top.sv \
-  ../../rtl/alu/alu.sv \
-  ../../rtl/control/imm_gen.sv \
-  ../../rtl/control/decoder.sv \
-  ../../rtl/control/branch_eval.sv \
-  ./core_top_tb.sv \
-  -I ../../rtl \
+  ${FILELIST} \
+  -I ${INCLUDES} \
   -D IVERILOG \
   -s tb \
-  -o core_top_test
+  -o tb
 
+if [ -e ./tb ]; then
+  ./tb
+fi
