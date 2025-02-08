@@ -6,7 +6,7 @@
  * 20210612
  */
 
-module register (
+module program_register (
   clk,
   rstn,
   in,
@@ -43,4 +43,4 @@ module register (
       data <= data;
     end
   end
-endmodule : register
+endmodule : program_register

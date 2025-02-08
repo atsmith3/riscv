@@ -1,7 +1,7 @@
 #!/bin/bash
 
 iverilog -g2005-sv \
-  ../../rtl/register.sv \
+  ../../rtl/program_register.sv \
   ../../rtl/regfile.sv \
   ../../rtl/mux4.sv \
   ../../rtl/control.sv \

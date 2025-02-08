@@ -160,6 +160,9 @@ module control
           ECSR : begin
             next_state = ERROR_OPCODE_NOT_IMPLEMENTED;
           end
+          default : begin
+            next_state = ERROR_OPCODE_NOT_IMPLEMENTED;
+          end
         endcase
       end
       BRANCH_0 : begin                       // Determine if Branch Taken/Not Taken
