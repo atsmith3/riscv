@@ -59,7 +59,7 @@ int main(int argc, char** argv, char** env) {
     top->rst_n = !0;
     top->clk = 0;
     top->mem_rdata = 0;
-    top->rvalid = 0;
+    top->mem_resp = 0;
 
     // Simulate until $finish
     while (contextp->time() < 300) {
@@ -116,7 +116,7 @@ int main(int argc, char** argv, char** env) {
         top->eval();
 
         // Read outputs
-        VL_PRINTF("[%" VL_PRI64 "d] clk=%x rstn=%x a=%" VL_PRI64 "x b=%" VL_PRI64 "x c=%" VL_PRI64 "x a_idx=%" VL_PRI64 "x b_idx=%" VL_PRI64 "x c_idx=%" VL_PRI64 "x wr=%x\n", contextp->time(), top->clk, top->rst_n, top->mem_rdata, top->mem_wdata, top->mem_addr, top->rvalid, top->wvalid, top->dvalid, top->databus);
+        VL_PRINTF("[%" VL_PRI64 "d]\n", contextp->time());
     }
 
     // Final model cleanup
