@@ -32,13 +32,6 @@ module regfile (
 
   reg [WIDTH-1:0] data [DEPTH-1:0];
 
-  // Initialize the array to 0 in simulation
-  initial begin
-    for (int i = 0; i < DEPTH; i = i+1) begin
-      data[i] = 0;
-    end
-  end
-
   // Output logic
   always_comb begin
     if (a_idx > 0) begin

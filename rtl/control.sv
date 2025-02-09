@@ -16,7 +16,7 @@ module control
   output logic mdr_mux_sel,
   output rs1_mux_sel_t  rs1_mux_sel,
   output rs2_mux_sel_t  rs2_mux_sel,
-  output logic [3:0] alu_op,
+  output alu_op_t alu_op,
   output databus_mux_sel_t databus_mux_sel,
   output logic mem_write,
   output logic mem_read,
@@ -328,19 +328,100 @@ module control
       REG_REG : begin
         databus_mux_sel = DATABUS_ALU;
         load_reg = 1'b1;
+        /*
         alu_op = {1'b0,funct3};
         if (funct3 == 3'b001 || funct3 == 3'b101 || funct3 == 3'b000) begin
           alu_op = {arithmatic,funct3};
         end
+        */
+        case(funct3)
+          3'b000:begin
+            if(arithmatic) begin
+              alu_op = ALU_SUB;
+            end
+            else begin
+              alu_op = ALU_ADD;
+            end
+          end
+          3'b001:begin
+            if(arithmatic) begin
+              alu_op = ALU_PASS_RS1;
+            end
+            else begin
+              alu_op = ALU_SLL;
+            end
+          end
+          3'b010:begin
+            alu_op = ALU_SLT;
+          end
+          3'b011:begin
+            alu_op = ALU_SLTU;
+          end
+          3'b100:begin
+            alu_op = ALU_XOR;
+          end
+          3'b101:begin
+            if(arithmatic) begin
+              alu_op = ALU_SRA;
+            end
+            else begin
+              alu_op = ALU_SRL;
+            end
+          end
+          3'b110:begin
+            alu_op = ALU_OR;
+          end
+          3'b111:begin
+            alu_op = ALU_AND;
+          end
+        endcase
       end
       REG_IMM : begin
         databus_mux_sel = DATABUS_ALU;
         rs2_mux_sel = RS2_IMM;
         load_reg = 1'b1;
+        /*
         alu_op = {1'b0,funct3};
         if (funct3 == 3'b001 || funct3 == 3'b101) begin
           alu_op = {arithmatic,funct3};
         end
+        */
+        case(funct3)
+          3'b000:begin
+            alu_op = ALU_ADD;
+          end
+          3'b001:begin
+            if(arithmatic) begin
+              alu_op = ALU_PASS_RS1;
+            end
+            else begin
+              alu_op = ALU_SLL;
+            end
+          end
+          3'b010:begin
+            alu_op = ALU_SLT;
+          end
+          3'b011:begin
+            alu_op = ALU_SLTU;
+          end
+          3'b100:begin
+            alu_op = ALU_XOR;
+          end
+          3'b101:begin
+            if(arithmatic) begin
+              alu_op = ALU_SRA;
+            end
+            else begin
+              alu_op = ALU_SRL;
+            end
+          end
+          3'b110:begin
+            alu_op = ALU_OR;
+          end
+          3'b111:begin
+            alu_op = ALU_AND;
+          end
+        endcase
       end
       LUI_0 : begin
         load_reg = 1'b1;
