@@ -1,5 +1,7 @@
 #include <stdlib.h>
 #include <iostream>
+#include <filesystem>
+#include <fstream>
 #include <cstdlib>
 #include <memory>
 #include <verilated.h>
@@ -20,6 +22,27 @@ void reset_dut(Vcore_top* core_top, uint64_t sim_time) {
   }
 }
 
+class Memory{
+  public:
+    std::vector<uint8_t> mem;
+    std::filesystem::path init_file;
+
+    Memory(std::filesystem::path init_file) : init_file(init_file) {
+      std::ifstream ifile(init_file);
+      std::string byte;
+      if(ifile.is_open()) {
+        while(!ifile.eof()) {
+          std::getline(ifile, byte, ' ');
+          mem.push_back(stoi(byte,0,16));
+        }
+      }
+      std::cout << "Read in " << mem.size() << " bytes from file " << init_file << "\n";
+    }
+
+    ~Memory() = default;
+
+};
+
 int main(int argc, char** argv, char** env) {
   srand(time(nullptr));
   Verilated::commandArgs(argc,argv);
@@ -31,6 +54,8 @@ int main(int argc, char** argv, char** env) {
   Verilated::mkdir("trace");
   m_trace->open("trace/waveform.vcd");
 
+  Memory* m = new Memory("../../../test/gcd/gcd.ini");
+
   while(simulation_time < MAX_SIM_TIME) {
     reset_dut(core_top, simulation_time);
     core_top->clk ^= 1;
@@ -38,7 +63,6 @@ int main(int argc, char** argv, char** env) {
 
     if(core_top->clk == 1) {
       if(simulation_time >= SIM_START_TIME) {
-
 
       }
     }
@@ -50,6 +74,7 @@ int main(int argc, char** argv, char** env) {
   //Verilated::mkdir("logs");
   //core_top->coveragep()->write("logs/coverage.dat");
 
+  if(m) delete m;
   if(core_top) delete core_top;
   if(m_trace) delete m_trace;
   return 0;
