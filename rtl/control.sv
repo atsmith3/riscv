@@ -297,7 +297,6 @@ module control
         databus_mux_sel = DATABUS_MDR;
       end
       DECODE: begin
-
       end
       BRANCH_0 : begin
       end
@@ -368,12 +367,8 @@ module control
               alu_op = ALU_SRL;
             end
           end
-          3'b110:begin
-            alu_op = ALU_OR;
-          end
-          3'b111:begin
-            alu_op = ALU_AND;
-          end
+          3'b110: alu_op = ALU_OR;
+          3'b111: alu_op = ALU_AND;
         endcase
       end
       REG_IMM : begin
