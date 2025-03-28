@@ -1,0 +1,9 @@
++incdir+${WORKSPACE}/rtl
+${WORKSPACE}/rtl/core_top.sv
+${WORKSPACE}/rtl/program_register.sv
+${WORKSPACE}/rtl/regfile.sv
+${WORKSPACE}/rtl/mux4.sv
+${WORKSPACE}/rtl/control.sv
+${WORKSPACE}/rtl/alu/alu.sv
+${WORKSPACE}/rtl/control/imm_gen.sv
+${WORKSPACE}/rtl/control/decoder.sv

@@ -3,6 +3,8 @@
  * Contains the datapath and all the top level modules that make up the core.
  */
 
+`include "datatypes.sv"
+
 module core_top (
   input logic clk,
   input logic rst_n,
@@ -40,13 +42,15 @@ wire beq_in, blt_in, bltu_in;
 wire load_ir;
 wire load_pc;
 wire load_reg;
+wire load_mar;
+wire load_mdr;
 wire mdr_mux_sel;
 wire [31:0] imm;
 
-register #(.WIDTH(32), .INIT(0)) u_ir (.clk(clk), .rstn(rst_n), .in(databus), .out(ir_out), .load(load_ir));
-register #(.WIDTH(32), .INIT('h1000)) u_pc (.clk(clk), .rstn(rst_n), .in(databus), .out(pc_out), .load(load_pc));
-register #(.WIDTH(32), .INIT(0)) u_mar (.clk(clk), .rstn(rst_n), .in(databus), .out(mar_out), .load(load_mar));
-register #(.WIDTH(32), .INIT(0)) u_mdr (.clk(clk), .rstn(rst_n), .in(mdr_in), .out(mdr_out), .load(load_mdr));
+program_register #(.WIDTH(32), .INIT(0)) u_ir (.clk(clk), .rstn(rst_n), .in(databus), .out(ir_out), .load(load_ir));
+program_register #(.WIDTH(32), .INIT('h1000)) u_pc (.clk(clk), .rstn(rst_n), .in(databus), .out(pc_out), .load(load_pc));
+program_register #(.WIDTH(32), .INIT(0)) u_mar (.clk(clk), .rstn(rst_n), .in(databus), .out(mar_out), .load(load_mar));
+program_register #(.WIDTH(32), .INIT(0)) u_mdr (.clk(clk), .rstn(rst_n), .in(mdr_in), .out(mdr_out), .load(load_mdr));
 
 assign mem_addr = mar_out;
 assign mem_wdata = mdr_out;

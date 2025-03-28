@@ -30,9 +30,21 @@ endif()
 # Create a new executable target that will contain all your sources
 add_executable(riscv ./sim_main.cpp)
 
+set(WORKSPACE "$ENV{WORKSPACE}")
+set(RTL_ROOT ${WORKSPACE}/rtl)
+
+set(RTL_SRC 
+  ${RTL_ROOT}/core_top.sv
+  ${RTL_ROOT}/program_register.sv
+  ${RTL_ROOT}/regfile.sv
+  ${RTL_ROOT}/mux4.sv
+  ${RTL_ROOT}/control.sv
+  ${RTL_ROOT}/alu/alu.sv
+  ${RTL_ROOT}/control/imm_gen.sv
+  ${RTL_ROOT}/control/decoder.sv
+)
+
 # Add the Verilated circuit to the target
 verilate(riscv COVERAGE TRACE
-  INCLUDE_DIRS "../../rtl"
-  VERILATOR_ARGS -f ./input.vc -Os -x-assign 0
-  SOURCES ../../rtl/core_top.sv)
-
+  VERILATOR_ARGS -f ./input.vc -O0 -x-assign 0
+  SOURCES ${RTL_SRC})
