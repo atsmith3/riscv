@@ -11,18 +11,17 @@ repos:
 - repo: local
   hooks:
     - id: yapf
-      name: Yet Another Python Formatter
-      description: Runs formatting on Python files
+      name: yapf
+      description: Yet Another Python Formatter
       entry: yapf
       args: [-i]
       types: [python]
       language: system
       files: \.py$
     - id: clang-format
-      name: Clang Format
-      description: Runs formatting on c/cpp files
+      name: clang-format
+      description: Clang Format
       entry: clang-format
       args: [-i]
-      types: [c++,c]
       language: system
-      files: \.(c|cpp|h|hpp)$
+      files: \.(c|cpp|hpp|h)$
