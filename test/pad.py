@@ -8,8 +8,8 @@ infile = sys.argv[1]
 address_width = int(sys.argv[2])
 
 file = []
-with open(infile,'r') as f:
-  file = f.readlines()
+with open(infile, 'r') as f:
+    file = f.readlines()
 
 mem = file[0].strip().split(" ")
 
@@ -17,8 +17,8 @@ addresses = 2**address_width
 
 i = len(mem)
 while i < addresses:
-  mem.append("00")
-  i = i+1
+    mem.append("00")
+    i = i + 1
 
-with open(infile,'w') as f:
-  f.write(" ".join(mem))
+with open(infile, 'w') as f:
+    f.write(" ".join(mem))
