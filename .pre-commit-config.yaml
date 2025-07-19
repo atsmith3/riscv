@@ -1,0 +1,13 @@
+repos:
+    - repo: local
+      hooks:
+        - id: yapf
+          name: yapf
+          entry: yapf -i
+          language: system
+          types: [file, python]
+        - id: mypy
+          name: mypy
+          entry: mypy
+          language: system
+          types: [file, python]
