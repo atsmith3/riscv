@@ -1,16 +1,26 @@
 #!/bin/bash
 
-riscv64-unknown-elf-gcc -march=rv32i -mabi=ilp32 -nostdlib -ffreestanding -Tmemory_map.ld -o gcd.elf entry.s gcd.c
-#riscv64-unknown-elf-gcc -march=rv32i -mabi=ilp32 -nostdlib -ffreestanding -Tmemory_map.ld -o gcd.s gcd.c entry.s -S
+DOCKER_IMAGE="ubuntu:riscv_compile"
+DOCKER_LAUNCHER="docker run --rm -it --user $(id -u):$(id -g) -v $PWD:/workspace:z $DOCKER_IMAGE"
 
-if [ -e gcd.dump ]; then
-  rm -f gcd.dump
+mkdir build
+
+$DOCKER_LAUNCHER \
+  riscv64-unknown-elf-gcc -march=rv32i -mabi=ilp32 -nostdlib -ffreestanding -Tld/memory_map.ld -o build/gcd.elf ld/entry.s src/gcd.c
+
+$DOCKER_LAUNCHER \
+  riscv64-unknown-elf-gcc -march=rv32i -mabi=ilp32 -nostdlib -ffreestanding -Tld/memory_map.ld -o build/gcd.s src/gcd.c -S
+
+if [ -e build/gcd.dump ]; then
+  rm -f build/gcd.dump
 fi
-riscv64-unknown-elf-objdump -d gcd.elf > gcd.dump
+
+$DOCKER_LAUNCHER \
+  riscv64-unknown-elf-objdump -d build/gcd.elf > build/gcd.dump
 
 # Format for init file in icarus Verilog
-hexdump -v -e '/1 "%02X "' gcd.elf > gcd.ini
+hexdump -v -e '/1 "%02X "' build/gcd.elf > gcd.ini
 
 ../pad.py gcd.ini 16
 
-gcc -DLOCAL_COMPILE gcd.c -o gcd_debug
+gcc -DLOCAL_COMPILE src/gcd.c -o build/gcd_debug

@@ -18,6 +18,11 @@ repos:
       types: [python]
       language: system
       files: \.py$
+    - id: mypy
+      name: mypy
+      entry: mypy
+      language: system
+      types: [file, python]
     - id: clang-format
       name: clang-format
       description: Clang Format
