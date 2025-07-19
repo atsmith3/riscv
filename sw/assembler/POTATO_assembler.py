@@ -13,100 +13,99 @@ import ply.yacc as yacc
 # [label] mnemonic [operands] [;comment]
 
 tokens = (
-  'PSOP_TEXT',
-  'PSOP_RODATA',
-  'PSOP_DATA',
-  'PSOP_BSS',
-  'PSOP_STRING',
-  'LABEL',
-  'LUI',
-  'AUIPC',
-  'JAL',
-  'JALR',
-  'BEQ',
-  'BNE',
-  'BLT',
-  'BGE',
-  'BLTU',
-  'BGEU',
-  'LB',
-  'LH',
-  'LW',
-  'LBU',
-  'LHU',
-  'SB',
-  'SH',
-  'SW',
-  'ADDI',
-  'SLTI',
-  'SLTIU',
-  'XORI',
-  'ORI',
-  'ANDI',
-  'SLLI',
-  'SRLI',
-  'SRAI',
-  'ADD',
-  'SUB',
-  'SLL',
-  'SLT',
-  'SLTU',
-  'XOR',
-  'SRL',
-  'SRA',
-  'OR',
-  'AND',
-  'FENCE',
-  'FENCEI',
-  'ECALL',
-  'EBREAK',
-  'CSRRW',
-  'CSRRS',
-  'CSRRC',
-  'CSRRWI',
-  'CSRRSI',
-  'CSRRCI',
-  'COMMA',
-  'NUMBER',
-#  'HEX_NUMBER', #TODO: Add for Byte, 2Byte(Half,Short), Word(Long), 8Byte(Dword,Quad)
-  'LPAREN',
-  'RPAREN',
-  'X0',
-  'X1',
-  'X2',
-  'X3',
-  'X4',
-  'X5',
-  'X6',
-  'X7',
-  'X8',
-  'X9',
-  'X10',
-  'X11',
-  'X12',
-  'X13',
-  'X14',
-  'X15',
-  'X16',
-  'X17',
-  'X18',
-  'X19',
-  'X20',
-  'X21',
-  'X22',
-  'X23',
-  'X24',
-  'X25',
-  'X26',
-  'X27',
-  'X28',
-  'X29',
-  'X30',
-  'X31',
-  'OLABEL',
-  'RETURN',
-  'COMMENT'
-)
+    'PSOP_TEXT',
+    'PSOP_RODATA',
+    'PSOP_DATA',
+    'PSOP_BSS',
+    'PSOP_STRING',
+    'LABEL',
+    'LUI',
+    'AUIPC',
+    'JAL',
+    'JALR',
+    'BEQ',
+    'BNE',
+    'BLT',
+    'BGE',
+    'BLTU',
+    'BGEU',
+    'LB',
+    'LH',
+    'LW',
+    'LBU',
+    'LHU',
+    'SB',
+    'SH',
+    'SW',
+    'ADDI',
+    'SLTI',
+    'SLTIU',
+    'XORI',
+    'ORI',
+    'ANDI',
+    'SLLI',
+    'SRLI',
+    'SRAI',
+    'ADD',
+    'SUB',
+    'SLL',
+    'SLT',
+    'SLTU',
+    'XOR',
+    'SRL',
+    'SRA',
+    'OR',
+    'AND',
+    'FENCE',
+    'FENCEI',
+    'ECALL',
+    'EBREAK',
+    'CSRRW',
+    'CSRRS',
+    'CSRRC',
+    'CSRRWI',
+    'CSRRSI',
+    'CSRRCI',
+    'COMMA',
+    'NUMBER',
+    #  'HEX_NUMBER', #TODO: Add for Byte, 2Byte(Half,Short), Word(Long), 8Byte(Dword,Quad)
+    'LPAREN',
+    'RPAREN',
+    'X0',
+    'X1',
+    'X2',
+    'X3',
+    'X4',
+    'X5',
+    'X6',
+    'X7',
+    'X8',
+    'X9',
+    'X10',
+    'X11',
+    'X12',
+    'X13',
+    'X14',
+    'X15',
+    'X16',
+    'X17',
+    'X18',
+    'X19',
+    'X20',
+    'X21',
+    'X22',
+    'X23',
+    'X24',
+    'X25',
+    'X26',
+    'X27',
+    'X28',
+    'X29',
+    'X30',
+    'X31',
+    'OLABEL',
+    'RETURN',
+    'COMMENT')
 
 # Regex for tokens:
 t_PSOP_TEXT = r'\.text'
@@ -203,38 +202,44 @@ t_OLABEL = r'[A-Za-z_0-9]+:'
 t_RETURN = r'ret'
 t_ignore_COMMENT = r'(\#|;).*'
 
+
 def t_NUMBER(t):
-  r'-?\d+'
-  try:
-    t.value = int(t.value)
-  except:
-    print("ERROR in parsing integer %d", t.value)
-    t.value = 0
-  return t
+    r'-?\d+'
+    try:
+        t.value = int(t.value)
+    except:
+        print("ERROR in parsing integer %d", t.value)
+        t.value = 0
+    return t
+
 
 # NewLine rule:
 def t_newline(t):
-   r'\n+'
-   t.lexer.lineno += len(t.value)
+    r'\n+'
+    t.lexer.lineno += len(t.value)
+
 
 t_ignore = ' \t'
 
- # Error handling rule
+
+# Error handling rule
 def t_error(t):
-  print("Illegal character '%s'" % t.value[0])
-  t.lexer.skip(1)
+    print("Illegal character '%s'" % t.value[0])
+    t.lexer.skip(1)
+
 
 # Byte Array
 binary = []
-address = 0x4000 # start address of program
+address = 0x4000  # start address of program
 current_section = "none"
 
 # Build the lexer
 lexer = lex.lex()
 
+
 def d_statement_addi(t):
-  'statement : ADDI COMMA ' 
-  print(t[1])
+    'statement : ADDI COMMA '
+    print(t[1])
 
 
 data = '''
@@ -261,7 +266,7 @@ lexer.input(data)
 
 # Tokenize
 while True:
-  tok = lexer.token()
-  if not tok:
-    break      # No more input
-  print(tok)
+    tok = lexer.token()
+    if not tok:
+        break  # No more input
+    print(tok)

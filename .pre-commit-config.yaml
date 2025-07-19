@@ -1,13 +1,32 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
 repos:
-    - repo: local
-      hooks:
-        - id: yapf
-          name: yapf
-          entry: yapf -i
-          language: system
-          types: [file, python]
-        - id: mypy
-          name: mypy
-          entry: mypy
-          language: system
-          types: [file, python]
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v3.2.0
+  hooks:
+    - id: trailing-whitespace
+    - id: end-of-file-fixer
+    - id: check-yaml
+    - id: check-added-large-files
+- repo: local
+  hooks:
+    - id: yapf
+      name: yapf
+      description: Yet Another Python Formatter
+      entry: yapf
+      args: [-i]
+      types: [python]
+      language: system
+      files: \.py$
+    - id: mypy
+      name: mypy
+      entry: mypy
+      language: system
+      types: [file, python]
+    - id: clang-format
+      name: clang-format
+      description: Clang Format
+      entry: clang-format
+      args: [-i]
+      language: system
+      files: \.(c|cpp|hpp|h)$
