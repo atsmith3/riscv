@@ -80,13 +80,6 @@ enable_testing()
 add_test(NAME system_tests COMMAND riscv_tests)
 #add_test(NAME system_tests_verbose COMMAND riscv_tests --log_level=all)
 
-# Coverage target
-add_custom_target(coverage
-  COMMAND verilator_coverage logs/coverage.dat --annotate coverage_html/
-  COMMAND echo "Coverage report generated in coverage_html/"
-  WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-)
-
 # Module-level tests for ALU
 add_library(verilated_alu STATIC)
 verilate(verilated_alu COVERAGE TRACE
@@ -96,13 +89,46 @@ verilate(verilated_alu COVERAGE TRACE
   SOURCES ${RTL_ROOT}/alu/alu.sv
 )
 
+# Module-level tests for Branch Evaluator
+add_library(verilated_branch_eval STATIC)
+verilate(verilated_branch_eval COVERAGE TRACE
+  PREFIX Vbranch_eval
+  INCLUDE_DIRS ${RTL_ROOT}
+  VERILATOR_ARGS -O0
+  SOURCES ${RTL_ROOT}/control/branch_eval.sv ${RTL_ROOT}/datatypes.sv
+)
+
+# Module-level tests for Instruction Decoder
+add_library(verilated_decoder STATIC)
+verilate(verilated_decoder COVERAGE TRACE
+  PREFIX Vir_decoder
+  INCLUDE_DIRS ${RTL_ROOT}
+  VERILATOR_ARGS -O0
+  SOURCES ${RTL_ROOT}/control/decoder.sv ${RTL_ROOT}/control/imm_gen.sv ${RTL_ROOT}/datatypes.sv
+)
+
+# Module-level tests for Immediate Generator
+add_library(verilated_imm_gen STATIC)
+verilate(verilated_imm_gen COVERAGE TRACE
+  PREFIX Vimm_gen_32
+  INCLUDE_DIRS ${RTL_ROOT}
+  VERILATOR_ARGS -O0
+  SOURCES ${RTL_ROOT}/control/imm_gen.sv ${RTL_ROOT}/datatypes.sv
+)
+
 add_executable(module_tests
   tests/test_main.cpp
   tests/module/alu_test.cpp
+  tests/module/branch_eval_test.cpp
+  tests/module/decoder_test.cpp
+  tests/module/imm_gen_test.cpp
 )
 
 target_link_libraries(module_tests
   verilated_alu
+  verilated_branch_eval
+  verilated_decoder
+  verilated_imm_gen
   ${Boost_LIBRARIES}
 )
 

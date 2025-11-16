@@ -234,7 +234,6 @@ BOOST_AUTO_TEST_CASE(alu_random_operations) {
   }
 
   BOOST_CHECK_EQUAL(failures, 0);
-  std::cout << "ALU random tests: " << NUM_TESTS << " tests passed\n";
 
   delete alu;
 }
