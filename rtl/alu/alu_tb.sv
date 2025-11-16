@@ -7,7 +7,7 @@
 `include "datatypes.sv"
 
 module tb;
-  
+
   reg [`WIDTH-1:0] rs1, rs2, rd;
   reg [3:0] op;
 
@@ -41,7 +41,7 @@ module tb;
     rs2 = 32'hFFFFFFFF;
     #2;
     rs1 = -5;
-    rs2 = -10; 
+    rs2 = -10;
     #2;
     op = ALU_SLL;
     $display("ALU_SLL");
@@ -162,7 +162,7 @@ module tb;
     rs2 = 32'hFFFFFFFF;
     #2;
     rs1 = -5;
-    rs2 = -10; 
+    rs2 = -10;
     #2;
     op = ALU_SRA;
     $display("ALU_SRA");
@@ -179,9 +179,10 @@ module tb;
   end
 
   alu #(.WIDTH(`WIDTH)) u_dut (
-    .rs1(rs1),
-    .rs2(rs2),
-    .rd(rd),
-    .op(op)
+    .a(rs1),
+    .b(rs2),
+    .y(rd),
+    .op(op),
+    .bsr()  // Branch status register output not used in testbench
   );
 endmodule

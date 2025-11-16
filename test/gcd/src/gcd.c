@@ -3,6 +3,10 @@
 #include <stdlib.h>
 #endif
 
+// Magic address for test result communication
+#define MAGIC_RESULT_ADDR ((volatile unsigned int *)0xDEAD0000)
+#define MAGIC_PASS_VALUE 0x00000001
+
 int gcd(int a, int b) {
 #ifdef LOCAL_COMPILE
   int i = 0;
@@ -30,6 +34,12 @@ int main() {
   // int result = gcd(45,40); // 5
   // int result = gcd(6,4); // 2
   if (result == 17) {
+    // Write result to magic address
+    *MAGIC_RESULT_ADDR = result;
+
+    // Indicate test pass
+    *MAGIC_RESULT_ADDR = MAGIC_PASS_VALUE;
+
     while (1)
       ;
   }

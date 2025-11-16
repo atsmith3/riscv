@@ -1,4 +1,4 @@
-ENTRY(main)
+ENTRY(__start)
 
 MEMORY
 {

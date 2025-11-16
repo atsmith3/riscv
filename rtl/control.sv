@@ -1,5 +1,25 @@
 /* control.sv
  *
+ * Control unit for the RISC-V 32I processor
+ *
+ * This module implements the control FSM that orchestrates all processor
+ * operations. It decodes instructions and generates control signals for
+ * the datapath components during each cycle of instruction execution.
+ *
+ * FSM States:
+ *   - FETCH_0-3: Four-cycle instruction fetch sequence
+ *   - DECODE: Instruction decode and dispatch
+ *   - Execution states for each instruction type (REG_REG, REG_IMM, etc.)
+ *   - Branch/jump states (BRANCH_0, BRANCH_T, JAL, JALR)
+ *   - Memory access states (LD_0-4, ST_0-3)
+ *   - PC_INC: Increment PC by 4
+ *   - Error states for invalid/unimplemented instructions
+ *
+ * Control Signals Generated:
+ *   - Register load enables (load_pc, load_ir, load_mar, load_mdr, load_reg)
+ *   - Multiplexer selects (rs1_mux_sel, rs2_mux_sel, databus_mux_sel, mdr_mux_sel)
+ *   - ALU operation select (alu_op)
+ *   - Memory interface signals (mem_read, mem_write)
  */
 
 `include "datatypes.sv"
@@ -38,7 +58,7 @@ module control
   logic [3:0] fm;
   logic [3:0] pred;
   logic [3:0] succ;
-  logic arithmatic;
+  logic arithmetic;
   logic ebreak;
   logic branch;
   logic beq, blt, bltu;
@@ -47,34 +67,57 @@ module control
   assign blt = bsr[1];
   assign bltu = bsr[0];
 
+  // FSM State Definitions
+  // Each instruction execution is broken into multiple states for the multi-cycle design
   enum {
-    FETCH_0 = 0,                  // MAR <- PC
-    FETCH_1,                      // wait on mem
-    FETCH_2,                      // MDR <- M[MAR]
-    FETCH_3,                      // IR <- MDR
-    DECODE,                       // Dispatch based on OpCode
-    BRANCH_0,                     // Determine if Branch Taken/Not Taken
-    BRANCH_T,                     // PC <- PC + IMM
-    PC_INC,                       // PC <- PC + 4
-    JAL_0,                        // RD <- PC + 4
-    JAL_1,                        // PC <- PC + IMM
-    REG_REG,                      // RD <- RS1 op RS2
-    REG_IMM,                      // RD <- RS1 op IMM
-    LUI_0,                        // RD <- IMM
-    JALR_0,                       // RD <- PC + 4
-    JALR_1,                       // PC <- RS1 + IMM
-    LD_0,                         // MAR <- RS1 + IMM
-    LD_1,                         
-    LD_2,
-    LD_3,                         // MDR <- M[MAR]
-    LD_4,                         // RD <- MDR
-    ST_0,                         // MAR <- RS1 + IMM
-    ST_1,                         // MDR <- RS2
-    ST_2,
-    ST_3,                         // M[MAR] <- MDR
-    AUIPC_0,                      // RD <- PC + IMM
-    ERROR_INVALID_OPCODE,
-    ERROR_OPCODE_NOT_IMPLEMENTED
+    // Instruction Fetch Sequence (4 cycles)
+    FETCH_0 = 0,                  // MAR <- PC, initiate memory read
+    FETCH_1,                      // Wait for memory response
+    FETCH_2,                      // MDR <- M[MAR] (capture instruction)
+    FETCH_3,                      // IR <- MDR (load instruction register)
+
+    // Decode and Dispatch
+    DECODE,                       // Decode instruction and dispatch to appropriate state
+
+    // Branch Instructions
+    BRANCH_0,                     // Evaluate branch condition (BEQ, BNE, BLT, BGE, BLTU, BGEU)
+    BRANCH_T,                     // Branch taken: PC <- PC + IMM
+
+    // Common States
+    PC_INC,                       // PC <- PC + 4 (advance to next instruction)
+
+    // Jump Instructions
+    JAL_0,                        // JAL: RD <- PC + 4 (save return address)
+    JAL_1,                        // JAL: PC <- PC + IMM (jump to target)
+
+    // ALU Instructions
+    REG_REG,                      // R-type: RD <- RS1 op RS2 (register-register operations)
+    REG_IMM,                      // I-type: RD <- RS1 op IMM (register-immediate operations)
+
+    // Upper Immediate Instructions
+    LUI_0,                        // LUI: RD <- IMM (load upper immediate)
+    AUIPC_0,                      // AUIPC: RD <- PC + IMM (add upper immediate to PC)
+
+    // Jump and Link Register
+    JALR_0,                       // JALR: RD <- PC + 4 (save return address)
+    JALR_1,                       // JALR: PC <- RS1 + IMM (jump to computed address)
+
+    // Load Instructions (Memory Read)
+    LD_0,                         // MAR <- RS1 + IMM (compute memory address)
+    LD_1,                         // Initiate memory read
+    LD_2,                         // Wait for memory response
+    LD_3,                         // MDR <- M[MAR] (capture loaded data)
+    LD_4,                         // RD <- MDR (write to destination register)
+
+    // Store Instructions (Memory Write)
+    ST_0,                         // MAR <- RS1 + IMM (compute memory address)
+    ST_1,                         // MDR <- RS2 (prepare data to store)
+    ST_2,                         // Initiate memory write
+    ST_3,                         // Wait for memory write completion
+
+    // Error States
+    ERROR_INVALID_OPCODE,         // Invalid instruction opcode detected
+    ERROR_OPCODE_NOT_IMPLEMENTED  // Valid but unimplemented instruction (CSR, FENCE, etc.)
   } state, next_state;
 
   always_ff @ (posedge clk) begin
@@ -98,33 +141,39 @@ module control
     .fm(fm),
     .pred(pred),
     .succ(succ),
-    .arithmatic(arithmatic),
+    .arithmetic(arithmetic),
     .ebreak(ebreak),
     .immediate(immediate));
 
 
   // Next State Logic
+  // Determines the next FSM state based on current state and instruction type
   always_comb begin
-    // Defaults
+    // Default: Return to fetch on completion or error
     next_state = FETCH_0;
 
     case (state)
+      // ==== INSTRUCTION FETCH SEQUENCE ====
+      // Four-cycle sequence to fetch instruction from memory
       FETCH_0 : begin
-        next_state = FETCH_1;
+        next_state = FETCH_1;  // Always proceed to wait state
       end
       FETCH_1 : begin
-        next_state = FETCH_1;
+        next_state = FETCH_1;  // Wait here until memory responds
         if (mem_resp) begin
-          next_state = FETCH_2;
+          next_state = FETCH_2;  // Memory ready, capture data
         end
       end
       FETCH_2 : begin
-        next_state = FETCH_3;
+        next_state = FETCH_3;  // Data captured in MDR, load IR next
       end
       FETCH_3 : begin
-        next_state = DECODE;
+        next_state = DECODE;  // IR loaded, proceed to decode
       end
-      DECODE : begin                       // Dispatch based on OpCode
+
+      // ==== DECODE AND DISPATCH ====
+      // Examine opcode and branch to appropriate execution sequence
+      DECODE : begin
         next_state = ERROR_INVALID_OPCODE;
         case (opcode)
           LUI : begin
@@ -165,101 +214,123 @@ module control
           end
         endcase
       end
-      BRANCH_0 : begin                       // Determine if Branch Taken/Not Taken
-        next_state = PC_INC;
+      // ==== BRANCH INSTRUCTIONS ====
+      // Evaluate condition and branch if taken
+      BRANCH_0 : begin
+        next_state = PC_INC;  // Default: branch not taken, increment PC
         case (funct3)
           BEQ : begin
-            if ( beq ) next_state = BRANCH_T;
+            if ( beq ) next_state = BRANCH_T;  // Branch if equal
           end
           BNE : begin
-            if ( ~beq ) next_state = BRANCH_T;
+            if ( ~beq ) next_state = BRANCH_T;  // Branch if not equal
           end
           BLT : begin
-            if ( blt ) next_state = BRANCH_T;
+            if ( blt ) next_state = BRANCH_T;  // Branch if less than (signed)
           end
           BGE : begin
-            if ( ~blt ) next_state = BRANCH_T;
+            if ( ~blt ) next_state = BRANCH_T;  // Branch if greater/equal (signed)
           end
           BLTU : begin
-            if ( bltu ) next_state = BRANCH_T;
+            if ( bltu ) next_state = BRANCH_T;  // Branch if less than (unsigned)
           end
           BGEU : begin
-            if ( ~bltu ) next_state = BRANCH_T;
+            if ( ~bltu ) next_state = BRANCH_T;  // Branch if greater/equal (unsigned)
           end
           default : begin
           end
         endcase
       end
-      BRANCH_T : begin                     // PC <- PC + IMM
+      BRANCH_T : begin  // Branch taken: update PC and return to fetch
         next_state = FETCH_0;
       end
-      PC_INC : begin                       // PC <- PC + 4
+
+      // ==== COMMON STATES ====
+      PC_INC : begin  // Increment PC by 4, return to fetch
         next_state = FETCH_0;
       end
-      JAL_0 : begin                          // RD <- PC + 4
+
+      // ==== JUMP AND LINK (JAL) ====
+      JAL_0 : begin  // Save return address (PC+4) to rd
         next_state = JAL_1;
       end
-      JAL_1 : begin                          // PC <- PC + IMM
+      JAL_1 : begin  // Update PC with target address, return to fetch
         next_state = FETCH_0;
       end
-      REG_REG : begin                      // RD <- RS1 op RS2
+
+      // ==== REGISTER-REGISTER ALU OPERATIONS ====
+      REG_REG : begin  // R-type: Compute result and write to rd, then increment PC
         next_state = PC_INC;
       end
-      REG_IMM : begin                      // RD <- RS1 op IMM
+
+      // ==== REGISTER-IMMEDIATE ALU OPERATIONS ====
+      REG_IMM : begin  // I-type: Compute result and write to rd, then increment PC
         next_state = PC_INC;
       end
-      LUI_0 : begin                          // RD <- IMM
+
+      // ==== LOAD UPPER IMMEDIATE ====
+      LUI_0 : begin  // Load immediate into rd, then increment PC
         next_state = PC_INC;
       end
-      JALR_0 : begin                         // RD <- PC + 4
+
+      // ==== ADD UPPER IMMEDIATE TO PC ====
+      AUIPC_0 : begin  // Compute PC+imm and write to rd, then increment PC
+        next_state = PC_INC;
+      end
+
+      // ==== JUMP AND LINK REGISTER (JALR) ====
+      JALR_0 : begin  // Save return address (PC+4) to rd
         next_state = JALR_1;
       end
-      JALR_1 : begin                         // PC <- RS1 + IMM
+      JALR_1 : begin  // Update PC with computed address (rs1+imm), return to fetch
         next_state = FETCH_0;
       end
-      LD_0 : begin                         // MAR <- RS1 + IMM
+
+      // ==== LOAD WORD ====
+      // Multi-cycle memory read sequence
+      LD_0 : begin  // Compute effective address (rs1+imm)
         next_state = LD_1;
       end
-      LD_1 : begin                         
+      LD_1 : begin  // Initiate memory read
         next_state = LD_2;
       end
-      LD_2 : begin
+      LD_2 : begin  // Wait for memory response
         next_state = LD_2;
         if (mem_resp) begin
-          next_state = LD_3;
+          next_state = LD_3;  // Memory ready, capture data
         end
       end
-      LD_3 : begin                         // MDR <- M[MAR]
+      LD_3 : begin  // Data captured in MDR
         next_state = LD_4;
       end
-      LD_4 : begin                         // RD <- MDR
+      LD_4 : begin  // Write data from MDR to rd, then increment PC
         next_state = PC_INC;
       end
-      ST_0 : begin                         // MAR <- RS1 + IMM
+
+      // ==== STORE WORD ====
+      // Multi-cycle memory write sequence
+      ST_0 : begin  // Compute effective address (rs1+imm)
         next_state = ST_1;
       end
-      ST_1 : begin                         // MDR <- RS2
+      ST_1 : begin  // Prepare data from rs2 in MDR
         next_state = ST_2;
       end
-      ST_2 : begin
+      ST_2 : begin  // Initiate memory write
         next_state = ST_3;
       end
-      ST_3 : begin                         // M[MAR] <- MDR
+      ST_3 : begin  // Wait for memory write completion
         next_state = ST_3;
         if (mem_resp) begin
-          next_state = PC_INC;
+          next_state = PC_INC;  // Write complete, increment PC
         end
       end
-      AUIPC_0 : begin                      // RD <- PC + IMM
-        next_state = PC_INC;
-      end
+
+      // ==== ERROR STATES ====
       ERROR_INVALID_OPCODE : begin
-        // Catch CPU Here
-        next_state = ERROR_INVALID_OPCODE;
+        next_state = ERROR_INVALID_OPCODE;  // Halt: invalid opcode
       end
       ERROR_OPCODE_NOT_IMPLEMENTED : begin
-        // Catch CPU Here
-        next_state = ERROR_OPCODE_NOT_IMPLEMENTED;
+        next_state = ERROR_OPCODE_NOT_IMPLEMENTED;  // Halt: unimplemented instruction
       end
       default:
         next_state = FETCH_0;
@@ -282,7 +353,18 @@ module control
     mem_write = 0;
     alu_op = ALU_ADD;
 
-    case (state)
+    // Suppress outputs during reset
+    if (!rst_n) begin
+      load_mar = 1'b0;
+      load_mdr = 1'b0;
+      load_pc = 1'b0;
+      load_ir = 1'b0;
+      load_reg = 1'b0;
+      mem_read = 1'b0;
+      mem_write = 1'b0;
+    end
+    else begin
+      case (state)
       FETCH_0: begin
         load_mar = 1'b1;
         mem_read = 1'b1;
@@ -330,12 +412,12 @@ module control
         /*
         alu_op = {1'b0,funct3};
         if (funct3 == 3'b001 || funct3 == 3'b101 || funct3 == 3'b000) begin
-          alu_op = {arithmatic,funct3};
+          alu_op = {arithmetic,funct3};
         end
         */
         case(funct3)
           3'b000:begin
-            if(arithmatic) begin
+            if(arithmetic) begin
               alu_op = ALU_SUB;
             end
             else begin
@@ -343,7 +425,7 @@ module control
             end
           end
           3'b001:begin
-            if(arithmatic) begin
+            if(arithmetic) begin
               alu_op = ALU_PASS_RS1;
             end
             else begin
@@ -360,7 +442,7 @@ module control
             alu_op = ALU_XOR;
           end
           3'b101:begin
-            if(arithmatic) begin
+            if(arithmetic) begin
               alu_op = ALU_SRA;
             end
             else begin
@@ -378,7 +460,7 @@ module control
         /*
         alu_op = {1'b0,funct3};
         if (funct3 == 3'b001 || funct3 == 3'b101) begin
-          alu_op = {arithmatic,funct3};
+          alu_op = {arithmetic,funct3};
         end
         */
         case(funct3)
@@ -386,7 +468,7 @@ module control
             alu_op = ALU_ADD;
           end
           3'b001:begin
-            if(arithmatic) begin
+            if(arithmetic) begin
               alu_op = ALU_PASS_RS1;
             end
             else begin
@@ -403,7 +485,7 @@ module control
             alu_op = ALU_XOR;
           end
           3'b101:begin
-            if(arithmatic) begin
+            if(arithmetic) begin
               alu_op = ALU_SRA;
             end
             else begin
@@ -474,6 +556,7 @@ module control
         rs1_mux_sel = RS1_PC;
         databus_mux_sel = DATABUS_ALU;
       end
-    endcase
-  end
+      endcase
+    end  // end else (not in reset)
+  end  // end always_comb
 endmodule
