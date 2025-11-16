@@ -5,6 +5,10 @@
  * Tests: LW, SW, BLT, BGE, nested loops, complex memory addressing
  */
 
+#ifdef HOST_COMPILE
+#include <stdio.h>
+#endif
+
 #define MAGIC_RESULT_ADDR ((volatile unsigned int *)0xDEAD0000)
 #define MAGIC_PASS_VALUE 0x00000001
 #define MAGIC_FAIL_VALUE 0xFFFFFFFF
@@ -60,6 +64,14 @@ int main() {
     }
   }
 
+#ifdef HOST_COMPILE
+  if (all_pass) {
+    printf("PASS\n");
+  } else {
+    printf("FAIL\n");
+  }
+  return 0;
+#endif
   if (all_pass) {
     *MAGIC_RESULT_ADDR = MAGIC_PASS_VALUE;
   } else {
