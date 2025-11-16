@@ -1,0 +1,117 @@
+
+memcpy.elf:     file format elf32-littleriscv
+
+
+Disassembly of section .text:
+
+00001000 <__start>:
+    1000:	00005137          	lui	sp,0x5
+    1004:	104000ef          	jal	ra,1108 <main>
+
+00001008 <LOOP>:
+    1008:	0000006f          	j	1008 <LOOP>
+
+0000100c <memcpy>:
+    100c:	fd010113          	addi	sp,sp,-48 # 4fd0 <main+0x3ec8>
+    1010:	02812623          	sw	s0,44(sp)
+    1014:	03010413          	addi	s0,sp,48
+    1018:	fca42e23          	sw	a0,-36(s0)
+    101c:	fcb42c23          	sw	a1,-40(s0)
+    1020:	fcc42a23          	sw	a2,-44(s0)
+    1024:	fdc42783          	lw	a5,-36(s0)
+    1028:	fef42423          	sw	a5,-24(s0)
+    102c:	fd842783          	lw	a5,-40(s0)
+    1030:	fef42223          	sw	a5,-28(s0)
+    1034:	fe042623          	sw	zero,-20(s0)
+    1038:	0300006f          	j	1068 <memcpy+0x5c>
+    103c:	fe442703          	lw	a4,-28(s0)
+    1040:	fec42783          	lw	a5,-20(s0)
+    1044:	00f70733          	add	a4,a4,a5
+    1048:	fe842683          	lw	a3,-24(s0)
+    104c:	fec42783          	lw	a5,-20(s0)
+    1050:	00f687b3          	add	a5,a3,a5
+    1054:	00074703          	lbu	a4,0(a4)
+    1058:	00e78023          	sb	a4,0(a5)
+    105c:	fec42783          	lw	a5,-20(s0)
+    1060:	00178793          	addi	a5,a5,1
+    1064:	fef42623          	sw	a5,-20(s0)
+    1068:	fec42703          	lw	a4,-20(s0)
+    106c:	fd442783          	lw	a5,-44(s0)
+    1070:	fcf766e3          	bltu	a4,a5,103c <memcpy+0x30>
+    1074:	fdc42783          	lw	a5,-36(s0)
+    1078:	00078513          	mv	a0,a5
+    107c:	02c12403          	lw	s0,44(sp)
+    1080:	03010113          	addi	sp,sp,48
+    1084:	00008067          	ret
+
+00001088 <arrays_equal>:
+    1088:	fd010113          	addi	sp,sp,-48
+    108c:	02812623          	sw	s0,44(sp)
+    1090:	03010413          	addi	s0,sp,48
+    1094:	fca42e23          	sw	a0,-36(s0)
+    1098:	fcb42c23          	sw	a1,-40(s0)
+    109c:	fcc42a23          	sw	a2,-44(s0)
+    10a0:	fe042623          	sw	zero,-20(s0)
+    10a4:	0440006f          	j	10e8 <arrays_equal+0x60>
+    10a8:	fec42783          	lw	a5,-20(s0)
+    10ac:	00279793          	slli	a5,a5,0x2
+    10b0:	fdc42703          	lw	a4,-36(s0)
+    10b4:	00f707b3          	add	a5,a4,a5
+    10b8:	0007a703          	lw	a4,0(a5)
+    10bc:	fec42783          	lw	a5,-20(s0)
+    10c0:	00279793          	slli	a5,a5,0x2
+    10c4:	fd842683          	lw	a3,-40(s0)
+    10c8:	00f687b3          	add	a5,a3,a5
+    10cc:	0007a783          	lw	a5,0(a5)
+    10d0:	00f70663          	beq	a4,a5,10dc <arrays_equal+0x54>
+    10d4:	00000793          	li	a5,0
+    10d8:	0200006f          	j	10f8 <arrays_equal+0x70>
+    10dc:	fec42783          	lw	a5,-20(s0)
+    10e0:	00178793          	addi	a5,a5,1
+    10e4:	fef42623          	sw	a5,-20(s0)
+    10e8:	fec42703          	lw	a4,-20(s0)
+    10ec:	fd442783          	lw	a5,-44(s0)
+    10f0:	faf74ce3          	blt	a4,a5,10a8 <arrays_equal+0x20>
+    10f4:	00100793          	li	a5,1
+    10f8:	00078513          	mv	a0,a5
+    10fc:	02c12403          	lw	s0,44(sp)
+    1100:	03010113          	addi	sp,sp,48
+    1104:	00008067          	ret
+
+00001108 <main>:
+    1108:	f6010113          	addi	sp,sp,-160
+    110c:	08112e23          	sw	ra,156(sp)
+    1110:	08812c23          	sw	s0,152(sp)
+    1114:	0a010413          	addi	s0,sp,160
+    1118:	000017b7          	lui	a5,0x1
+    111c:	19878713          	addi	a4,a5,408 # 1198 <main+0x90>
+    1120:	fac40793          	addi	a5,s0,-84
+    1124:	00070693          	mv	a3,a4
+    1128:	04000713          	li	a4,64
+    112c:	00070613          	mv	a2,a4
+    1130:	00068593          	mv	a1,a3
+    1134:	00078513          	mv	a0,a5
+    1138:	ed5ff0ef          	jal	ra,100c <memcpy>
+    113c:	fac40713          	addi	a4,s0,-84
+    1140:	f6c40793          	addi	a5,s0,-148
+    1144:	01000613          	li	a2,16
+    1148:	00070593          	mv	a1,a4
+    114c:	00078513          	mv	a0,a5
+    1150:	ebdff0ef          	jal	ra,100c <memcpy>
+    1154:	f6c40713          	addi	a4,s0,-148
+    1158:	fac40793          	addi	a5,s0,-84
+    115c:	01000613          	li	a2,16
+    1160:	00070593          	mv	a1,a4
+    1164:	00078513          	mv	a0,a5
+    1168:	f21ff0ef          	jal	ra,1088 <arrays_equal>
+    116c:	fea42623          	sw	a0,-20(s0)
+    1170:	fec42783          	lw	a5,-20(s0)
+    1174:	00078a63          	beqz	a5,1188 <main+0x80>
+    1178:	dead07b7          	lui	a5,0xdead0
+    117c:	00100713          	li	a4,1
+    1180:	00e7a023          	sw	a4,0(a5) # dead0000 <main+0xdeaceef8>
+    1184:	0100006f          	j	1194 <main+0x8c>
+    1188:	dead07b7          	lui	a5,0xdead0
+    118c:	fff00713          	li	a4,-1
+    1190:	00e7a023          	sw	a4,0(a5) # dead0000 <main+0xdeaceef8>
+    1194:	0000006f          	j	1194 <main+0x8c>

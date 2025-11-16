@@ -80,6 +80,158 @@ BOOST_AUTO_TEST_CASE(test_gcd_program) {
             << " writes\n";
 }
 
+BOOST_AUTO_TEST_CASE(test_fibonacci_program) {
+  TestRunner runner("fibonacci", false);
+
+  std::string ini_file = get_test_program_path("fibonacci");
+  BOOST_REQUIRE_MESSAGE(runner.load_program(ini_file),
+                        "Failed to load fibonacci.ini");
+
+  TestResult result = runner.run(10000);
+
+  BOOST_CHECK_EQUAL(result, TestResult::PASS);
+  BOOST_CHECK_LT(runner.get_cycle_count(), 5000);
+
+  std::cout << "FIBONACCI test completed in " << runner.get_cycle_count()
+            << " cycles\n";
+  std::cout << "Memory accesses: " << runner.get_memory().get_read_count()
+            << " reads, " << runner.get_memory().get_write_count()
+            << " writes\n";
+}
+
+BOOST_AUTO_TEST_CASE(test_bitops_program) {
+  TestRunner runner("bitops", false);
+
+  std::string ini_file = get_test_program_path("bitops");
+  BOOST_REQUIRE_MESSAGE(runner.load_program(ini_file),
+                        "Failed to load bitops.ini");
+
+  TestResult result = runner.run(100000);
+
+  BOOST_CHECK_EQUAL(result, TestResult::PASS);
+  BOOST_CHECK_LT(runner.get_cycle_count(), 10000);
+
+  std::cout << "BITOPS test completed in " << runner.get_cycle_count()
+            << " cycles\n";
+  std::cout << "Memory accesses: " << runner.get_memory().get_read_count()
+            << " reads, " << runner.get_memory().get_write_count()
+            << " writes\n";
+}
+
+BOOST_AUTO_TEST_CASE(test_multiply_program) {
+  TestRunner runner("multiply", false);
+
+  std::string ini_file = get_test_program_path("multiply");
+  BOOST_REQUIRE_MESSAGE(runner.load_program(ini_file),
+                        "Failed to load multiply.ini");
+
+  TestResult result = runner.run(100000);
+
+  BOOST_CHECK_EQUAL(result, TestResult::PASS);
+  BOOST_CHECK_LT(runner.get_cycle_count(), 20000);
+
+  std::cout << "MULTIPLY test completed in " << runner.get_cycle_count()
+            << " cycles\n";
+  std::cout << "Memory accesses: " << runner.get_memory().get_read_count()
+            << " reads, " << runner.get_memory().get_write_count()
+            << " writes\n";
+}
+
+BOOST_AUTO_TEST_CASE(test_strlen_program) {
+  TestRunner runner("strlen", false);
+
+  std::string ini_file = get_test_program_path("strlen");
+  BOOST_REQUIRE_MESSAGE(runner.load_program(ini_file),
+                        "Failed to load strlen.ini");
+
+  TestResult result = runner.run(100000);
+
+  BOOST_CHECK_EQUAL(result, TestResult::PASS);
+  BOOST_CHECK_LT(runner.get_cycle_count(), 20000);
+
+  std::cout << "STRLEN test completed in " << runner.get_cycle_count()
+            << " cycles\n";
+  std::cout << "Memory accesses: " << runner.get_memory().get_read_count()
+            << " reads, " << runner.get_memory().get_write_count()
+            << " writes\n";
+}
+
+BOOST_AUTO_TEST_CASE(test_memcpy_program) {
+  TestRunner runner("memcpy", false);
+
+  std::string ini_file = get_test_program_path("memcpy");
+  BOOST_REQUIRE_MESSAGE(runner.load_program(ini_file),
+                        "Failed to load memcpy.ini");
+
+  TestResult result = runner.run(100000);
+
+  BOOST_CHECK_EQUAL(result, TestResult::PASS);
+  BOOST_CHECK_LT(runner.get_cycle_count(), 25000);
+
+  std::cout << "MEMCPY test completed in " << runner.get_cycle_count()
+            << " cycles\n";
+  std::cout << "Memory accesses: " << runner.get_memory().get_read_count()
+            << " reads, " << runner.get_memory().get_write_count()
+            << " writes\n";
+}
+
+BOOST_AUTO_TEST_CASE(test_bubble_sort_program) {
+  TestRunner runner("bubble_sort", false);
+
+  std::string ini_file = get_test_program_path("bubble_sort");
+  BOOST_REQUIRE_MESSAGE(runner.load_program(ini_file),
+                        "Failed to load bubble_sort.ini");
+
+  TestResult result = runner.run(100000);
+
+  BOOST_CHECK_EQUAL(result, TestResult::PASS);
+  BOOST_CHECK_LT(runner.get_cycle_count(), 20000);
+
+  std::cout << "BUBBLE_SORT test completed in " << runner.get_cycle_count()
+            << " cycles\n";
+  std::cout << "Memory accesses: " << runner.get_memory().get_read_count()
+            << " reads, " << runner.get_memory().get_write_count()
+            << " writes\n";
+}
+
+BOOST_AUTO_TEST_CASE(test_factorial_program) {
+  TestRunner runner("factorial", false);
+
+  std::string ini_file = get_test_program_path("factorial");
+  BOOST_REQUIRE_MESSAGE(runner.load_program(ini_file),
+                        "Failed to load factorial.ini");
+
+  TestResult result = runner.run(100000);
+
+  BOOST_CHECK_EQUAL(result, TestResult::PASS);
+  BOOST_CHECK_LT(runner.get_cycle_count(), 20000);
+
+  std::cout << "FACTORIAL test completed in " << runner.get_cycle_count()
+            << " cycles\n";
+  std::cout << "Memory accesses: " << runner.get_memory().get_read_count()
+            << " reads, " << runner.get_memory().get_write_count()
+            << " writes\n";
+}
+
+BOOST_AUTO_TEST_CASE(test_prime_program) {
+  TestRunner runner("prime", false);
+
+  std::string ini_file = get_test_program_path("prime");
+  BOOST_REQUIRE_MESSAGE(runner.load_program(ini_file),
+                        "Failed to load prime.ini");
+
+  TestResult result = runner.run(200000);
+
+  BOOST_CHECK_EQUAL(result, TestResult::PASS);
+  BOOST_CHECK_LT(runner.get_cycle_count(), 70000);
+
+  std::cout << "PRIME test completed in " << runner.get_cycle_count()
+            << " cycles\n";
+  std::cout << "Memory accesses: " << runner.get_memory().get_read_count()
+            << " reads, " << runner.get_memory().get_write_count()
+            << " writes\n";
+}
+
 BOOST_AUTO_TEST_CASE(test_timeout_detection) {
   TestRunner runner("add", false);
 

@@ -79,8 +79,8 @@ void MemoryModel::eval(bool clk, bool rst_n, bool read, bool write,
                         (static_cast<uint32_t>(memory[addr + 2]) << 16) |
                         (static_cast<uint32_t>(memory[addr + 3]) << 24);
         read_count++;
-        log("READ  addr=0x" + to_hex(addr) + " data=0x" +
-            to_hex(output_buffer));
+        // log("READ  addr=0x" + to_hex(addr) + " data=0x" +
+        //     to_hex(output_buffer));
       } else {
         log("ERROR: Invalid read address 0x" + to_hex(addr));
         output_buffer = 0xDEADBEEF; // Error pattern
@@ -111,7 +111,7 @@ void MemoryModel::eval(bool clk, bool rst_n, bool read, bool write,
         memory[addr + 2] = (data_in >> 16) & 0xFF;
         memory[addr + 3] = (data_in >> 24) & 0xFF;
         write_count++;
-        log("WRITE addr=0x" + to_hex(addr) + " data=0x" + to_hex(data_in));
+        // log("WRITE addr=0x" + to_hex(addr) + " data=0x" + to_hex(data_in));
       } else {
         log("ERROR: Invalid write address 0x" + to_hex(addr));
       }

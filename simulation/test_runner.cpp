@@ -209,8 +209,8 @@ TestResult TestRunner::run(uint32_t max_cycles) {
 
     // Periodic progress updates (every 1000 cycles)
     if (cycle_count % 1000 == 0 && cycle_count > 0) {
-      std::cout << "[TEST] Cycle " << cycle_count
-                << " - PC: " << to_hex_string(get_pc(), 8) << "\n";
+      // std::cout << "[TEST] Cycle " << cycle_count
+      //           << " - PC: " << to_hex_string(get_pc(), 8) << "\n";
     }
   }
 
