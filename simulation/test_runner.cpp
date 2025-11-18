@@ -135,7 +135,8 @@ void TestRunner::clock_cycle() {
   bool mem_resp_out;
   uint32_t mem_data_out;
   memory->eval(dut->clk, dut->rst_n, dut->mem_read, dut->mem_write,
-               dut->mem_addr, dut->mem_wdata, mem_data_out, mem_resp_out);
+               dut->mem_addr, dut->mem_wdata, mem_data_out, mem_resp_out,
+               dut->mem_be);
 
   dut->mem_rdata = mem_data_out;
   dut->mem_resp = mem_resp_out;
@@ -152,7 +153,8 @@ void TestRunner::clock_cycle() {
 
   // Evaluate memory before DUT on falling edge too
   memory->eval(dut->clk, dut->rst_n, dut->mem_read, dut->mem_write,
-               dut->mem_addr, dut->mem_wdata, mem_data_out, mem_resp_out);
+               dut->mem_addr, dut->mem_wdata, mem_data_out, mem_resp_out,
+               dut->mem_be);
 
   dut->mem_rdata = mem_data_out;
   dut->mem_resp = mem_resp_out;

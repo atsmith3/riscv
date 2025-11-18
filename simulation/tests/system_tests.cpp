@@ -232,6 +232,25 @@ BOOST_AUTO_TEST_CASE(test_prime_program) {
             << " writes\n";
 }
 
+BOOST_AUTO_TEST_CASE(test_byte_load_simple_program) {
+  TestRunner runner("byte_load_simple", false);
+
+  std::string ini_file = get_test_program_path("byte_load_simple");
+  BOOST_REQUIRE_MESSAGE(runner.load_program(ini_file),
+                        "Failed to load byte_load_simple.ini");
+
+  TestResult result = runner.run(10000);
+
+  BOOST_CHECK_EQUAL(result, TestResult::PASS);
+  BOOST_CHECK_LT(runner.get_cycle_count(), 1000);
+
+  std::cout << "BYTE_LOAD_SIMPLE test completed in " << runner.get_cycle_count()
+            << " cycles\n";
+  std::cout << "Memory accesses: " << runner.get_memory().get_read_count()
+            << " reads, " << runner.get_memory().get_write_count()
+            << " writes\n";
+}
+
 BOOST_AUTO_TEST_CASE(test_timeout_detection) {
   TestRunner runner("add", false);
 

@@ -116,12 +116,22 @@ verilate(verilated_imm_gen COVERAGE TRACE
   SOURCES ${RTL_ROOT}/control/imm_gen.sv ${RTL_ROOT}/datatypes.sv
 )
 
+# Module-level tests for Byte Lane
+add_library(verilated_byte_lane STATIC)
+verilate(verilated_byte_lane COVERAGE TRACE
+  PREFIX Vbyte_lane
+  INCLUDE_DIRS ${RTL_ROOT}
+  VERILATOR_ARGS -O0
+  SOURCES ${RTL_ROOT}/byte_lane.sv ${RTL_ROOT}/datatypes.sv
+)
+
 add_executable(module_tests
   tests/test_main.cpp
   tests/module/alu_test.cpp
   tests/module/branch_eval_test.cpp
   tests/module/decoder_test.cpp
   tests/module/imm_gen_test.cpp
+  tests/module/byte_lane_test.cpp
 )
 
 target_link_libraries(module_tests
@@ -129,6 +139,7 @@ target_link_libraries(module_tests
   verilated_branch_eval
   verilated_decoder
   verilated_imm_gen
+  verilated_byte_lane
   ${Boost_LIBRARIES}
 )
 

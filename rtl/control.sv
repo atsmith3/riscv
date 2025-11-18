@@ -40,6 +40,8 @@ module control
   output databus_mux_sel_t databus_mux_sel,
   output logic mem_write,
   output logic mem_read,
+  output mem_size_t mem_size,
+  output logic load_unsigned,
   output logic [4:0] rs1,
   output logic [4:0] rs2,
   output logic [4:0] rd,
@@ -559,4 +561,64 @@ module control
       endcase
     end  // end else (not in reset)
   end  // end always_comb
+
+  // Decode funct3 for memory size and sign extension
+  always_comb begin
+    // Default values
+    mem_size = MEM_SIZE_WORD;
+    load_unsigned = 1'b0;
+
+    // CRITICAL: During FETCH states, always use WORD size for instruction fetch
+    // This prevents corruption of instruction fetches by byte/halfword load settings
+    // from previous data load instructions
+    if (state == FETCH_0 || state == FETCH_1 || state == FETCH_2 || state == FETCH_3) begin
+      mem_size = MEM_SIZE_WORD;
+      load_unsigned = 1'b0;
+    end
+    // Only decode for load/store operations during data memory access
+    else if (opcode == LD) begin
+      case (funct3)
+        3'b000: begin  // LB - load byte (signed)
+          mem_size = MEM_SIZE_BYTE;
+          load_unsigned = 1'b0;
+        end
+        3'b001: begin  // LH - load halfword (signed)
+          mem_size = MEM_SIZE_HALF;
+          load_unsigned = 1'b0;
+        end
+        3'b010: begin  // LW - load word
+          mem_size = MEM_SIZE_WORD;
+          load_unsigned = 1'b0;
+        end
+        3'b100: begin  // LBU - load byte unsigned
+          mem_size = MEM_SIZE_BYTE;
+          load_unsigned = 1'b1;
+        end
+        3'b101: begin  // LHU - load halfword unsigned
+          mem_size = MEM_SIZE_HALF;
+          load_unsigned = 1'b1;
+        end
+        default: begin
+          mem_size = MEM_SIZE_WORD;
+          load_unsigned = 1'b0;
+        end
+      endcase
+    end else if (opcode == ST) begin
+      case (funct3)
+        3'b000: begin  // SB - store byte
+          mem_size = MEM_SIZE_BYTE;
+        end
+        3'b001: begin  // SH - store halfword
+          mem_size = MEM_SIZE_HALF;
+        end
+        3'b010: begin  // SW - store word
+          mem_size = MEM_SIZE_WORD;
+        end
+        default: begin
+          mem_size = MEM_SIZE_WORD;
+        end
+      endcase
+    end
+  end
+
 endmodule
