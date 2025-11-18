@@ -251,6 +251,25 @@ BOOST_AUTO_TEST_CASE(test_byte_load_simple_program) {
             << " writes\n";
 }
 
+BOOST_AUTO_TEST_CASE(test_halfword_program) {
+  TestRunner runner("halfword_test", false);
+
+  std::string ini_file = get_test_program_path("halfword_test");
+  BOOST_REQUIRE_MESSAGE(runner.load_program(ini_file),
+                        "Failed to load halfword_test.ini");
+
+  TestResult result = runner.run(10000);
+
+  BOOST_CHECK_EQUAL(result, TestResult::PASS);
+  BOOST_CHECK_LT(runner.get_cycle_count(), 2000);
+
+  std::cout << "HALFWORD_TEST completed in " << runner.get_cycle_count()
+            << " cycles\n";
+  std::cout << "Memory accesses: " << runner.get_memory().get_read_count()
+            << " reads, " << runner.get_memory().get_write_count()
+            << " writes\n";
+}
+
 BOOST_AUTO_TEST_CASE(test_timeout_detection) {
   TestRunner runner("add", false);
 
