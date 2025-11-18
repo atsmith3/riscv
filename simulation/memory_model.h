@@ -40,7 +40,8 @@ public:
 
   // Main interface - call on every clock cycle
   void eval(bool clk, bool rst_n, bool read, bool write, uint32_t addr,
-            uint32_t data_in, uint32_t &data_out, bool &resp);
+            uint32_t data_in, uint32_t &data_out, bool &resp,
+            uint8_t byte_enables = 0xF);
 
   // Program loading
   bool load_hex_file(const std::string &filename);

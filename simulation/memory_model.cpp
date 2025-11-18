@@ -33,7 +33,7 @@ MemoryModel::~MemoryModel() {
 
 void MemoryModel::eval(bool clk, bool rst_n, bool read, bool write,
                        uint32_t addr, uint32_t data_in, uint32_t &data_out,
-                       bool &resp) {
+                       bool &resp, uint8_t byte_enables) {
   // Detect rising edge
   bool rising_edge = clk && !old_clk;
   old_clk = clk;
@@ -89,6 +89,7 @@ void MemoryModel::eval(bool clk, bool rst_n, bool read, bool write,
 
     if (state == DONE_WRITE) {
       // Perform write - little-endian byte ordering
+      // Only write bytes where byte_enables is set
       // Special case: Allow writes to magic address region
       // (0xDEAD0000-0xDEADFFFF) even though it's outside physical memory for
       // test result communication
@@ -97,21 +98,30 @@ void MemoryModel::eval(bool clk, bool rst_n, bool read, bool write,
         // Map 0xDEAD0000+ to the last 64KB of physical memory
         uint32_t magic_offset = (memory_size - 65536) + (addr & 0xFFFF);
         if (magic_offset + 3 < memory_size) {
-          memory[magic_offset] = data_in & 0xFF;
-          memory[magic_offset + 1] = (data_in >> 8) & 0xFF;
-          memory[magic_offset + 2] = (data_in >> 16) & 0xFF;
-          memory[magic_offset + 3] = (data_in >> 24) & 0xFF;
+          if (byte_enables & 0x1)
+            memory[magic_offset] = data_in & 0xFF;
+          if (byte_enables & 0x2)
+            memory[magic_offset + 1] = (data_in >> 8) & 0xFF;
+          if (byte_enables & 0x4)
+            memory[magic_offset + 2] = (data_in >> 16) & 0xFF;
+          if (byte_enables & 0x8)
+            memory[magic_offset + 3] = (data_in >> 24) & 0xFF;
           write_count++;
           log("WRITE addr=0x" + to_hex(addr) + " data=0x" + to_hex(data_in) +
-              " (magic address)");
+              " be=0x" + to_hex(byte_enables) + " (magic address)");
         }
       } else if (is_valid_address(addr) && is_valid_address(addr + 3)) {
-        memory[addr] = data_in & 0xFF;
-        memory[addr + 1] = (data_in >> 8) & 0xFF;
-        memory[addr + 2] = (data_in >> 16) & 0xFF;
-        memory[addr + 3] = (data_in >> 24) & 0xFF;
+        if (byte_enables & 0x1)
+          memory[addr] = data_in & 0xFF;
+        if (byte_enables & 0x2)
+          memory[addr + 1] = (data_in >> 8) & 0xFF;
+        if (byte_enables & 0x4)
+          memory[addr + 2] = (data_in >> 16) & 0xFF;
+        if (byte_enables & 0x8)
+          memory[addr + 3] = (data_in >> 24) & 0xFF;
         write_count++;
-        // log("WRITE addr=0x" + to_hex(addr) + " data=0x" + to_hex(data_in));
+        // log("WRITE addr=0x" + to_hex(addr) + " data=0x" + to_hex(data_in) +
+        //     " be=0x" + to_hex(byte_enables));
       } else {
         log("ERROR: Invalid write address 0x" + to_hex(addr));
       }

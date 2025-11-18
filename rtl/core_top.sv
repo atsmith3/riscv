@@ -31,6 +31,7 @@ module core_top (
   output logic [31:0] mem_addr,
   output logic mem_read,
   output logic mem_write,
+  output logic [3:0] mem_be,  // Byte enables for sub-word memory access
   output logic [31:0] pc  // Program counter output for testbench visibility
 );
 
@@ -69,13 +70,40 @@ wire load_mdr;
 wire mdr_mux_sel;
 wire [31:0] imm;
 
+// Byte lane signals for sub-word memory access
+mem_size_t mem_size;
+wire load_unsigned;
+wire [31:0] load_data_aligned;   // Data from byte_lane (load path)
+wire [31:0] store_data_aligned;  // Data to byte_lane (store path)
+
 program_register #(.WIDTH(32), .INIT(0)) u_ir (.clk(clk), .rst_n(rst_n), .in(databus), .out(ir_out), .load(load_ir));
 program_register #(.WIDTH(32), .INIT('h1000)) u_pc (.clk(clk), .rst_n(rst_n), .in(databus), .out(pc_out), .load(load_pc));
 program_register #(.WIDTH(32), .INIT(0)) u_mar (.clk(clk), .rst_n(rst_n), .in(databus), .out(mar_out), .load(load_mar));
 program_register #(.WIDTH(32), .INIT(0)) u_mdr (.clk(clk), .rst_n(rst_n), .in(mdr_in), .out(mdr_out), .load(load_mdr));
 
-assign mem_addr = mar_out;
-assign mem_wdata = mdr_out;
+// Byte lane module for sub-word memory operations
+byte_lane u_byte_lane (
+  // Load path: memory -> register file (with byte extraction and sign extension)
+  .mem_data_in(mem_rdata),
+  .load_size(mem_size),
+  .load_unsigned(load_unsigned),
+  .addr_low(mar_out[1:0]),
+  .load_data_out(load_data_aligned),
+
+  // Store path: register file -> memory (with byte replication)
+  .store_data_in(mdr_out),
+  .store_size(mem_size),
+  .mem_data_out(store_data_aligned),
+
+  // Byte enable output
+  .byte_enable(mem_be)
+);
+
+// Word-align memory address for sub-word accesses
+// For byte/halfword loads, the memory returns the word containing the byte/halfword
+// The byte_lane module then extracts the correct byte/halfword based on mar_out[1:0]
+assign mem_addr = {mar_out[31:2], 2'b00};
+assign mem_wdata = store_data_aligned;  // Use aligned data from byte_lane
 assign pc = pc_out;  // Export PC for testbench visibility
 
 regfile u_regfile (
@@ -112,7 +140,9 @@ control u_control (
   .rs2_val(rs2_out),
   .rs1(rs1),
   .rs2(rs2),
-  .rd(rd));
+  .rd(rd),
+  .mem_size(mem_size),
+  .load_unsigned(load_unsigned));
 
 alu #(.WIDTH(32)) u_alu (
   .a(rs1_mux_out),
@@ -131,7 +161,7 @@ mux4 #(.WIDTH(32)) u_databus_mux (
 
 mux2 #(.WIDTH(32)) u_mdr_mux (
   .sel(mdr_mux_sel),
-  .a(mem_rdata),
+  .a(load_data_aligned),  // Load data comes through byte_lane for extraction/extension
   .b(databus),
   .y(mdr_in));
 

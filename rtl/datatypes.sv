@@ -75,4 +75,27 @@ typedef enum bit [6:0] {
   ECSR   = 7'b1110011
 } opcode_t;
 
+// Memory access size for load/store operations
+typedef enum bit [1:0] {
+  MEM_SIZE_BYTE = 2'b00,
+  MEM_SIZE_HALF = 2'b01,
+  MEM_SIZE_WORD = 2'b10
+} mem_size_t;
+
+// Load funct3 values
+typedef enum bit [2:0] {
+  LD_BYTE  = 3'b000,  // LB - load byte (sign extended)
+  LD_HALF  = 3'b001,  // LH - load halfword (sign extended)
+  LD_WORD  = 3'b010,  // LW - load word
+  LD_BYTEU = 3'b100,  // LBU - load byte unsigned
+  LD_HALFU = 3'b101   // LHU - load halfword unsigned
+} load_funct3_t;
+
+// Store funct3 values
+typedef enum bit [2:0] {
+  ST_BYTE = 3'b000,   // SB - store byte
+  ST_HALF = 3'b001,   // SH - store halfword
+  ST_WORD = 3'b010    // SW - store word
+} store_funct3_t;
+
 `endif
