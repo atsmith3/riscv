@@ -119,7 +119,8 @@ BOOST_AUTO_TEST_CASE(decoder_r_type) {
   BOOST_CHECK_EQUAL(dut->rs2, 7);
   BOOST_CHECK_EQUAL(dut->funct7, 0b0000000);
   BOOST_CHECK_EQUAL(dut->arithmetic, 0); // ADD (bit 30 = 0)
-  BOOST_CHECK_EQUAL(dut->immediate, 0);  // R-type has no immediate
+  BOOST_CHECK_EQUAL(dut->immediate,
+                    7); // R-type immediate = bits[24:20] = rs2 field
 
   // SUB x1, x2, x3 (funct7=0100000 distinguishes from ADD)
   uint32_t sub_instr = make_r_type(OP_ALU, 1, 0b000, 2, 3, 0b0100000);

@@ -73,6 +73,12 @@ uint32_t ref_imm_gen(uint32_t ir, uint8_t instr_type) {
     imm = sign ? (imm_bits | 0xFFE00000) : imm_bits;
     break;
   }
+  case INSTR_R: {
+    // R-type: For shift immediate instructions (SLLI, SRLI, SRAI)
+    // Extract shift amount from bits [24:20] (shamt field)
+    imm = (ir >> 20) & 0x1F;
+    break;
+  }
   default:
     imm = 0;
     break;
@@ -320,18 +326,18 @@ BOOST_AUTO_TEST_CASE(imm_gen_j_type) {
   delete dut;
 }
 
-// Test R-type (should return 0, no immediate)
+// Test R-type (should return shift amount from bits [24:20])
 BOOST_AUTO_TEST_CASE(imm_gen_r_type) {
   Vimm_gen_32 *dut = new Vimm_gen_32();
 
   dut->instr_type = INSTR_R;
-  dut->ir = 0xFFFFFFFF; // All bits set
+  dut->ir = 0xFFFFFFFF; // All bits set, shamt = 0x1F (31)
   dut->eval();
-  BOOST_CHECK_EQUAL(dut->imm, 0);
+  BOOST_CHECK_EQUAL(dut->imm, 0x1F);
 
-  dut->ir = 0x12345678;
+  dut->ir = 0x12345678; // bits[24:20] = 0x03
   dut->eval();
-  BOOST_CHECK_EQUAL(dut->imm, 0);
+  BOOST_CHECK_EQUAL(dut->imm, 0x03);
 
   delete dut;
 }
