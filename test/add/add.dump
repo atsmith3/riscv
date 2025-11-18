@@ -6,10 +6,14 @@ Disassembly of section .text:
 
 00001000 <__start>:
     1000:	00000717          	auipc	a4,0x0
-    1004:	01872703          	lw	a4,24(a4) # 1018 <VAL_1>
+    1004:	02872703          	lw	a4,40(a4) # 1028 <VAL_1>
     1008:	00000797          	auipc	a5,0x0
-    100c:	0147a783          	lw	a5,20(a5) # 101c <VAL_2>
+    100c:	0247a783          	lw	a5,36(a5) # 102c <VAL_2>
     1010:	00f70833          	add	a6,a4,a5
+    1014:	dead08b7          	lui	a7,0xdead0
+    1018:	0108a023          	sw	a6,0(a7) # dead0000 <VAL_2+0xdeacefd4>
+    101c:	00100513          	li	a0,1
+    1020:	00a8a023          	sw	a0,0(a7)
 
-00001014 <LOOP>:
-    1014:	0000006f          	j	1014 <LOOP>
+00001024 <LOOP>:
+    1024:	0000006f          	j	1024 <LOOP>

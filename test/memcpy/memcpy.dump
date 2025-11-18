@@ -1,0 +1,188 @@
+
+memcpy.elf:     file format elf32-littleriscv
+
+
+Disassembly of section .text:
+
+00001000 <__start>:
+    1000:	00005137          	lui	sp,0x5
+    1004:	188000ef          	jal	ra,118c <main>
+
+00001008 <LOOP>:
+    1008:	0000006f          	j	1008 <LOOP>
+
+0000100c <memcpy>:
+    100c:	fc010113          	addi	sp,sp,-64 # 4fc0 <main+0x3e34>
+    1010:	02812e23          	sw	s0,60(sp)
+    1014:	04010413          	addi	s0,sp,64
+    1018:	fca42623          	sw	a0,-52(s0)
+    101c:	fcb42423          	sw	a1,-56(s0)
+    1020:	fcc42223          	sw	a2,-60(s0)
+    1024:	fc442783          	lw	a5,-60(s0)
+    1028:	0037f793          	andi	a5,a5,3
+    102c:	06079e63          	bnez	a5,10a8 <memcpy+0x9c>
+    1030:	fcc42783          	lw	a5,-52(s0)
+    1034:	0037f793          	andi	a5,a5,3
+    1038:	06079863          	bnez	a5,10a8 <memcpy+0x9c>
+    103c:	fc842783          	lw	a5,-56(s0)
+    1040:	0037f793          	andi	a5,a5,3
+    1044:	06079263          	bnez	a5,10a8 <memcpy+0x9c>
+    1048:	fcc42783          	lw	a5,-52(s0)
+    104c:	fef42223          	sw	a5,-28(s0)
+    1050:	fc842783          	lw	a5,-56(s0)
+    1054:	fef42023          	sw	a5,-32(s0)
+    1058:	fe042623          	sw	zero,-20(s0)
+    105c:	0380006f          	j	1094 <memcpy+0x88>
+    1060:	fec42783          	lw	a5,-20(s0)
+    1064:	00279793          	slli	a5,a5,0x2
+    1068:	fe042703          	lw	a4,-32(s0)
+    106c:	00f70733          	add	a4,a4,a5
+    1070:	fec42783          	lw	a5,-20(s0)
+    1074:	00279793          	slli	a5,a5,0x2
+    1078:	fe442683          	lw	a3,-28(s0)
+    107c:	00f687b3          	add	a5,a3,a5
+    1080:	00072703          	lw	a4,0(a4)
+    1084:	00e7a023          	sw	a4,0(a5)
+    1088:	fec42783          	lw	a5,-20(s0)
+    108c:	00178793          	addi	a5,a5,1
+    1090:	fef42623          	sw	a5,-20(s0)
+    1094:	fc442783          	lw	a5,-60(s0)
+    1098:	0027d793          	srli	a5,a5,0x2
+    109c:	fec42703          	lw	a4,-20(s0)
+    10a0:	fcf760e3          	bltu	a4,a5,1060 <memcpy+0x54>
+    10a4:	0540006f          	j	10f8 <memcpy+0xec>
+    10a8:	fcc42783          	lw	a5,-52(s0)
+    10ac:	fcf42e23          	sw	a5,-36(s0)
+    10b0:	fc842783          	lw	a5,-56(s0)
+    10b4:	fcf42c23          	sw	a5,-40(s0)
+    10b8:	fe042423          	sw	zero,-24(s0)
+    10bc:	0300006f          	j	10ec <memcpy+0xe0>
+    10c0:	fd842703          	lw	a4,-40(s0)
+    10c4:	fe842783          	lw	a5,-24(s0)
+    10c8:	00f70733          	add	a4,a4,a5
+    10cc:	fdc42683          	lw	a3,-36(s0)
+    10d0:	fe842783          	lw	a5,-24(s0)
+    10d4:	00f687b3          	add	a5,a3,a5
+    10d8:	00074703          	lbu	a4,0(a4)
+    10dc:	00e78023          	sb	a4,0(a5)
+    10e0:	fe842783          	lw	a5,-24(s0)
+    10e4:	00178793          	addi	a5,a5,1
+    10e8:	fef42423          	sw	a5,-24(s0)
+    10ec:	fe842703          	lw	a4,-24(s0)
+    10f0:	fc442783          	lw	a5,-60(s0)
+    10f4:	fcf766e3          	bltu	a4,a5,10c0 <memcpy+0xb4>
+    10f8:	fcc42783          	lw	a5,-52(s0)
+    10fc:	00078513          	mv	a0,a5
+    1100:	03c12403          	lw	s0,60(sp)
+    1104:	04010113          	addi	sp,sp,64
+    1108:	00008067          	ret
+
+0000110c <arrays_equal>:
+    110c:	fd010113          	addi	sp,sp,-48
+    1110:	02812623          	sw	s0,44(sp)
+    1114:	03010413          	addi	s0,sp,48
+    1118:	fca42e23          	sw	a0,-36(s0)
+    111c:	fcb42c23          	sw	a1,-40(s0)
+    1120:	fcc42a23          	sw	a2,-44(s0)
+    1124:	fe042623          	sw	zero,-20(s0)
+    1128:	0440006f          	j	116c <arrays_equal+0x60>
+    112c:	fec42783          	lw	a5,-20(s0)
+    1130:	00279793          	slli	a5,a5,0x2
+    1134:	fdc42703          	lw	a4,-36(s0)
+    1138:	00f707b3          	add	a5,a4,a5
+    113c:	0007a703          	lw	a4,0(a5)
+    1140:	fec42783          	lw	a5,-20(s0)
+    1144:	00279793          	slli	a5,a5,0x2
+    1148:	fd842683          	lw	a3,-40(s0)
+    114c:	00f687b3          	add	a5,a3,a5
+    1150:	0007a783          	lw	a5,0(a5)
+    1154:	00f70663          	beq	a4,a5,1160 <arrays_equal+0x54>
+    1158:	00000793          	li	a5,0
+    115c:	0200006f          	j	117c <arrays_equal+0x70>
+    1160:	fec42783          	lw	a5,-20(s0)
+    1164:	00178793          	addi	a5,a5,1
+    1168:	fef42623          	sw	a5,-20(s0)
+    116c:	fec42703          	lw	a4,-20(s0)
+    1170:	fd442783          	lw	a5,-44(s0)
+    1174:	faf74ce3          	blt	a4,a5,112c <arrays_equal+0x20>
+    1178:	00100793          	li	a5,1
+    117c:	00078513          	mv	a0,a5
+    1180:	02c12403          	lw	s0,44(sp)
+    1184:	03010113          	addi	sp,sp,48
+    1188:	00008067          	ret
+
+0000118c <main>:
+    118c:	f6010113          	addi	sp,sp,-160
+    1190:	08112e23          	sw	ra,156(sp)
+    1194:	08812c23          	sw	s0,152(sp)
+    1198:	0a010413          	addi	s0,sp,160
+    119c:	111117b7          	lui	a5,0x11111
+    11a0:	11178793          	addi	a5,a5,273 # 11111111 <main+0x1110ff85>
+    11a4:	faf42623          	sw	a5,-84(s0)
+    11a8:	222227b7          	lui	a5,0x22222
+    11ac:	22278793          	addi	a5,a5,546 # 22222222 <main+0x22221096>
+    11b0:	faf42823          	sw	a5,-80(s0)
+    11b4:	333337b7          	lui	a5,0x33333
+    11b8:	33378793          	addi	a5,a5,819 # 33333333 <main+0x333321a7>
+    11bc:	faf42a23          	sw	a5,-76(s0)
+    11c0:	444447b7          	lui	a5,0x44444
+    11c4:	44478793          	addi	a5,a5,1092 # 44444444 <main+0x444432b8>
+    11c8:	faf42c23          	sw	a5,-72(s0)
+    11cc:	555557b7          	lui	a5,0x55555
+    11d0:	55578793          	addi	a5,a5,1365 # 55555555 <main+0x555543c9>
+    11d4:	faf42e23          	sw	a5,-68(s0)
+    11d8:	666667b7          	lui	a5,0x66666
+    11dc:	66678793          	addi	a5,a5,1638 # 66666666 <main+0x666654da>
+    11e0:	fcf42023          	sw	a5,-64(s0)
+    11e4:	777777b7          	lui	a5,0x77777
+    11e8:	77778793          	addi	a5,a5,1911 # 77777777 <main+0x777765eb>
+    11ec:	fcf42223          	sw	a5,-60(s0)
+    11f0:	888897b7          	lui	a5,0x88889
+    11f4:	88878793          	addi	a5,a5,-1912 # 88888888 <main+0x888876fc>
+    11f8:	fcf42423          	sw	a5,-56(s0)
+    11fc:	9999a7b7          	lui	a5,0x9999a
+    1200:	99978793          	addi	a5,a5,-1639 # 99999999 <main+0x9999880d>
+    1204:	fcf42623          	sw	a5,-52(s0)
+    1208:	aaaab7b7          	lui	a5,0xaaaab
+    120c:	aaa78793          	addi	a5,a5,-1366 # aaaaaaaa <main+0xaaaa991e>
+    1210:	fcf42823          	sw	a5,-48(s0)
+    1214:	bbbbc7b7          	lui	a5,0xbbbbc
+    1218:	bbb78793          	addi	a5,a5,-1093 # bbbbbbbb <main+0xbbbbaa2f>
+    121c:	fcf42a23          	sw	a5,-44(s0)
+    1220:	ccccd7b7          	lui	a5,0xccccd
+    1224:	ccc78793          	addi	a5,a5,-820 # cccccccc <main+0xccccbb40>
+    1228:	fcf42c23          	sw	a5,-40(s0)
+    122c:	dddde7b7          	lui	a5,0xdddde
+    1230:	ddd78793          	addi	a5,a5,-547 # dddddddd <main+0xddddcc51>
+    1234:	fcf42e23          	sw	a5,-36(s0)
+    1238:	eeeef7b7          	lui	a5,0xeeeef
+    123c:	eee78793          	addi	a5,a5,-274 # eeeeeeee <main+0xeeeedd62>
+    1240:	fef42023          	sw	a5,-32(s0)
+    1244:	fff00793          	li	a5,-1
+    1248:	fef42223          	sw	a5,-28(s0)
+    124c:	123457b7          	lui	a5,0x12345
+    1250:	67878793          	addi	a5,a5,1656 # 12345678 <main+0x123444ec>
+    1254:	fef42423          	sw	a5,-24(s0)
+    1258:	fac40713          	addi	a4,s0,-84
+    125c:	f6c40793          	addi	a5,s0,-148
+    1260:	04000613          	li	a2,64
+    1264:	00070593          	mv	a1,a4
+    1268:	00078513          	mv	a0,a5
+    126c:	da1ff0ef          	jal	ra,100c <memcpy>
+    1270:	f6c40713          	addi	a4,s0,-148
+    1274:	fac40793          	addi	a5,s0,-84
+    1278:	01000613          	li	a2,16
+    127c:	00070593          	mv	a1,a4
+    1280:	00078513          	mv	a0,a5
+    1284:	e89ff0ef          	jal	ra,110c <arrays_equal>
+    1288:	fea42623          	sw	a0,-20(s0)
+    128c:	fec42783          	lw	a5,-20(s0)
+    1290:	00078a63          	beqz	a5,12a4 <main+0x118>
+    1294:	dead07b7          	lui	a5,0xdead0
+    1298:	00100713          	li	a4,1
+    129c:	00e7a023          	sw	a4,0(a5) # dead0000 <main+0xdeacee74>
+    12a0:	0100006f          	j	12b0 <main+0x124>
+    12a4:	dead07b7          	lui	a5,0xdead0
+    12a8:	fff00713          	li	a4,-1
+    12ac:	00e7a023          	sw	a4,0(a5) # dead0000 <main+0xdeacee74>
+    12b0:	0000006f          	j	12b0 <main+0x124>

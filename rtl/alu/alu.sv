@@ -1,5 +1,23 @@
 /*
- * Interger ALU
+ * Integer ALU
+ *
+ * Arithmetic Logic Unit supporting all RV32I operations
+ *
+ * This module implements the ALU for the RISC-V processor, supporting
+ * all standard integer operations including arithmetic, logical, shift,
+ * and comparison operations.
+ *
+ * Supported Operations:
+ *   - Arithmetic: ADD, SUB
+ *   - Logical: AND, OR, XOR
+ *   - Shift: SLL (logical left), SRL (logical right), SRA (arithmetic right)
+ *   - Comparison: SLT (signed), SLTU (unsigned)
+ *   - Pass-through: PASS_RS1, PASS_RS2 (for LUI, AUIPC, etc.)
+ *
+ * Branch Status Register (bsr):
+ *   - bsr[2]: beq (a == b)
+ *   - bsr[1]: blt (a < b, signed)
+ *   - bsr[0]: bltu (a < b, unsigned)
  */
 
 `include "datatypes.sv"
@@ -52,7 +70,7 @@ always_comb begin
       y = b;
     end
     ALU_SRA: begin
-      y = a >>> shift;
+      y = $signed(a) >>> shift;
     end
     default: begin
       y = 0;

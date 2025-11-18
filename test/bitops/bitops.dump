@@ -1,0 +1,152 @@
+
+bitops.elf:     file format elf32-littleriscv
+
+
+Disassembly of section .text:
+
+00001000 <__start>:
+    1000:	00005137          	lui	sp,0x5
+    1004:	140000ef          	jal	ra,1144 <main>
+
+00001008 <LOOP>:
+    1008:	0000006f          	j	1008 <LOOP>
+
+0000100c <count_bits>:
+    100c:	fd010113          	addi	sp,sp,-48 # 4fd0 <main+0x3e8c>
+    1010:	02812623          	sw	s0,44(sp)
+    1014:	03010413          	addi	s0,sp,48
+    1018:	fca42e23          	sw	a0,-36(s0)
+    101c:	fe042623          	sw	zero,-20(s0)
+    1020:	0240006f          	j	1044 <count_bits+0x38>
+    1024:	fdc42783          	lw	a5,-36(s0)
+    1028:	0017f713          	andi	a4,a5,1
+    102c:	fec42783          	lw	a5,-20(s0)
+    1030:	00f707b3          	add	a5,a4,a5
+    1034:	fef42623          	sw	a5,-20(s0)
+    1038:	fdc42783          	lw	a5,-36(s0)
+    103c:	0017d793          	srli	a5,a5,0x1
+    1040:	fcf42e23          	sw	a5,-36(s0)
+    1044:	fdc42783          	lw	a5,-36(s0)
+    1048:	fc079ee3          	bnez	a5,1024 <count_bits+0x18>
+    104c:	fec42783          	lw	a5,-20(s0)
+    1050:	00078513          	mv	a0,a5
+    1054:	02c12403          	lw	s0,44(sp)
+    1058:	03010113          	addi	sp,sp,48
+    105c:	00008067          	ret
+
+00001060 <reverse_bits>:
+    1060:	fd010113          	addi	sp,sp,-48
+    1064:	02812623          	sw	s0,44(sp)
+    1068:	03010413          	addi	s0,sp,48
+    106c:	fca42e23          	sw	a0,-36(s0)
+    1070:	fe042623          	sw	zero,-20(s0)
+    1074:	fe042423          	sw	zero,-24(s0)
+    1078:	03c0006f          	j	10b4 <reverse_bits+0x54>
+    107c:	fec42783          	lw	a5,-20(s0)
+    1080:	00179793          	slli	a5,a5,0x1
+    1084:	fef42623          	sw	a5,-20(s0)
+    1088:	fdc42783          	lw	a5,-36(s0)
+    108c:	0017f793          	andi	a5,a5,1
+    1090:	fec42703          	lw	a4,-20(s0)
+    1094:	00f767b3          	or	a5,a4,a5
+    1098:	fef42623          	sw	a5,-20(s0)
+    109c:	fdc42783          	lw	a5,-36(s0)
+    10a0:	0017d793          	srli	a5,a5,0x1
+    10a4:	fcf42e23          	sw	a5,-36(s0)
+    10a8:	fe842783          	lw	a5,-24(s0)
+    10ac:	00178793          	addi	a5,a5,1
+    10b0:	fef42423          	sw	a5,-24(s0)
+    10b4:	fe842703          	lw	a4,-24(s0)
+    10b8:	01f00793          	li	a5,31
+    10bc:	fce7d0e3          	bge	a5,a4,107c <reverse_bits+0x1c>
+    10c0:	fec42783          	lw	a5,-20(s0)
+    10c4:	00078513          	mv	a0,a5
+    10c8:	02c12403          	lw	s0,44(sp)
+    10cc:	03010113          	addi	sp,sp,48
+    10d0:	00008067          	ret
+
+000010d4 <is_power_of_2>:
+    10d4:	fe010113          	addi	sp,sp,-32
+    10d8:	00812e23          	sw	s0,28(sp)
+    10dc:	02010413          	addi	s0,sp,32
+    10e0:	fea42623          	sw	a0,-20(s0)
+    10e4:	fec42783          	lw	a5,-20(s0)
+    10e8:	00079663          	bnez	a5,10f4 <is_power_of_2+0x20>
+    10ec:	00000793          	li	a5,0
+    10f0:	01c0006f          	j	110c <is_power_of_2+0x38>
+    10f4:	fec42783          	lw	a5,-20(s0)
+    10f8:	fff78713          	addi	a4,a5,-1
+    10fc:	fec42783          	lw	a5,-20(s0)
+    1100:	00f777b3          	and	a5,a4,a5
+    1104:	0017b793          	seqz	a5,a5
+    1108:	0ff7f793          	andi	a5,a5,255
+    110c:	00078513          	mv	a0,a5
+    1110:	01c12403          	lw	s0,28(sp)
+    1114:	02010113          	addi	sp,sp,32
+    1118:	00008067          	ret
+
+0000111c <test_arithmetic_shift>:
+    111c:	fe010113          	addi	sp,sp,-32
+    1120:	00812e23          	sw	s0,28(sp)
+    1124:	02010413          	addi	s0,sp,32
+    1128:	fea42623          	sw	a0,-20(s0)
+    112c:	fec42783          	lw	a5,-20(s0)
+    1130:	4027d793          	srai	a5,a5,0x2
+    1134:	00078513          	mv	a0,a5
+    1138:	01c12403          	lw	s0,28(sp)
+    113c:	02010113          	addi	sp,sp,32
+    1140:	00008067          	ret
+
+00001144 <main>:
+    1144:	fd010113          	addi	sp,sp,-48
+    1148:	02112623          	sw	ra,44(sp)
+    114c:	02812423          	sw	s0,40(sp)
+    1150:	03010413          	addi	s0,sp,48
+    1154:	00100793          	li	a5,1
+    1158:	fef42623          	sw	a5,-20(s0)
+    115c:	aaaab7b7          	lui	a5,0xaaaab
+    1160:	aaa78513          	addi	a0,a5,-1366 # aaaaaaaa <main+0xaaaa9966>
+    1164:	ea9ff0ef          	jal	ra,100c <count_bits>
+    1168:	fea42423          	sw	a0,-24(s0)
+    116c:	fe842703          	lw	a4,-24(s0)
+    1170:	01000793          	li	a5,16
+    1174:	00f70463          	beq	a4,a5,117c <main+0x38>
+    1178:	fe042623          	sw	zero,-20(s0)
+    117c:	00100513          	li	a0,1
+    1180:	ee1ff0ef          	jal	ra,1060 <reverse_bits>
+    1184:	fea42223          	sw	a0,-28(s0)
+    1188:	fe442703          	lw	a4,-28(s0)
+    118c:	800007b7          	lui	a5,0x80000
+    1190:	00f70463          	beq	a4,a5,1198 <main+0x54>
+    1194:	fe042623          	sw	zero,-20(s0)
+    1198:	01000513          	li	a0,16
+    119c:	f39ff0ef          	jal	ra,10d4 <is_power_of_2>
+    11a0:	00050793          	mv	a5,a0
+    11a4:	00079463          	bnez	a5,11ac <main+0x68>
+    11a8:	fe042623          	sw	zero,-20(s0)
+    11ac:	00f00513          	li	a0,15
+    11b0:	f25ff0ef          	jal	ra,10d4 <is_power_of_2>
+    11b4:	00050793          	mv	a5,a0
+    11b8:	00078463          	beqz	a5,11c0 <main+0x7c>
+    11bc:	fe042623          	sw	zero,-20(s0)
+    11c0:	ff000513          	li	a0,-16
+    11c4:	f59ff0ef          	jal	ra,111c <test_arithmetic_shift>
+    11c8:	fea42023          	sw	a0,-32(s0)
+    11cc:	fe042703          	lw	a4,-32(s0)
+    11d0:	ffc00793          	li	a5,-4
+    11d4:	00f70463          	beq	a4,a5,11dc <main+0x98>
+    11d8:	fe042623          	sw	zero,-20(s0)
+    11dc:	fc042e23          	sw	zero,-36(s0)
+    11e0:	fdc42783          	lw	a5,-36(s0)
+    11e4:	00078463          	beqz	a5,11ec <main+0xa8>
+    11e8:	fe042623          	sw	zero,-20(s0)
+    11ec:	fec42783          	lw	a5,-20(s0)
+    11f0:	00078a63          	beqz	a5,1204 <main+0xc0>
+    11f4:	dead07b7          	lui	a5,0xdead0
+    11f8:	00100713          	li	a4,1
+    11fc:	00e7a023          	sw	a4,0(a5) # dead0000 <main+0xdeaceebc>
+    1200:	0100006f          	j	1210 <main+0xcc>
+    1204:	dead07b7          	lui	a5,0xdead0
+    1208:	fff00713          	li	a4,-1
+    120c:	00e7a023          	sw	a4,0(a5) # dead0000 <main+0xdeaceebc>
+    1210:	0000006f          	j	1210 <main+0xcc>

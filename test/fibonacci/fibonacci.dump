@@ -1,0 +1,71 @@
+
+fibonacci.elf:     file format elf32-littleriscv
+
+
+Disassembly of section .text:
+
+00001000 <__start>:
+    1000:	00005137          	lui	sp,0x5
+    1004:	090000ef          	jal	ra,1094 <main>
+
+00001008 <LOOP>:
+    1008:	0000006f          	j	1008 <LOOP>
+
+0000100c <fibonacci>:
+    100c:	fd010113          	addi	sp,sp,-48 # 4fd0 <main+0x3f3c>
+    1010:	02812623          	sw	s0,44(sp)
+    1014:	03010413          	addi	s0,sp,48
+    1018:	fca42e23          	sw	a0,-36(s0)
+    101c:	fdc42703          	lw	a4,-36(s0)
+    1020:	00100793          	li	a5,1
+    1024:	00e7c663          	blt	a5,a4,1030 <fibonacci+0x24>
+    1028:	fdc42783          	lw	a5,-36(s0)
+    102c:	0580006f          	j	1084 <fibonacci+0x78>
+    1030:	fe042623          	sw	zero,-20(s0)
+    1034:	00100793          	li	a5,1
+    1038:	fef42423          	sw	a5,-24(s0)
+    103c:	00200793          	li	a5,2
+    1040:	fef42223          	sw	a5,-28(s0)
+    1044:	0300006f          	j	1074 <fibonacci+0x68>
+    1048:	fec42703          	lw	a4,-20(s0)
+    104c:	fe842783          	lw	a5,-24(s0)
+    1050:	00f707b3          	add	a5,a4,a5
+    1054:	fef42023          	sw	a5,-32(s0)
+    1058:	fe842783          	lw	a5,-24(s0)
+    105c:	fef42623          	sw	a5,-20(s0)
+    1060:	fe042783          	lw	a5,-32(s0)
+    1064:	fef42423          	sw	a5,-24(s0)
+    1068:	fe442783          	lw	a5,-28(s0)
+    106c:	00178793          	addi	a5,a5,1
+    1070:	fef42223          	sw	a5,-28(s0)
+    1074:	fe442703          	lw	a4,-28(s0)
+    1078:	fdc42783          	lw	a5,-36(s0)
+    107c:	fce7d6e3          	bge	a5,a4,1048 <fibonacci+0x3c>
+    1080:	fe842783          	lw	a5,-24(s0)
+    1084:	00078513          	mv	a0,a5
+    1088:	02c12403          	lw	s0,44(sp)
+    108c:	03010113          	addi	sp,sp,48
+    1090:	00008067          	ret
+
+00001094 <main>:
+    1094:	fe010113          	addi	sp,sp,-32
+    1098:	00112e23          	sw	ra,28(sp)
+    109c:	00812c23          	sw	s0,24(sp)
+    10a0:	02010413          	addi	s0,sp,32
+    10a4:	00a00513          	li	a0,10
+    10a8:	f65ff0ef          	jal	ra,100c <fibonacci>
+    10ac:	fea42623          	sw	a0,-20(s0)
+    10b0:	dead07b7          	lui	a5,0xdead0
+    10b4:	fec42703          	lw	a4,-20(s0)
+    10b8:	00e7a023          	sw	a4,0(a5) # dead0000 <main+0xdeacef6c>
+    10bc:	fec42703          	lw	a4,-20(s0)
+    10c0:	03700793          	li	a5,55
+    10c4:	00f71a63          	bne	a4,a5,10d8 <main+0x44>
+    10c8:	dead07b7          	lui	a5,0xdead0
+    10cc:	00100713          	li	a4,1
+    10d0:	00e7a023          	sw	a4,0(a5) # dead0000 <main+0xdeacef6c>
+    10d4:	0100006f          	j	10e4 <main+0x50>
+    10d8:	dead07b7          	lui	a5,0xdead0
+    10dc:	fff00713          	li	a4,-1
+    10e0:	00e7a023          	sw	a4,0(a5) # dead0000 <main+0xdeacef6c>
+    10e4:	0000006f          	j	10e4 <main+0x50>

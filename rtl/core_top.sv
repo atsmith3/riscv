@@ -1,6 +1,23 @@
 /* core_top.sv
- * 
- * Contains the datapath and all the top level modules that make up the core.
+ *
+ * Top-level module for the RISC-V 32I processor core
+ *
+ * This module contains the complete datapath and control logic for a
+ * multi-cycle, non-pipelined RISC-V 32I processor. The design uses an
+ * FSM-based control scheme with separate fetch, decode, and execute states.
+ *
+ * Architecture:
+ *   - Multi-cycle execution (7-12 cycles per instruction)
+ *   - Shared databus connecting all major components
+ *   - Single memory interface with separate read/write signals
+ *   - Harvard-style memory access pattern
+ *
+ * Major Components:
+ *   - Program registers (IR, PC, MAR, MDR)
+ *   - 32-entry register file with dual-read, single-write ports
+ *   - ALU supporting all RV32I operations
+ *   - Control FSM with instruction decoder
+ *   - Datapath multiplexers for flexible routing
  */
 
 `include "datatypes.sv"
@@ -13,8 +30,13 @@ module core_top (
   output logic [31:0] mem_wdata,
   output logic [31:0] mem_addr,
   output logic mem_read,
-  output logic mem_write
+  output logic mem_write,
+  output logic [31:0] pc  // Program counter output for testbench visibility
 );
+
+// Constants for PC increment values
+localparam WORD_SIZE = 32'd4;
+localparam HALF_WORD_SIZE = 32'd2;
 
 databus_mux_sel_t databus_mux_sel;
 rs1_mux_sel_t rs1_mux_sel;
@@ -47,17 +69,18 @@ wire load_mdr;
 wire mdr_mux_sel;
 wire [31:0] imm;
 
-program_register #(.WIDTH(32), .INIT(0)) u_ir (.clk(clk), .rstn(rst_n), .in(databus), .out(ir_out), .load(load_ir));
-program_register #(.WIDTH(32), .INIT('h1000)) u_pc (.clk(clk), .rstn(rst_n), .in(databus), .out(pc_out), .load(load_pc));
-program_register #(.WIDTH(32), .INIT(0)) u_mar (.clk(clk), .rstn(rst_n), .in(databus), .out(mar_out), .load(load_mar));
-program_register #(.WIDTH(32), .INIT(0)) u_mdr (.clk(clk), .rstn(rst_n), .in(mdr_in), .out(mdr_out), .load(load_mdr));
+program_register #(.WIDTH(32), .INIT(0)) u_ir (.clk(clk), .rst_n(rst_n), .in(databus), .out(ir_out), .load(load_ir));
+program_register #(.WIDTH(32), .INIT('h1000)) u_pc (.clk(clk), .rst_n(rst_n), .in(databus), .out(pc_out), .load(load_pc));
+program_register #(.WIDTH(32), .INIT(0)) u_mar (.clk(clk), .rst_n(rst_n), .in(databus), .out(mar_out), .load(load_mar));
+program_register #(.WIDTH(32), .INIT(0)) u_mdr (.clk(clk), .rst_n(rst_n), .in(mdr_in), .out(mdr_out), .load(load_mdr));
 
 assign mem_addr = mar_out;
 assign mem_wdata = mdr_out;
+assign pc = pc_out;  // Export PC for testbench visibility
 
 regfile u_regfile (
   .clk(clk),
-  .rstn(rst_n),
+  .rst_n(rst_n),
   .a(rs1_out),
   .a_idx(rs1),
   .b(rs2_out),
@@ -68,7 +91,7 @@ regfile u_regfile (
 
 control u_control (
   .clk(clk),
-  .rst_n(rst_n), 
+  .rst_n(rst_n),
   .load_mar(load_mar),
   .load_pc(load_pc),
   .load_ir(load_ir),
@@ -86,7 +109,7 @@ control u_control (
   .ir(ir_out),
   .immediate(imm),
   .rs1_val(rs1_out),
-  .rs2_val(rs1_out),
+  .rs2_val(rs2_out),
   .rs1(rs1),
   .rs2(rs2),
   .rd(rd));
@@ -116,8 +139,8 @@ mux4 #(.WIDTH(32)) u_rs1_mux (
   .sel(rs1_mux_sel),
   .a(rs1_out),
   .b(pc_out),
-  .c(2),
-  .d(4),
+  .c(HALF_WORD_SIZE),
+  .d(WORD_SIZE),
   .y(rs1_mux_out));
 
 mux4 #(.WIDTH(32)) u_rs2_mux (

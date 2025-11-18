@@ -1,4 +1,4 @@
-/* 
+/*
  * Immediate value generator
  *
  * Outputs all the immediate values based on the instruction register.
@@ -34,7 +34,7 @@ always_comb begin
       // Sign Extended Immediate[11:0]
       imm = imm_s;
     end
-    INSTR_B: begin 
+    INSTR_B: begin
       // Sign Extended Immediate
       imm = imm_b;
     end
@@ -45,6 +45,11 @@ always_comb begin
     INSTR_J: begin
       // Sign Extended Immediate[20:1]
       imm = imm_j;
+    end
+    INSTR_R: begin
+      // For shift immediate instructions (SLLI, SRLI, SRAI)
+      // Extract shift amount from bits [24:20] (shamt field)
+      imm = {27'b0, ir[24:20]};
     end
     default: begin
 

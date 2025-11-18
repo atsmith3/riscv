@@ -1,0 +1,19 @@
+# Docker image for RISC-V cross-compilation
+# Provides riscv64-unknown-elf-gcc toolchain for compiling test programs
+
+FROM ubuntu:22.04
+
+# Install RISC-V GNU toolchain and utilities
+RUN apt-get update && \
+    apt-get install -y \
+    gcc-riscv64-unknown-elf \
+    binutils-riscv64-unknown-elf \
+    build-essential \
+    bsdmainutils \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
+WORKDIR /workspace
+
+# Default command
+CMD ["/bin/bash"]

@@ -23,7 +23,16 @@ Disassembly of section .text:
     102c:	fec42783          	lw	a5,-20(s0)
     1030:	40f707b3          	sub	a5,a4,a5
     1034:	fef42223          	sw	a5,-28(s0)
-    1038:	00000013          	nop
-    103c:	01c12403          	lw	s0,28(sp)
-    1040:	02010113          	addi	sp,sp,32
-    1044:	00008067          	ret
+    1038:	fe442703          	lw	a4,-28(s0)
+    103c:	02000793          	li	a5,32
+    1040:	00f71e63          	bne	a4,a5,105c <main+0x50>
+    1044:	dead07b7          	lui	a5,0xdead0
+    1048:	fe442703          	lw	a4,-28(s0)
+    104c:	00e7a023          	sw	a4,0(a5) # dead0000 <main+0xdeaceff4>
+    1050:	dead07b7          	lui	a5,0xdead0
+    1054:	00100713          	li	a4,1
+    1058:	00e7a023          	sw	a4,0(a5) # dead0000 <main+0xdeaceff4>
+    105c:	00000013          	nop
+    1060:	01c12403          	lw	s0,28(sp)
+    1064:	02010113          	addi	sp,sp,32
+    1068:	00008067          	ret

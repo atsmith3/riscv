@@ -1,7 +1,20 @@
 /*
- * Decoder
+ * Instruction Decoder
  *
- * Decode RV32G instructions.
+ * Decodes RV32I instructions and extracts instruction fields
+ *
+ * This module decodes RISC-V instructions and determines the instruction
+ * format type (R, I, S, B, U, J) based on the opcode. It also extracts
+ * all instruction fields (rs1, rs2, rd, funct3, funct7, etc.) and
+ * generates the appropriate immediate value for the instruction type.
+ *
+ * Outputs:
+ *   - instr_type: Instruction format (R/I/S/B/U/J/ERR)
+ *   - opcode: 7-bit opcode field
+ *   - rs1, rs2, rd: Register indices
+ *   - funct3, funct7: Function fields for instruction variants
+ *   - arithmetic: Bit 30 of instruction (distinguishes SUB/SRA from ADD/SRL)
+ *   - immediate: Sign-extended immediate value based on instruction type
  *
  * 2022 04 10
  */
@@ -20,7 +33,7 @@ module ir_decoder (
   output logic [3:0] fm,
   output logic [3:0] pred,
   output logic [3:0] succ,
-  output logic arithmatic,
+  output logic arithmetic,
   output logic ebreak,
   output logic [31:0] immediate
 );
@@ -34,7 +47,7 @@ assign fm = ir[31:28];
 assign pred = ir[27:24];
 assign succ = ir[23:20];
 assign opcode = ir[6:0];
-assign arithmatic = ir[30];
+assign arithmetic = ir[30];
 assign ebreak = ir[20];
 
 imm_gen_32 u_imm_gen (
@@ -53,13 +66,13 @@ always_comb begin
   end
   else if ((opcode==JALR) ||
     (opcode==LD) ||
-    (opcode==ALUI && (funct3 != 3'b001 || funct3 != 3'b101)) ||
+    (opcode==ALUI && (funct3 != 3'b001 && funct3 != 3'b101)) ||
     (opcode==ECSR) ||
     (opcode==FENCE)) begin
     instr_type = INSTR_I;
   end
   else if ((opcode==ALU)||
-    (opcode==ALUI && (funct3 != 3'b001 || funct3 != 3'b101))) begin
+    (opcode==ALUI && (funct3 == 3'b001 || funct3 == 3'b101))) begin
     instr_type = INSTR_R;
   end
   else if (opcode==ST) begin
@@ -71,4 +84,4 @@ always_comb begin
 end
 
 
-endmodule : ir_decoder 
+endmodule : ir_decoder
