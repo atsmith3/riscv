@@ -50,7 +50,11 @@ module control
   input logic [31:0] ir,
   input logic [31:0] rs1_val,
   input logic [31:0] rs2_val,
-  output logic [31:0] immediate
+  output logic [31:0] immediate,
+  // CSR interface
+  output logic csr_access,       // High when accessing CSR
+  output logic csr_write,         // High when writing to CSR (for instret increment)
+  input logic csr_valid           // CSR address valid signal
 );
 
   logic [2:0] instr_type;
@@ -116,6 +120,10 @@ module control
     ST_1,                         // MDR <- RS2 (prepare data to store)
     ST_2,                         // Initiate memory write
     ST_3,                         // Wait for memory write completion
+
+    // CSR Instructions
+    CSR_0,                        // Read CSR, compute new value
+    CSR_1,                        // Write old CSR value to RD, update CSR
 
     // Error States
     ERROR_INVALID_OPCODE,         // Invalid instruction opcode detected
@@ -209,7 +217,12 @@ module control
             next_state = ERROR_OPCODE_NOT_IMPLEMENTED;
           end
           ECSR : begin
-            next_state = ERROR_OPCODE_NOT_IMPLEMENTED;
+            // Distinguish CSR instructions (funct3 != 0) from ECALL/EBREAK (funct3 == 0)
+            if (funct3 == 3'b000) begin
+              next_state = ERROR_OPCODE_NOT_IMPLEMENTED;  // ECALL/EBREAK not implemented yet
+            end else begin
+              next_state = CSR_0;  // CSR instruction
+            end
           end
           default : begin
             next_state = ERROR_OPCODE_NOT_IMPLEMENTED;
@@ -327,6 +340,19 @@ module control
         end
       end
 
+      // ==== CSR INSTRUCTIONS ====
+      // Atomic read-modify-write for Control and Status Registers
+      CSR_0 : begin  // Read CSR, compute new value
+        if (!csr_valid) begin
+          next_state = ERROR_OPCODE_NOT_IMPLEMENTED;  // Invalid CSR address
+        end else begin
+          next_state = CSR_1;
+        end
+      end
+      CSR_1 : begin  // Write old CSR value to rd, update CSR
+        next_state = PC_INC;
+      end
+
       // ==== ERROR STATES ====
       ERROR_INVALID_OPCODE : begin
         next_state = ERROR_INVALID_OPCODE;  // Halt: invalid opcode
@@ -354,6 +380,8 @@ module control
     mem_read = 0;
     mem_write = 0;
     alu_op = ALU_ADD;
+    csr_access = 1'b0;
+    csr_write = 1'b0;
 
     // Suppress outputs during reset
     if (!rst_n) begin
@@ -551,6 +579,19 @@ module control
         mem_write = 1'b1;
       end
       ST_3 : begin
+      end
+      CSR_0 : begin
+        // Read CSR and compute new value
+        // CSR read data will be captured and used in CSR_1
+        csr_access = 1'b1;
+      end
+      CSR_1 : begin
+        // Write old CSR value to rd
+        // CSR module handles the actual register write
+        load_reg = 1'b1;
+        databus_mux_sel = DATABUS_CSR;
+        csr_access = 1'b1;
+        csr_write = 1'b1;
       end
       AUIPC_0 : begin
         load_reg = 1'b1;

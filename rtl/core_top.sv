@@ -76,6 +76,17 @@ wire load_unsigned;
 wire [31:0] load_data_aligned;   // Data from byte_lane (load path)
 wire [31:0] store_data_aligned;  // Data to byte_lane (store path)
 
+// CSR signals
+wire csr_access;          // High when accessing CSR
+wire csr_write;           // High when writing to CSR
+wire csr_valid;           // CSR address valid signal
+wire [31:0] csr_rdata;    // CSR read data
+wire [31:0] csr_wdata;    // CSR write data
+wire csr_we;              // CSR write enable (from csr_alu)
+wire [31:0] csr_operand;  // RS1 or zero-extended immediate
+wire rs1_is_zero;         // True if rs1=x0 or zimm=0
+wire instret_inc;         // Increment instruction retired counter
+
 program_register #(.WIDTH(32), .INIT(0)) u_ir (.clk(clk), .rst_n(rst_n), .in(databus), .out(ir_out), .load(load_ir));
 program_register #(.WIDTH(32), .INIT('h1000)) u_pc (.clk(clk), .rst_n(rst_n), .in(databus), .out(pc_out), .load(load_pc));
 program_register #(.WIDTH(32), .INIT(0)) u_mar (.clk(clk), .rst_n(rst_n), .in(databus), .out(mar_out), .load(load_mar));
@@ -98,6 +109,36 @@ byte_lane u_byte_lane (
   // Byte enable output
   .byte_enable(mem_be)
 );
+
+// CSR register file for user-mode counters
+csr_file u_csr_file (
+  .clk(clk),
+  .rst_n(rst_n),
+  .csr_addr(imm[11:0]),      // CSR address from instruction immediate field
+  .csr_wdata(csr_wdata),     // Write data from csr_alu
+  .csr_we(csr_we & csr_write), // Write enable (gated by control signal)
+  .csr_rdata(csr_rdata),     // Read data
+  .csr_valid(csr_valid),     // Address valid signal
+  .instret_inc(instret_inc)  // Increment instruction retired counter
+);
+
+// CSR ALU for read-modify-write operations
+csr_alu u_csr_alu (
+  .csr_rdata(csr_rdata),     // Current CSR value
+  .rs1_or_zimm(csr_operand), // RS1 value or zero-extended immediate
+  .funct3(imm[14:12]),       // CSR operation from instruction funct3
+  .rs1_is_zero(rs1_is_zero), // Write suppression flag
+  .csr_wdata(csr_wdata),     // New CSR value
+  .csr_we(csr_we)            // Write enable
+);
+
+// CSR operand selection: For immediate variants (bit 14 set), use zimm from rs1 field
+// Otherwise use rs1 register value
+assign csr_operand = imm[14] ? {27'b0, rs1} : rs1_out;
+assign rs1_is_zero = imm[14] ? (rs1 == 5'b0) : (rs1 == 5'b0);
+
+// Increment instret counter when completing an instruction (transitioning to PC_INC or direct to FETCH)
+assign instret_inc = load_pc;  // PC is loaded when instruction completes
 
 // Word-align memory address for sub-word accesses
 // For byte/halfword loads, the memory returns the word containing the byte/halfword
@@ -142,7 +183,10 @@ control u_control (
   .rs2(rs2),
   .rd(rd),
   .mem_size(mem_size),
-  .load_unsigned(load_unsigned));
+  .load_unsigned(load_unsigned),
+  .csr_access(csr_access),
+  .csr_write(csr_write),
+  .csr_valid(csr_valid));
 
 alu #(.WIDTH(32)) u_alu (
   .a(rs1_mux_out),
@@ -151,12 +195,16 @@ alu #(.WIDTH(32)) u_alu (
   .bsr({beq, blt, bltu}),
   .y(alu_out));
 
-mux4 #(.WIDTH(32)) u_databus_mux (
+mux8 #(.WIDTH(32)) u_databus_mux (
   .sel(databus_mux_sel),
-  .a(pc_out),
-  .b(alu_out),
-  .c(mdr_out),
-  .d('b0 /* mar_out */),
+  .a(pc_out),          // DATABUS_PC = 0
+  .b(alu_out),         // DATABUS_ALU = 1
+  .c(mdr_out),         // DATABUS_MDR = 2
+  .d('b0 /* mar_out */), // DATABUS_MAR = 3
+  .e(csr_rdata),       // DATABUS_CSR = 4
+  .f(32'b0),           // Unused
+  .g(32'b0),           // Unused
+  .h(32'b0),           // Unused
   .y(databus));
 
 mux2 #(.WIDTH(32)) u_mdr_mux (

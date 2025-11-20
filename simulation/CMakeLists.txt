@@ -68,6 +68,7 @@ target_include_directories(verilated_core PUBLIC
 add_executable(riscv_tests
   tests/test_main.cpp
   tests/system_tests.cpp
+  tests/csr_system_tests.cpp
 )
 
 target_link_libraries(riscv_tests
@@ -125,6 +126,24 @@ verilate(verilated_byte_lane COVERAGE TRACE
   SOURCES ${RTL_ROOT}/byte_lane.sv ${RTL_ROOT}/datatypes.sv
 )
 
+# Module-level tests for CSR File
+add_library(verilated_csr_file STATIC)
+verilate(verilated_csr_file COVERAGE TRACE
+  PREFIX Vcsr_file
+  INCLUDE_DIRS ${RTL_ROOT}
+  VERILATOR_ARGS -O0
+  SOURCES ${RTL_ROOT}/csr_file.sv
+)
+
+# Module-level tests for CSR ALU
+add_library(verilated_csr_alu STATIC)
+verilate(verilated_csr_alu COVERAGE TRACE
+  PREFIX Vcsr_alu
+  INCLUDE_DIRS ${RTL_ROOT}
+  VERILATOR_ARGS -O0
+  SOURCES ${RTL_ROOT}/csr_alu.sv
+)
+
 add_executable(module_tests
   tests/test_main.cpp
   tests/module/alu_test.cpp
@@ -132,6 +151,8 @@ add_executable(module_tests
   tests/module/decoder_test.cpp
   tests/module/imm_gen_test.cpp
   tests/module/byte_lane_test.cpp
+  tests/module/csr_file_test.cpp
+  tests/module/csr_alu_test.cpp
 )
 
 target_link_libraries(module_tests
@@ -140,6 +161,8 @@ target_link_libraries(module_tests
   verilated_decoder
   verilated_imm_gen
   verilated_byte_lane
+  verilated_csr_file
+  verilated_csr_alu
   ${Boost_LIBRARIES}
 )
 

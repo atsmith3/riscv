@@ -4,11 +4,12 @@
 `ifndef __DATATYPES_SV__
 `define __DATATYPES_SV__
 
-typedef enum bit [1:0] {
+typedef enum bit [2:0] {
   DATABUS_PC=0,
   DATABUS_ALU,
   DATABUS_MDR,
-  DATABUS_MAR
+  DATABUS_MAR,
+  DATABUS_CSR
 } databus_mux_sel_t;
 
 typedef enum bit [1:0] {
@@ -97,5 +98,15 @@ typedef enum bit [2:0] {
   ST_HALF = 3'b001,   // SH - store halfword
   ST_WORD = 3'b010    // SW - store word
 } store_funct3_t;
+
+// CSR operation funct3 values
+typedef enum bit [2:0] {
+  CSR_RW  = 3'b001,   // CSRRW  - Atomic Read/Write
+  CSR_RS  = 3'b010,   // CSRRS  - Atomic Read and Set Bits
+  CSR_RC  = 3'b011,   // CSRRC  - Atomic Read and Clear Bits
+  CSR_RWI = 3'b101,   // CSRRWI - Atomic Read/Write Immediate
+  CSR_RSI = 3'b110,   // CSRRSI - Atomic Read and Set Bits Immediate
+  CSR_RCI = 3'b111    // CSRRCI - Atomic Read and Clear Bits Immediate
+} csr_op_t;
 
 `endif

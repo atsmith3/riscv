@@ -1,0 +1,75 @@
+
+csr_read_cycle.elf:     file format elf32-littleriscv
+
+
+Disassembly of section .text:
+
+00001000 <__start>:
+    1000:	00005137          	lui	sp,0x5
+    1004:	008000ef          	jal	ra,100c <main>
+
+00001008 <LOOP>:
+    1008:	0000006f          	j	1008 <LOOP>
+
+0000100c <main>:
+    100c:	fc010113          	addi	sp,sp,-64 # 4fc0 <main+0x3fb4>
+    1010:	02812e23          	sw	s0,60(sp)
+    1014:	04010413          	addi	s0,sp,64
+    1018:	c00027f3          	rdcycle	a5
+    101c:	fef42623          	sw	a5,-20(s0)
+    1020:	fec42783          	lw	a5,-20(s0)
+    1024:	fef42423          	sw	a5,-24(s0)
+    1028:	c00027f3          	rdcycle	a5
+    102c:	fef42223          	sw	a5,-28(s0)
+    1030:	fe442783          	lw	a5,-28(s0)
+    1034:	fef42023          	sw	a5,-32(s0)
+    1038:	c00027f3          	rdcycle	a5
+    103c:	fcf42e23          	sw	a5,-36(s0)
+    1040:	fdc42783          	lw	a5,-36(s0)
+    1044:	fcf42c23          	sw	a5,-40(s0)
+    1048:	fe042703          	lw	a4,-32(s0)
+    104c:	fe842783          	lw	a5,-24(s0)
+    1050:	00e7ea63          	bltu	a5,a4,1064 <main+0x58>
+    1054:	dead07b7          	lui	a5,0xdead0
+    1058:	fff00713          	li	a4,-1
+    105c:	00e7a023          	sw	a4,0(a5) # dead0000 <main+0xdeaceff4>
+    1060:	0000006f          	j	1060 <main+0x54>
+    1064:	fd842703          	lw	a4,-40(s0)
+    1068:	fe042783          	lw	a5,-32(s0)
+    106c:	00e7ea63          	bltu	a5,a4,1080 <main+0x74>
+    1070:	dead07b7          	lui	a5,0xdead0
+    1074:	fff00713          	li	a4,-1
+    1078:	00e7a023          	sw	a4,0(a5) # dead0000 <main+0xdeaceff4>
+    107c:	0000006f          	j	107c <main+0x70>
+    1080:	c01027f3          	rdtime	a5
+    1084:	fcf42a23          	sw	a5,-44(s0)
+    1088:	fd442783          	lw	a5,-44(s0)
+    108c:	fcf42823          	sw	a5,-48(s0)
+    1090:	fd042703          	lw	a4,-48(s0)
+    1094:	fe842783          	lw	a5,-24(s0)
+    1098:	00e7ea63          	bltu	a5,a4,10ac <main+0xa0>
+    109c:	dead07b7          	lui	a5,0xdead0
+    10a0:	fff00713          	li	a4,-1
+    10a4:	00e7a023          	sw	a4,0(a5) # dead0000 <main+0xdeaceff4>
+    10a8:	0000006f          	j	10a8 <main+0x9c>
+    10ac:	c02027f3          	rdinstret	a5
+    10b0:	fcf42623          	sw	a5,-52(s0)
+    10b4:	fcc42783          	lw	a5,-52(s0)
+    10b8:	fcf42423          	sw	a5,-56(s0)
+    10bc:	fc842783          	lw	a5,-56(s0)
+    10c0:	00079a63          	bnez	a5,10d4 <main+0xc8>
+    10c4:	dead07b7          	lui	a5,0xdead0
+    10c8:	fff00713          	li	a4,-1
+    10cc:	00e7a023          	sw	a4,0(a5) # dead0000 <main+0xdeaceff4>
+    10d0:	0000006f          	j	10d0 <main+0xc4>
+    10d4:	fc842703          	lw	a4,-56(s0)
+    10d8:	fd842783          	lw	a5,-40(s0)
+    10dc:	00e7fa63          	bgeu	a5,a4,10f0 <main+0xe4>
+    10e0:	dead07b7          	lui	a5,0xdead0
+    10e4:	fff00713          	li	a4,-1
+    10e8:	00e7a023          	sw	a4,0(a5) # dead0000 <main+0xdeaceff4>
+    10ec:	0000006f          	j	10ec <main+0xe0>
+    10f0:	dead07b7          	lui	a5,0xdead0
+    10f4:	00100713          	li	a4,1
+    10f8:	00e7a023          	sw	a4,0(a5) # dead0000 <main+0xdeaceff4>
+    10fc:	0000006f          	j	10fc <main+0xf0>
