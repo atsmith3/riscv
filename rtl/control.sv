@@ -52,6 +52,7 @@ module control
   input logic [31:0] rs2_val,
   output logic [31:0] immediate,
   // CSR interface
+  output logic [2:0] funct3_out,  // Instruction funct3 field for CSR operations
   output logic csr_access,       // High when accessing CSR
   output logic csr_write,         // High when writing to CSR (for instret increment)
   input logic csr_valid,          // CSR address valid signal
@@ -756,5 +757,8 @@ module control
       endcase
     end
   end
+
+  // Export funct3 for CSR ALU
+  assign funct3_out = funct3;
 
 endmodule

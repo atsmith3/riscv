@@ -77,6 +77,7 @@ wire [31:0] load_data_aligned;   // Data from byte_lane (load path)
 wire [31:0] store_data_aligned;  // Data to byte_lane (store path)
 
 // CSR signals
+wire [2:0] funct3_csr;    // Instruction funct3 for CSR operations
 wire csr_access;          // High when accessing CSR
 wire csr_write;           // High when writing to CSR
 wire csr_valid;           // CSR address valid signal
@@ -177,16 +178,16 @@ csr_file u_csr_file (
 csr_alu u_csr_alu (
   .csr_rdata(csr_rdata),     // Current CSR value
   .rs1_or_zimm(csr_operand), // RS1 value or zero-extended immediate
-  .funct3(imm[14:12]),       // CSR operation from instruction funct3
+  .funct3(funct3_csr),       // CSR operation from instruction funct3
   .rs1_is_zero(rs1_is_zero), // Write suppression flag
   .csr_wdata(csr_wdata),     // New CSR value
   .csr_we(csr_we)            // Write enable
 );
 
-// CSR operand selection: For immediate variants (bit 14 set), use zimm from rs1 field
+// CSR operand selection: For immediate variants (funct3[2] set), use zimm from rs1 field
 // Otherwise use rs1 register value
-assign csr_operand = imm[14] ? {27'b0, rs1} : rs1_out;
-assign rs1_is_zero = imm[14] ? (rs1 == 5'b0) : (rs1 == 5'b0);
+assign csr_operand = funct3_csr[2] ? {27'b0, rs1} : rs1_out;
+assign rs1_is_zero = funct3_csr[2] ? (rs1 == 5'b0) : (rs1 == 5'b0);
 
 // Increment instret counter when completing an instruction (transitioning to PC_INC or direct to FETCH)
 assign instret_inc = load_pc;  // PC is loaded when instruction completes
@@ -235,6 +236,7 @@ control u_control (
   .rd(rd),
   .mem_size(mem_size),
   .load_unsigned(load_unsigned),
+  .funct3_out(funct3_csr),
   .csr_access(csr_access),
   .csr_write(csr_write),
   .csr_valid(csr_valid),

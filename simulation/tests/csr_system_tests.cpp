@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE(test_csr_immediate_variants) {
  * Verifies that ECALL triggers a trap with mcause=11 and MRET returns correctly
  */
 BOOST_AUTO_TEST_CASE(test_ecall_basic) {
-  TestRunner runner("ecall_basic", true); // Enable VCD tracing for debugging
+  TestRunner runner("ecall_basic", false);
 
   std::string ini_file = get_test_program_path("ecall_basic");
   BOOST_REQUIRE_MESSAGE(runner.load_program(ini_file),

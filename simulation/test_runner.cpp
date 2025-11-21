@@ -21,8 +21,9 @@ TestRunner::TestRunner(const std::string &name, bool enable_trace)
   // Create DUT instance
   dut = new Vcore_top();
 
-  // Create memory model (1MB, 4 cycle delay, debug enabled)
-  memory = new MemoryModel(1024 * 1024, 4, true);
+  // Create memory model (288MB to cover ROM at 0x1000 and RAM at 0x10000000, 4
+  // cycle delay, debug enabled)
+  memory = new MemoryModel(288 * 1024 * 1024, 4, true);
 
   // Setup tracing if requested
   if (trace_enabled) {
