@@ -301,7 +301,7 @@ BOOST_AUTO_TEST_CASE(test_invalid_csr_address) {
   BOOST_CHECK_EQUAL(dut->csr_rdata, 0); // Should return 0
 
   // Test another invalid address
-  dut->csr_addr = 0x000; // Machine-mode CSR not implemented
+  dut->csr_addr = 0x000; // Invalid CSR address
   dut->eval();
   BOOST_CHECK_EQUAL(dut->csr_valid, 0);
 
@@ -411,6 +411,246 @@ BOOST_AUTO_TEST_CASE(test_write_ignored_readonly) {
   // Cycle should have incremented by 1, not been overwritten
   BOOST_CHECK_EQUAL(dut->csr_rdata, cycle_before + 1);
   BOOST_CHECK_NE(dut->csr_rdata, 0xDEADBEEF);
+
+  delete dut;
+}
+
+/**
+ * Test: Machine-mode CSR initialization
+ * Verify that machine-mode CSRs have correct default values
+ */
+BOOST_AUTO_TEST_CASE(test_machine_mode_csr_init) {
+  Vcsr_file *dut = new Vcsr_file();
+
+  // Initialize
+  dut->rst_n = 0;
+  dut->csr_addr = 0x305;
+  dut->csr_we = 0;
+  dut->csr_wdata = 0;
+  dut->instret_inc = 0;
+  tick(dut);
+
+  dut->rst_n = 1;
+  tick(dut);
+
+  // Check mtvec default value (0x00000100)
+  dut->csr_addr = 0x305;
+  dut->eval();
+  BOOST_CHECK_EQUAL(dut->csr_rdata, 0x00000100);
+  BOOST_CHECK_EQUAL(dut->csr_valid, 1);
+
+  // Check mepc default value (0x00000000)
+  dut->csr_addr = 0x341;
+  dut->eval();
+  BOOST_CHECK_EQUAL(dut->csr_rdata, 0x00000000);
+  BOOST_CHECK_EQUAL(dut->csr_valid, 1);
+
+  // Check mcause default value (0x00000000)
+  dut->csr_addr = 0x342;
+  dut->eval();
+  BOOST_CHECK_EQUAL(dut->csr_rdata, 0x00000000);
+  BOOST_CHECK_EQUAL(dut->csr_valid, 1);
+
+  // Check mtval default value (0x00000000)
+  dut->csr_addr = 0x343;
+  dut->eval();
+  BOOST_CHECK_EQUAL(dut->csr_rdata, 0x00000000);
+  BOOST_CHECK_EQUAL(dut->csr_valid, 1);
+
+  delete dut;
+}
+
+/**
+ * Test: Machine-mode CSR write functionality
+ * Verify that machine-mode CSRs can be written
+ */
+BOOST_AUTO_TEST_CASE(test_machine_mode_csr_write) {
+  Vcsr_file *dut = new Vcsr_file();
+
+  // Initialize
+  dut->rst_n = 0;
+  dut->csr_addr = 0x305;
+  dut->csr_we = 0;
+  dut->csr_wdata = 0;
+  dut->instret_inc = 0;
+  tick(dut);
+
+  dut->rst_n = 1;
+  tick(dut);
+
+  // Write to mtvec
+  dut->csr_addr = 0x305;
+  dut->csr_we = 1;
+  dut->csr_wdata = 0x80000000;
+  tick(dut);
+
+  // Read back mtvec
+  dut->csr_we = 0;
+  dut->eval();
+  BOOST_CHECK_EQUAL(dut->csr_rdata, 0x80000000);
+
+  // Write to mepc
+  dut->csr_addr = 0x341;
+  dut->csr_we = 1;
+  dut->csr_wdata = 0x00001234;
+  tick(dut);
+
+  // Read back mepc
+  dut->csr_we = 0;
+  dut->eval();
+  BOOST_CHECK_EQUAL(dut->csr_rdata, 0x00001234);
+
+  // Write to mcause
+  dut->csr_addr = 0x342;
+  dut->csr_we = 1;
+  dut->csr_wdata = 0x0000000B; // ECALL cause code
+  tick(dut);
+
+  // Read back mcause
+  dut->csr_we = 0;
+  dut->eval();
+  BOOST_CHECK_EQUAL(dut->csr_rdata, 0x0000000B);
+
+  // Write to mtval
+  dut->csr_addr = 0x343;
+  dut->csr_we = 1;
+  dut->csr_wdata = 0xDEADBEEF;
+  tick(dut);
+
+  // Read back mtval
+  dut->csr_we = 0;
+  dut->eval();
+  BOOST_CHECK_EQUAL(dut->csr_rdata, 0xDEADBEEF);
+
+  delete dut;
+}
+
+/**
+ * Test: Machine-mode CSR persistence
+ * Verify that written values persist across multiple cycles
+ */
+BOOST_AUTO_TEST_CASE(test_machine_mode_csr_persistence) {
+  Vcsr_file *dut = new Vcsr_file();
+
+  // Initialize
+  dut->rst_n = 0;
+  dut->csr_addr = 0x305;
+  dut->csr_we = 0;
+  dut->csr_wdata = 0;
+  dut->instret_inc = 0;
+  tick(dut);
+
+  dut->rst_n = 1;
+  tick(dut);
+
+  // Write to all machine CSRs
+  dut->csr_addr = 0x305;
+  dut->csr_we = 1;
+  dut->csr_wdata = 0x12345678;
+  tick(dut);
+
+  dut->csr_addr = 0x341;
+  dut->csr_wdata = 0xAABBCCDD;
+  tick(dut);
+
+  dut->csr_addr = 0x342;
+  dut->csr_wdata = 0x00000003; // EBREAK cause
+  tick(dut);
+
+  dut->csr_addr = 0x343;
+  dut->csr_wdata = 0x99887766;
+  tick(dut);
+
+  // Disable write
+  dut->csr_we = 0;
+
+  // Advance many cycles
+  for (int i = 0; i < 50; i++) {
+    tick(dut);
+  }
+
+  // Read back all CSRs and verify they still hold written values
+  dut->csr_addr = 0x305;
+  dut->eval();
+  BOOST_CHECK_EQUAL(dut->csr_rdata, 0x12345678);
+
+  dut->csr_addr = 0x341;
+  dut->eval();
+  BOOST_CHECK_EQUAL(dut->csr_rdata, 0xAABBCCDD);
+
+  dut->csr_addr = 0x342;
+  dut->eval();
+  BOOST_CHECK_EQUAL(dut->csr_rdata, 0x00000003);
+
+  dut->csr_addr = 0x343;
+  dut->eval();
+  BOOST_CHECK_EQUAL(dut->csr_rdata, 0x99887766);
+
+  delete dut;
+}
+
+/**
+ * Test: Mixed user-mode and machine-mode CSR access
+ * Verify both types of CSRs work correctly together
+ */
+BOOST_AUTO_TEST_CASE(test_mixed_csr_access) {
+  Vcsr_file *dut = new Vcsr_file();
+
+  // Initialize
+  dut->rst_n = 0;
+  dut->csr_addr = 0x305;
+  dut->csr_we = 0;
+  dut->csr_wdata = 0;
+  dut->instret_inc = 0;
+  tick(dut);
+
+  dut->rst_n = 1;
+  tick(dut);
+
+  // Write to machine CSR
+  dut->csr_addr = 0x341; // mepc
+  dut->csr_we = 1;
+  dut->csr_wdata = 0x00002000;
+  tick(dut);
+
+  dut->csr_we = 0;
+
+  // Advance cycles to increment user-mode counters
+  for (int i = 0; i < 20; i++) {
+    dut->instret_inc = (i % 2 == 0);
+    tick(dut);
+  }
+
+  // Verify machine CSR still holds value
+  dut->csr_addr = 0x341;
+  dut->eval();
+  BOOST_CHECK_EQUAL(dut->csr_rdata, 0x00002000);
+
+  // Verify user-mode counters incremented correctly
+  // Expected: 1 tick after reset + 1 tick for mepc write + 20 ticks in loop =
+  // 22 cycles
+  dut->csr_addr = 0xC00; // cycle
+  dut->eval();
+  BOOST_CHECK_EQUAL(dut->csr_rdata, 22);
+
+  dut->csr_addr = 0xC02; // instret
+  dut->eval();
+  BOOST_CHECK_EQUAL(dut->csr_rdata, 10);
+
+  // Write to another machine CSR
+  dut->csr_addr = 0x342; // mcause
+  dut->csr_we = 1;
+  dut->csr_wdata = 0x0000000B; // ECALL
+  tick(dut);
+
+  dut->csr_we = 0;
+  dut->eval();
+  BOOST_CHECK_EQUAL(dut->csr_rdata, 0x0000000B);
+
+  // Verify other machine CSR still holds value
+  dut->csr_addr = 0x341;
+  dut->eval();
+  BOOST_CHECK_EQUAL(dut->csr_rdata, 0x00002000);
 
   delete dut;
 }

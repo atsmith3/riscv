@@ -1,15 +1,20 @@
 //
-// CSR Register File for RV32I User Mode
+// CSR Register File for RV32I User Mode and Machine Mode
 //
-// Implements the minimum required user-mode CSRs:
-//   0xC00 - cycle[31:0]    - Cycle counter (lower 32 bits) - RO
-//   0xC01 - time[31:0]     - Real-time clock (lower 32 bits) - RO
-//   0xC02 - instret[31:0]  - Instructions retired (lower 32 bits) - RO
-//   0xC80 - cycleh[31:0]   - Cycle counter (upper 32 bits) - RO
-//   0xC81 - timeh[31:0]    - Real-time clock (upper 32 bits) - RO
-//   0xC82 - instreth[31:0] - Instructions retired (upper 32 bits) - RO
+// User-mode CSRs (read-only):
+//   0xC00 - cycle[31:0]    - Cycle counter (lower 32 bits)
+//   0xC01 - time[31:0]     - Real-time clock (lower 32 bits)
+//   0xC02 - instret[31:0]  - Instructions retired (lower 32 bits)
+//   0xC80 - cycleh[31:0]   - Cycle counter (upper 32 bits)
+//   0xC81 - timeh[31:0]    - Real-time clock (upper 32 bits)
+//   0xC82 - instreth[31:0] - Instructions retired (upper 32 bits)
 //
-// All user-mode CSRs are read-only. Writes are ignored.
+// Machine-mode CSRs (read-write):
+//   0x305 - mtvec          - Machine trap-handler base address
+//   0x341 - mepc           - Machine exception program counter
+//   0x342 - mcause         - Machine trap cause
+//   0x343 - mtval          - Machine bad address or instruction
+//
 // Invalid CSR addresses signal an error.
 //
 
@@ -33,6 +38,12 @@ module csr_file (
   logic [63:0] time_counter;    // Mirrors cycle counter per user requirements
   logic [63:0] instret_counter;
 
+  // Machine-mode CSRs
+  logic [31:0] mtvec;           // Machine trap vector base address
+  logic [31:0] mepc;            // Machine exception program counter
+  logic [31:0] mcause;          // Machine cause register
+  logic [31:0] mtval;           // Machine trap value
+
   // Counter increment logic
   always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
@@ -53,18 +64,46 @@ module csr_file (
     end
   end
 
+  // Machine-mode CSR write logic
+  always_ff @(posedge clk or negedge rst_n) begin
+    if (!rst_n) begin
+      mtvec  <= 32'h00000100;  // Default trap vector at 0x100
+      mepc   <= 32'h00000000;
+      mcause <= 32'h00000000;
+      mtval  <= 32'h00000000;
+    end else if (csr_we) begin
+      // Write to machine-mode CSRs when write enable is asserted
+      case (csr_addr)
+        12'h305: mtvec  <= csr_wdata;   // mtvec is writable
+        12'h341: mepc   <= csr_wdata;   // mepc is writable
+        12'h342: mcause <= csr_wdata;   // mcause is writable
+        12'h343: mtval  <= csr_wdata;   // mtval is writable
+        default: begin
+          // User-mode CSRs are read-only, writes ignored
+        end
+      endcase
+    end
+  end
+
   // CSR address decoding and read logic
   always_comb begin
     csr_rdata = 32'h0;
     csr_valid = 1'b1;
 
     case (csr_addr)
+      // User-mode CSRs (read-only)
       12'hC00: csr_rdata = cycle_counter[31:0];     // cycle (lower 32)
       12'hC01: csr_rdata = time_counter[31:0];      // time (lower 32)
       12'hC02: csr_rdata = instret_counter[31:0];   // instret (lower 32)
       12'hC80: csr_rdata = cycle_counter[63:32];    // cycleh (upper 32)
       12'hC81: csr_rdata = time_counter[63:32];     // timeh (upper 32)
       12'hC82: csr_rdata = instret_counter[63:32];  // instreth (upper 32)
+
+      // Machine-mode CSRs (read-write)
+      12'h305: csr_rdata = mtvec;                    // mtvec
+      12'h341: csr_rdata = mepc;                     // mepc
+      12'h342: csr_rdata = mcause;                   // mcause
+      12'h343: csr_rdata = mtval;                    // mtval
 
       default: begin
         csr_rdata = 32'h0;

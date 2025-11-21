@@ -1,0 +1,66 @@
+
+ecall_basic.elf:     file format elf32-littleriscv
+
+
+Disassembly of section .text:
+
+00001000 <__start>:
+    1000:	00005137          	lui	sp,0x5
+    1004:	048000ef          	jal	ra,104c <main>
+
+00001008 <LOOP>:
+    1008:	0000006f          	j	1008 <LOOP>
+
+0000100c <trap_handler>:
+    100c:	34202573          	csrr	a0,mcause
+    1010:	00b00593          	li	a1,11
+    1014:	02b51263          	bne	a0,a1,1038 <fail>
+    1018:	0ffff517          	auipc	a0,0xffff
+    101c:	fe850513          	addi	a0,a0,-24 # 10000000 <trap_handled>
+    1020:	00100593          	li	a1,1
+    1024:	00b52023          	sw	a1,0(a0)
+    1028:	34102573          	csrr	a0,mepc
+    102c:	00450513          	addi	a0,a0,4
+    1030:	34151073          	csrw	mepc,a0
+    1034:	30200073          	mret
+
+00001038 <fail>:
+    1038:	dead0537          	lui	a0,0xdead0
+    103c:	fff00593          	li	a1,-1
+    1040:	00b52023          	sw	a1,0(a0) # dead0000 <trap_handled+0xcead0000>
+    1044:	0000006f          	j	1044 <fail+0xc>
+    1048:	00000013          	nop
+
+0000104c <main>:
+    104c:	fe010113          	addi	sp,sp,-32 # 4fe0 <main+0x3f94>
+    1050:	00812e23          	sw	s0,28(sp)
+    1054:	02010413          	addi	s0,sp,32
+    1058:	000017b7          	lui	a5,0x1
+    105c:	00c78793          	addi	a5,a5,12 # 100c <trap_handler>
+    1060:	fef42623          	sw	a5,-20(s0)
+    1064:	fec42783          	lw	a5,-20(s0)
+    1068:	30579073          	csrw	mtvec,a5
+    106c:	305027f3          	csrr	a5,mtvec
+    1070:	fef42423          	sw	a5,-24(s0)
+    1074:	fe842783          	lw	a5,-24(s0)
+    1078:	fef42223          	sw	a5,-28(s0)
+    107c:	fe442703          	lw	a4,-28(s0)
+    1080:	fec42783          	lw	a5,-20(s0)
+    1084:	00f70a63          	beq	a4,a5,1098 <main+0x4c>
+    1088:	dead07b7          	lui	a5,0xdead0
+    108c:	fff00713          	li	a4,-1
+    1090:	00e7a023          	sw	a4,0(a5) # dead0000 <trap_handled+0xcead0000>
+    1094:	0000006f          	j	1094 <main+0x48>
+    1098:	00000073          	ecall
+    109c:	100007b7          	lui	a5,0x10000
+    10a0:	0007a703          	lw	a4,0(a5) # 10000000 <trap_handled>
+    10a4:	00100793          	li	a5,1
+    10a8:	00f70a63          	beq	a4,a5,10bc <main+0x70>
+    10ac:	dead07b7          	lui	a5,0xdead0
+    10b0:	fff00713          	li	a4,-1
+    10b4:	00e7a023          	sw	a4,0(a5) # dead0000 <trap_handled+0xcead0000>
+    10b8:	0000006f          	j	10b8 <main+0x6c>
+    10bc:	dead07b7          	lui	a5,0xdead0
+    10c0:	00100713          	li	a4,1
+    10c4:	00e7a023          	sw	a4,0(a5) # dead0000 <trap_handled+0xcead0000>
+    10c8:	0000006f          	j	10c8 <main+0x7c>

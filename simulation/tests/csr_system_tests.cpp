@@ -151,4 +151,50 @@ BOOST_AUTO_TEST_CASE(test_csr_immediate_variants) {
   // TODO: Implement when test program infrastructure is ready
 }
 
+/**
+ * Test: ECALL instruction and trap handling
+ * Verifies that ECALL triggers a trap with mcause=11 and MRET returns correctly
+ */
+BOOST_AUTO_TEST_CASE(test_ecall_basic) {
+  TestRunner runner("ecall_basic", true); // Enable VCD tracing for debugging
+
+  std::string ini_file = get_test_program_path("ecall_basic");
+  BOOST_REQUIRE_MESSAGE(runner.load_program(ini_file),
+                        "Failed to load ecall_basic.ini");
+
+  TestResult result = runner.run(10000);
+
+  BOOST_CHECK_EQUAL(result, TestResult::PASS);
+  BOOST_CHECK_LT(runner.get_cycle_count(), 5000);
+
+  std::cout << "ECALL_BASIC test completed in " << runner.get_cycle_count()
+            << " cycles\n";
+  std::cout << "Memory accesses: " << runner.get_memory().get_read_count()
+            << " reads, " << runner.get_memory().get_write_count()
+            << " writes\n";
+}
+
+/**
+ * Test: EBREAK instruction and trap handling
+ * Verifies that EBREAK triggers a trap with mcause=3 and MRET returns correctly
+ */
+BOOST_AUTO_TEST_CASE(test_ebreak_basic) {
+  TestRunner runner("ebreak_basic", false);
+
+  std::string ini_file = get_test_program_path("ebreak_basic");
+  BOOST_REQUIRE_MESSAGE(runner.load_program(ini_file),
+                        "Failed to load ebreak_basic.ini");
+
+  TestResult result = runner.run(10000);
+
+  BOOST_CHECK_EQUAL(result, TestResult::PASS);
+  BOOST_CHECK_LT(runner.get_cycle_count(), 5000);
+
+  std::cout << "EBREAK_BASIC test completed in " << runner.get_cycle_count()
+            << " cycles\n";
+  std::cout << "Memory accesses: " << runner.get_memory().get_read_count()
+            << " reads, " << runner.get_memory().get_write_count()
+            << " writes\n";
+}
+
 BOOST_AUTO_TEST_SUITE_END()

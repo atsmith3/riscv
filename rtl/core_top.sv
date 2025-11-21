@@ -87,6 +87,17 @@ wire [31:0] csr_operand;  // RS1 or zero-extended immediate
 wire rs1_is_zero;         // True if rs1=x0 or zimm=0
 wire instret_inc;         // Increment instruction retired counter
 
+// Trap handling signals
+wire trap_entry;          // High during trap entry
+wire load_pc_from_csr;    // High when loading PC from CSR
+wire load_mepc;           // High when writing current PC to mepc
+wire load_mcause;         // High when writing mcause
+wire load_mtval;          // High when writing mtval
+wire [31:0] mcause_val;   // Value to write to mcause
+logic [11:0] trap_csr_addr;// CSR address during trap handling
+logic [31:0] trap_csr_wdata;// CSR write data during trap handling
+logic trap_csr_we;         // CSR write enable during trap handling
+
 program_register #(.WIDTH(32), .INIT(0)) u_ir (.clk(clk), .rst_n(rst_n), .in(databus), .out(ir_out), .load(load_ir));
 program_register #(.WIDTH(32), .INIT('h1000)) u_pc (.clk(clk), .rst_n(rst_n), .in(databus), .out(pc_out), .load(load_pc));
 program_register #(.WIDTH(32), .INIT(0)) u_mar (.clk(clk), .rst_n(rst_n), .in(databus), .out(mar_out), .load(load_mar));
@@ -110,16 +121,56 @@ byte_lane u_byte_lane (
   .byte_enable(mem_be)
 );
 
-// CSR register file for user-mode counters
+// Trap CSR address mux - select CSR address
+always_comb begin
+  if (load_mepc) begin
+    trap_csr_addr = 12'h341;  // mepc
+  end else if (load_mcause) begin
+    trap_csr_addr = 12'h342;  // mcause
+  end else if (load_mtval) begin
+    trap_csr_addr = 12'h343;  // mtval
+  end else if (trap_entry && csr_access && !load_pc_from_csr) begin
+    // Read mtvec during TRAP_ENTRY_3 (before load_pc_from_csr is asserted)
+    trap_csr_addr = 12'h305;  // mtvec
+  end else if (load_pc_from_csr) begin
+    // Read mtvec (TRAP_ENTRY_4) or mepc (MRET_0)
+    trap_csr_addr = trap_entry ? 12'h305 : 12'h341;  // mtvec or mepc
+  end else begin
+    trap_csr_addr = imm[11:0];
+  end
+end
+
+// Trap CSR write data mux - select write data
+// During trap, use trap-specific values. During normal CSR ops, use CSR ALU output.
+// These are mutually exclusive (trap signals and csr_write never active together)
+// Refactored to avoid combinational loop warning by separating dependencies
+
+// Trap-specific write data (doesn't depend on csr_wdata)
+wire [31:0] trap_wdata;
+assign trap_wdata = load_mepc ? pc_out :
+                    load_mcause ? mcause_val :
+                    32'h0;  // mtval
+
+// Detect if we're in a trap operation
+wire is_trap_operation;
+assign is_trap_operation = load_mepc | load_mcause | load_mtval;
+
+// Final mux: use trap data during trap operations, CSR ALU output otherwise
+assign trap_csr_wdata = is_trap_operation ? trap_wdata : csr_wdata;
+
+// Trap CSR write enable
+assign trap_csr_we = load_mepc | load_mcause | load_mtval | (csr_we & csr_write);
+
+// CSR register file for user-mode counters and machine-mode trap handling
 csr_file u_csr_file (
   .clk(clk),
   .rst_n(rst_n),
-  .csr_addr(imm[11:0]),      // CSR address from instruction immediate field
-  .csr_wdata(csr_wdata),     // Write data from csr_alu
-  .csr_we(csr_we & csr_write), // Write enable (gated by control signal)
-  .csr_rdata(csr_rdata),     // Read data
-  .csr_valid(csr_valid),     // Address valid signal
-  .instret_inc(instret_inc)  // Increment instruction retired counter
+  .csr_addr(trap_csr_addr),   // Muxed CSR address
+  .csr_wdata(trap_csr_wdata), // Muxed write data
+  .csr_we(trap_csr_we),       // Muxed write enable
+  .csr_rdata(csr_rdata),      // Read data
+  .csr_valid(csr_valid),      // Address valid signal
+  .instret_inc(instret_inc)   // Increment instruction retired counter
 );
 
 // CSR ALU for read-modify-write operations
@@ -186,7 +237,13 @@ control u_control (
   .load_unsigned(load_unsigned),
   .csr_access(csr_access),
   .csr_write(csr_write),
-  .csr_valid(csr_valid));
+  .csr_valid(csr_valid),
+  .trap_entry(trap_entry),
+  .load_pc_from_csr(load_pc_from_csr),
+  .load_mepc(load_mepc),
+  .load_mcause(load_mcause),
+  .load_mtval(load_mtval),
+  .mcause_val(mcause_val));
 
 alu #(.WIDTH(32)) u_alu (
   .a(rs1_mux_out),
