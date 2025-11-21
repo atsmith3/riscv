@@ -569,4 +569,74 @@ BOOST_AUTO_TEST_CASE(decoder_real_instructions) {
   delete dut;
 }
 
+/**
+ * Test FENCE instruction decoding
+ */
+BOOST_AUTO_TEST_CASE(test_fence_decode) {
+  Vir_decoder *dut = new Vir_decoder();
+
+  // FENCE instruction with pred=IORW (1111), succ=IORW (1111), fm=0000
+  // Encoding: fm[31:28]=0000, pred[27:24]=1111, succ[23:20]=1111,
+  // rs1[19:15]=00000
+  //           funct3[14:12]=000, rd[11:7]=00000, opcode[6:0]=0001111
+  uint32_t fence_instr = 0x0FF0000F; // fence iorw, iorw
+  dut->ir = fence_instr;
+  dut->eval();
+
+  BOOST_CHECK_EQUAL(dut->opcode, OP_FENCE);
+  BOOST_CHECK_EQUAL(dut->instr_type, INSTR_I);
+  BOOST_CHECK_EQUAL(dut->funct3, 0b000); // FENCE has funct3=000
+  BOOST_CHECK_EQUAL(dut->fm, 0b0000);    // fm field
+  BOOST_CHECK_EQUAL(dut->pred, 0b1111);  // pred=IORW
+  BOOST_CHECK_EQUAL(dut->succ, 0b1111);  // succ=IORW
+  BOOST_CHECK_EQUAL(dut->rs1, 0);        // Reserved, should be 0
+  BOOST_CHECK_EQUAL(dut->rd, 0);         // Reserved, should be 0
+
+  // FENCE with pred=RW (0011), succ=RW (0011)
+  fence_instr = 0x0330000F; // fence rw, rw
+  dut->ir = fence_instr;
+  dut->eval();
+
+  BOOST_CHECK_EQUAL(dut->opcode, OP_FENCE);
+  BOOST_CHECK_EQUAL(dut->instr_type, INSTR_I);
+  BOOST_CHECK_EQUAL(dut->funct3, 0b000);
+  BOOST_CHECK_EQUAL(dut->pred, 0b0011); // pred=RW
+  BOOST_CHECK_EQUAL(dut->succ, 0b0011); // succ=RW
+
+  // FENCE with pred=W (0010), succ=R (0001)
+  fence_instr = 0x0210000F; // fence w, r
+  dut->ir = fence_instr;
+  dut->eval();
+
+  BOOST_CHECK_EQUAL(dut->opcode, OP_FENCE);
+  BOOST_CHECK_EQUAL(dut->instr_type, INSTR_I);
+  BOOST_CHECK_EQUAL(dut->pred, 0b0010); // pred=W
+  BOOST_CHECK_EQUAL(dut->succ, 0b0001); // succ=R
+
+  delete dut;
+}
+
+/**
+ * Test FENCE.I instruction decoding
+ */
+BOOST_AUTO_TEST_CASE(test_fence_i_decode) {
+  Vir_decoder *dut = new Vir_decoder();
+
+  // FENCE.I instruction encoding
+  // Encoding: imm[31:20]=000000000000, rs1[19:15]=00000
+  //           funct3[14:12]=001, rd[11:7]=00000, opcode[6:0]=0001111
+  uint32_t fence_i_instr = 0x0000100F; // fence.i
+  dut->ir = fence_i_instr;
+  dut->eval();
+
+  BOOST_CHECK_EQUAL(dut->opcode, OP_FENCE);
+  BOOST_CHECK_EQUAL(dut->instr_type, INSTR_I);
+  BOOST_CHECK_EQUAL(dut->funct3, 0b001); // FENCE.I has funct3=001
+  BOOST_CHECK_EQUAL(dut->rs1, 0);        // Reserved, should be 0
+  BOOST_CHECK_EQUAL(dut->rd, 0);         // Reserved, should be 0
+  BOOST_CHECK_EQUAL(dut->immediate, 0);  // Reserved, should be 0
+
+  delete dut;
+}
+
 BOOST_AUTO_TEST_SUITE_END()

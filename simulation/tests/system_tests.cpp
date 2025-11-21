@@ -284,4 +284,52 @@ BOOST_AUTO_TEST_CASE(test_timeout_detection) {
   std::cout << "Timeout detection working correctly\n";
 }
 
+BOOST_AUTO_TEST_CASE(test_fence_basic_program) {
+  TestRunner runner("fence_basic", false);
+
+  std::string ini_file = get_test_program_path("fence_basic");
+  BOOST_REQUIRE_MESSAGE(runner.load_program(ini_file),
+                        "Failed to load fence_basic.ini");
+
+  TestResult result = runner.run(10000);
+
+  BOOST_CHECK_EQUAL(result, TestResult::PASS);
+  BOOST_CHECK_LT(runner.get_cycle_count(), 1000);
+
+  std::cout << "FENCE_BASIC test completed in " << runner.get_cycle_count()
+            << " cycles\n";
+}
+
+BOOST_AUTO_TEST_CASE(test_fence_i_program) {
+  TestRunner runner("fence_i", false);
+
+  std::string ini_file = get_test_program_path("fence_i");
+  BOOST_REQUIRE_MESSAGE(runner.load_program(ini_file),
+                        "Failed to load fence_i.ini");
+
+  TestResult result = runner.run(10000);
+
+  BOOST_CHECK_EQUAL(result, TestResult::PASS);
+  BOOST_CHECK_LT(runner.get_cycle_count(), 1000);
+
+  std::cout << "FENCE.I test completed in " << runner.get_cycle_count()
+            << " cycles\n";
+}
+
+BOOST_AUTO_TEST_CASE(test_fence_ordering_program) {
+  TestRunner runner("fence_ordering", false);
+
+  std::string ini_file = get_test_program_path("fence_ordering");
+  BOOST_REQUIRE_MESSAGE(runner.load_program(ini_file),
+                        "Failed to load fence_ordering.ini");
+
+  TestResult result = runner.run(10000);
+
+  BOOST_CHECK_EQUAL(result, TestResult::PASS);
+  BOOST_CHECK_LT(runner.get_cycle_count(), 2000);
+
+  std::cout << "FENCE_ORDERING test completed in " << runner.get_cycle_count()
+            << " cycles\n";
+}
+
 BOOST_AUTO_TEST_SUITE_END()

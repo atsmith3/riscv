@@ -1,0 +1,32 @@
+
+fence_ordering.elf:     file format elf32-littleriscv
+
+
+Disassembly of section .text:
+
+00001000 <__start>:
+    1000:	01000537          	lui	a0,0x1000
+    1004:	123455b7          	lui	a1,0x12345
+    1008:	67858593          	addi	a1,a1,1656 # 12345678 <LOOP+0x12344628>
+    100c:	00b52023          	sw	a1,0(a0) # 1000000 <LOOP+0xffefb0>
+    1010:	0120000f          	fence	w,r
+    1014:	00052603          	lw	a2,0(a0)
+    1018:	02c59663          	bne	a1,a2,1044 <FAIL>
+    101c:	abcdf5b7          	lui	a1,0xabcdf
+    1020:	f0058593          	addi	a1,a1,-256 # abcdef00 <LOOP+0xabcddeb0>
+    1024:	00b52223          	sw	a1,4(a0)
+    1028:	0330000f          	fence	rw,rw
+    102c:	00452683          	lw	a3,4(a0)
+    1030:	00d59a63          	bne	a1,a3,1044 <FAIL>
+    1034:	dead08b7          	lui	a7,0xdead0
+    1038:	00100813          	li	a6,1
+    103c:	0108a023          	sw	a6,0(a7) # dead0000 <LOOP+0xdeacefb0>
+    1040:	0100006f          	j	1050 <LOOP>
+
+00001044 <FAIL>:
+    1044:	dead08b7          	lui	a7,0xdead0
+    1048:	fff00813          	li	a6,-1
+    104c:	0108a023          	sw	a6,0(a7) # dead0000 <LOOP+0xdeacefb0>
+
+00001050 <LOOP>:
+    1050:	0000006f          	j	1050 <LOOP>

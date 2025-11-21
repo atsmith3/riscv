@@ -44,6 +44,7 @@ A clean, educational implementation of the RV32I base integer instruction set wi
 - Load Upper: `LUI`, `AUIPC`
 - Control Flow: `JAL`, `JALR`, `BEQ`, `BNE`, `BLT`, `BGE`, `BLTU`, `BGEU`
 - Memory Access: `LW`, `LH`, `LB`, `LHU`, `LBU`, `SW`, `SH`, `SB`
+- Memory Ordering: `FENCE`, `FENCE.I` (architectural NOPs in single-core, no-cache design)
 - CSR Operations: `CSRRW`, `CSRRS`, `CSRRC`, `CSRRWI`, `CSRRSI`, `CSRRCI`
 - Trap Instructions: `ECALL`, `EBREAK`, `MRET`
 
@@ -116,7 +117,7 @@ output [3:0]  mem_be       // Byte enables
 
 **Location**: `/rtl/control.sv`
 
-**FSM States** (46 states total):
+**FSM States** (47 states total):
 ```
 Instruction Fetch (4+ cycles):
   FETCH_0: MAR <- PC, initiate read
@@ -136,6 +137,7 @@ Execution States:
   ST_0..ST_3: Store (4 cycles)
   LUI_0, AUIPC_0: Upper immediate
   CSR_0, CSR_1: CSR access
+  FENCE_0: FENCE/FENCE.I (architectural NOP)
   TRAP_ENTRY_0..4: Trap handling
   MRET_0: Machine return
   PC_INC: Increment PC
@@ -934,8 +936,9 @@ test/
 ## Known Limitations
 
 1. **No pipeline**: Lower performance than pipelined designs
-2. **No FENCE**: Fence instruction unimplemented (single-threaded, no issue)
-3. **No M extension**: No hardware multiply/divide (software only)
-4. **No interrupts**: Only synchronous traps (ECALL/EBREAK)
-5. **No privilege modes**: Machine mode only, no user/supervisor
-6. **Simple CSRs**: Minimal CSR set, no performance monitoring counters beyond basics
+2. **No M extension**: No hardware multiply/divide (software only)
+3. **No interrupts**: Only synchronous traps (ECALL/EBREAK)
+4. **No privilege modes**: Machine mode only, no user/supervisor
+5. **Simple CSRs**: Minimal CSR set, no performance monitoring counters beyond basics
+
+**Note on FENCE instructions**: `FENCE` and `FENCE.I` are implemented as architectural NOPs. This is correct behavior for a single-core, non-pipelined, no-cache design where all memory operations are strictly ordered by the FSM.
