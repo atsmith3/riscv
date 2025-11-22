@@ -141,6 +141,9 @@ module control
     TRAP_ENTRY_4,                 // Jump to trap handler (load PC from mtvec)
     MRET_0,                       // MRET: Load mepc into PC
 
+    // FENCE Instructions (NOPs in single-core, no-cache architecture)
+    FENCE_0,                      // FENCE/FENCE.I: architectural NOP, proceed to PC_INC
+
     // Error States
     ERROR_INVALID_OPCODE,         // Invalid instruction opcode detected
     ERROR_OPCODE_NOT_IMPLEMENTED  // Valid but unimplemented instruction (CSR, FENCE, etc.)
@@ -230,7 +233,7 @@ module control
             next_state = REG_REG;
           end
           FENCE : begin
-            next_state = ERROR_OPCODE_NOT_IMPLEMENTED;
+            next_state = FENCE_0;
           end
           ECSR : begin
             // Distinguish CSR instructions (funct3 != 0) from ECALL/EBREAK/MRET (funct3 == 0)
@@ -403,6 +406,13 @@ module control
       MRET_0 : begin
         // Load PC from mepc (return from trap)
         next_state = FETCH_0;
+      end
+
+      // ==== FENCE Instructions ====
+      FENCE_0 : begin
+        // FENCE/FENCE.I: architectural NOP for single-core, no-cache design
+        // Proceed to increment PC
+        next_state = PC_INC;
       end
 
       // ==== ERROR STATES ====
@@ -688,6 +698,11 @@ module control
         csr_access = 1'b1;
         databus_mux_sel = DATABUS_CSR;
         // Note: CSR address will be set by core_top for mepc (0x341)
+      end
+      FENCE_0 : begin
+        // FENCE/FENCE.I: architectural NOP
+        // No control signals needed - just transition to PC_INC
+        // All defaults remain (no loads, no memory access, no CSR access)
       end
       AUIPC_0 : begin
         load_reg = 1'b1;

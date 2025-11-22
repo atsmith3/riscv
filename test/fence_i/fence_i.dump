@@ -1,0 +1,15 @@
+
+fence_i.elf:     file format elf32-littleriscv
+
+
+Disassembly of section .text:
+
+00001000 <__start>:
+    1000:	0000100f          	fence.i
+    1004:	0000100f          	fence.i
+    1008:	dead08b7          	lui	a7,0xdead0
+    100c:	00100513          	li	a0,1
+    1010:	00a8a023          	sw	a0,0(a7) # dead0000 <LOOP+0xdeacefec>
+
+00001014 <LOOP>:
+    1014:	0000006f          	j	1014 <LOOP>
