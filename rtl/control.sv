@@ -52,9 +52,17 @@ module control
   input logic [31:0] rs2_val,
   output logic [31:0] immediate,
   // CSR interface
+  output logic [2:0] funct3_out,  // Instruction funct3 field for CSR operations
   output logic csr_access,       // High when accessing CSR
   output logic csr_write,         // High when writing to CSR (for instret increment)
-  input logic csr_valid           // CSR address valid signal
+  input logic csr_valid,          // CSR address valid signal
+  // Trap handling interface
+  output logic trap_entry,        // High during trap entry (write mepc, mcause, mtval)
+  output logic load_pc_from_csr,  // High when loading PC from CSR (mtvec or mepc)
+  output logic load_mepc,         // High when writing current PC to mepc
+  output logic load_mcause,       // High when writing mcause
+  output logic load_mtval,        // High when writing mtval
+  output logic [31:0] mcause_val  // Value to write to mcause
 );
 
   logic [2:0] instr_type;
@@ -124,6 +132,14 @@ module control
     // CSR Instructions
     CSR_0,                        // Read CSR, compute new value
     CSR_1,                        // Write old CSR value to RD, update CSR
+
+    // Trap Handling
+    TRAP_ENTRY_0,                 // Save PC to mepc
+    TRAP_ENTRY_1,                 // Set mcause
+    TRAP_ENTRY_2,                 // Set mtval
+    TRAP_ENTRY_3,                 // Load trap vector from mtvec
+    TRAP_ENTRY_4,                 // Jump to trap handler (load PC from mtvec)
+    MRET_0,                       // MRET: Load mepc into PC
 
     // Error States
     ERROR_INVALID_OPCODE,         // Invalid instruction opcode detected
@@ -217,9 +233,16 @@ module control
             next_state = ERROR_OPCODE_NOT_IMPLEMENTED;
           end
           ECSR : begin
-            // Distinguish CSR instructions (funct3 != 0) from ECALL/EBREAK (funct3 == 0)
+            // Distinguish CSR instructions (funct3 != 0) from ECALL/EBREAK/MRET (funct3 == 0)
             if (funct3 == 3'b000) begin
-              next_state = ERROR_OPCODE_NOT_IMPLEMENTED;  // ECALL/EBREAK not implemented yet
+              // Check immediate field to distinguish ECALL/EBREAK/MRET
+              if (immediate[11:0] == 12'h302) begin
+                // MRET instruction
+                next_state = MRET_0;
+              end else begin
+                // ECALL or EBREAK - both trap
+                next_state = TRAP_ENTRY_0;
+              end
             end else begin
               next_state = CSR_0;  // CSR instruction
             end
@@ -353,6 +376,35 @@ module control
         next_state = PC_INC;
       end
 
+      // ==== TRAP HANDLING ====
+      // Trap entry sequence for ECALL/EBREAK
+      TRAP_ENTRY_0 : begin
+        // Save PC to mepc
+        next_state = TRAP_ENTRY_1;
+      end
+      TRAP_ENTRY_1 : begin
+        // Set mcause
+        next_state = TRAP_ENTRY_2;
+      end
+      TRAP_ENTRY_2 : begin
+        // Set mtval
+        next_state = TRAP_ENTRY_3;
+      end
+      TRAP_ENTRY_3 : begin
+        // Read mtvec CSR to get trap vector
+        next_state = TRAP_ENTRY_4;
+      end
+      TRAP_ENTRY_4 : begin
+        // Load PC from mtvec (jump to trap handler)
+        next_state = FETCH_0;
+      end
+
+      // ==== MRET (Machine Return) ====
+      MRET_0 : begin
+        // Load PC from mepc (return from trap)
+        next_state = FETCH_0;
+      end
+
       // ==== ERROR STATES ====
       ERROR_INVALID_OPCODE : begin
         next_state = ERROR_INVALID_OPCODE;  // Halt: invalid opcode
@@ -382,6 +434,12 @@ module control
     alu_op = ALU_ADD;
     csr_access = 1'b0;
     csr_write = 1'b0;
+    trap_entry = 1'b0;
+    load_pc_from_csr = 1'b0;
+    load_mepc = 1'b0;
+    load_mcause = 1'b0;
+    load_mtval = 1'b0;
+    mcause_val = 32'h0;
 
     // Suppress outputs during reset
     if (!rst_n) begin
@@ -593,6 +651,44 @@ module control
         csr_access = 1'b1;
         csr_write = 1'b1;
       end
+      TRAP_ENTRY_0 : begin
+        // Save current PC to mepc
+        trap_entry = 1'b1;
+        load_mepc = 1'b1;
+      end
+      TRAP_ENTRY_1 : begin
+        // Set mcause based on ebreak signal
+        trap_entry = 1'b1;
+        load_mcause = 1'b1;
+        // mcause: 11 for ECALL, 3 for EBREAK
+        mcause_val = ebreak ? 32'h00000003 : 32'h0000000B;
+      end
+      TRAP_ENTRY_2 : begin
+        // Set mtval (unused for ECALL/EBREAK, set to 0)
+        trap_entry = 1'b1;
+        load_mtval = 1'b1;
+      end
+      TRAP_ENTRY_3 : begin
+        // Access mtvec CSR to read trap vector
+        trap_entry = 1'b1;
+        csr_access = 1'b1;
+        // Note: CSR address will be set by core_top for mtvec (0x305)
+      end
+      TRAP_ENTRY_4 : begin
+        // Load PC from CSR (mtvec)
+        trap_entry = 1'b1;
+        load_pc = 1'b1;
+        load_pc_from_csr = 1'b1;
+        databus_mux_sel = DATABUS_CSR;
+      end
+      MRET_0 : begin
+        // Load PC from mepc (return from trap)
+        load_pc = 1'b1;
+        load_pc_from_csr = 1'b1;
+        csr_access = 1'b1;
+        databus_mux_sel = DATABUS_CSR;
+        // Note: CSR address will be set by core_top for mepc (0x341)
+      end
       AUIPC_0 : begin
         load_reg = 1'b1;
         rs2_mux_sel = RS2_IMM;
@@ -661,5 +757,8 @@ module control
       endcase
     end
   end
+
+  // Export funct3 for CSR ALU
+  assign funct3_out = funct3;
 
 endmodule
