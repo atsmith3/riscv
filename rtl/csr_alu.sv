@@ -10,6 +10,8 @@
 // (Allows read-only access without side effects)
 //
 
+`include "datatypes.sv"
+
 module csr_alu (
   input  logic [31:0] csr_rdata,      // Current CSR value (from csr_file)
   input  logic [31:0] rs1_or_zimm,    // RS1 value or zero-extended immediate
@@ -20,13 +22,8 @@ module csr_alu (
   output logic        csr_we          // Write enable (0 if write suppressed)
 );
 
-  // CSR operation encoding (funct3 field)
-  localparam [2:0] CSR_RW  = 3'b001;  // CSRRW
-  localparam [2:0] CSR_RS  = 3'b010;  // CSRRS
-  localparam [2:0] CSR_RC  = 3'b011;  // CSRRC
-  localparam [2:0] CSR_RWI = 3'b101;  // CSRRWI
-  localparam [2:0] CSR_RSI = 3'b110;  // CSRRSI
-  localparam [2:0] CSR_RCI = 3'b111;  // CSRRCI
+  // CSR operation encoding from datatypes.sv (csr_op_t enum)
+  // Using enum values: CSR_RW, CSR_RS, CSR_RC, CSR_RWI, CSR_RSI, CSR_RCI
 
   always_comb begin
     // Default values

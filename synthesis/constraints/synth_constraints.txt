@@ -1,0 +1,278 @@
+# ==============================================================================
+# Synthesis Constraints and Configuration Notes
+# Potato RISC-V Core - Gate-Level Synthesis for GF180 PDK
+# ==============================================================================
+
+# ==============================================================================
+# FSM Encoding Configuration
+# ==============================================================================
+
+FSM_ENCODING: ONE-HOT
+
+Rationale:
+  - Simpler next-state logic compared to binary encoding
+  - Better for formal verification (explicit state representation)
+  - Easier to debug (one flip-flop per state)
+  - Preferred for verification-oriented designs
+
+Trade-offs:
+  - More flip-flops: 40 FFs for 40-state FSM
+  - Binary encoding would use ~6 FFs but more complex logic
+  - One-hot chosen for formal verification focus
+
+Implementation:
+  - Configured in scripts/synth.tcl via: fsm_recode -encoding onehot
+  - Applied to control.sv FSM (main control unit)
+
+# ==============================================================================
+# Memory Mapping Strategy
+# ==============================================================================
+
+REGISTER_FILE: Map to individual flip-flops
+
+Configuration:
+  - 32x32-bit register file → 1024 individual DFFs
+  - Read ports → 1024:1 multiplexer trees
+  - Write port → Enable logic for each DFF
+
+Rationale:
+  - Explicit representation for formal verification
+  - Standard practice for ASIC synthesis
+  - Required for complete circuit representation
+
+Trade-offs:
+  - Large latch count (~1024 FFs just for regfile)
+  - Large multiplexer trees for reads
+  - Accurate representation vs compactness
+
+CSR_FILE: Map counters and registers to flip-flops
+
+Configuration:
+  - 3x 64-bit counters (cycle, time, instret) → ~200 FFs
+  - 4x 32-bit machine CSRs → 128 FFs
+  - Counter increment logic → Adder gates
+
+# ==============================================================================
+# Expected Resource Usage
+# ==============================================================================
+
+TOTAL CELLS: ~9,600-9,800
+
+Gate Library Distribution:
+  - $_MUX_:          ~4,300  (datapath multiplexers, register file reads)
+  - $_AND_:          ~1,700  (ALU, decoder, control logic)
+  - $_OR_:           ~1,500  (signal combining, branch logic)
+  - $_DFFE_PP_:      ~1,024  (register file with enable)
+  - $_XOR_:            ~300  (ALU, comparisons)
+  - $_NOT_:            ~260  (inversions, active-low signals)
+  - $_DFFE_PN0P_:      ~191  (DFFs with enable and reset to 0)
+  - $_DFF_PN0_:        ~128  (program registers with reset to 0)
+  - $_SDFFE_PN0P_:     ~127  (sync reset + enable DFFs)
+  - $_SDFF_PN0_:         ~6  (sync reset DFFs)
+  - Other variants:      ~3  (misc DFF types)
+
+FLIP-FLOPS (All DFF variants): ~1,450-1,480 total
+
+Breakdown:
+  - Register file:      1024 FFs  (32 registers × 32 bits)
+  - CSR counters:       ~200 FFs  (3× 64-bit counters)
+  - CSR machine regs:    128 FFs  (4× 32-bit registers)
+  - FSM state:            40 FFs  (one-hot encoding)
+  - Program registers:   128 FFs  (PC, IR, MAR, MDR = 4× 32 bits)
+
+LOGIC GATES: ~7,000-8,000 combinational cells
+
+Major contributors:
+  - Multiplexers ($_MUX_): ~4,300 cells for datapath routing
+  - AND gates ($_AND_): ~1,700 for ALU and decoder logic
+  - OR gates ($_OR_): ~1,500 for signal combining
+  - XOR gates ($_XOR_): ~300 for ALU operations
+  - NOT gates ($_NOT_): ~260 for inversions
+
+# ==============================================================================
+# Timing Considerations
+# ==============================================================================
+
+NOTE: Current netlist is UNTIMED (Yosys $_ primitives)
+
+Important:
+  - Gate-level netlist represents structure only
+  - No timing information until PDK mapping
+  - No actual gate delays (placeholders)
+  - No wire capacitance/resistance
+
+Next Steps for Timing:
+  1. Map to GF180 PDK cells (via ABC with Liberty file)
+  2. Add SDC constraints (clock period, input/output delays)
+  3. Run static timing analysis (STA) with OpenSTA
+  4. Iterate optimization to meet timing
+
+Clock behavior:
+  - Single clock signal (clk) drives all FFs
+  - Synchronous design (all FFs clocked by same edge)
+  - Reset is asynchronous (rst_n active-low)
+
+# ==============================================================================
+# Optimization Directives
+# ==============================================================================
+
+CURRENT CONFIGURATION: Low optimization for debuggability
+
+Yosys flags (in synth.tcl):
+  - No aggressive optimization passes
+  - opt -nodffe -nosdff (disable DFF optimization)
+  - This preserves more intermediate signals
+  - Better for debugging but larger netlist
+
+Alternative for production:
+  - Remove -nodffe -nosdff for smaller netlist
+  - Add abc -g AND for further optimization
+  - Trade-off: smaller but harder to debug
+
+# ==============================================================================
+# Synthesis Phases and Critical Operations
+# ==============================================================================
+
+CRITICAL PHASE 1: File ordering
+  - datatypes.sv MUST be first
+  - Defines all enums and typedefs
+  - Other files depend on these definitions
+
+CRITICAL PHASE 2: FSM optimization
+  - Sequence: detect → extract → optimize → recode → map
+  - Detects ~40-state FSM in control.sv
+  - One-hot encoding applied
+  - Converted to next-state logic
+
+CRITICAL PHASE 3: Memory mapping
+  - memory -nomap: Process abstractly first
+  - memory_map: Convert to flip-flops and logic
+  - Register file becomes 1024 FFs
+  - Critical for complete representation
+
+CRITICAL PHASE 4: Flattening
+  - flatten: Remove all hierarchy
+  - Enables cross-module optimization
+  - All signals get flat names: module.signal
+  - Standard practice for ASIC synthesis
+
+CRITICAL PHASE 5: Standard Gate Mapping
+  - techmap: Map to standard gate library
+  - Produces $_AND_, $_OR_, $_NOT_, $_XOR_, $_MUX_
+  - Preserves DFF variants ($_DFFE_*, $_SDFF_*, etc.)
+  - Suitable for PDK mapping
+
+# ==============================================================================
+# Verification Criteria
+# ==============================================================================
+
+SYNTHESIS SUCCESS:
+  ✓ Yosys exits with status 0
+  ✓ No FATAL or ERROR in log
+  ✓ All output files generated (.v, .json, .blif)
+  ✓ Warnings acceptable (unused signals, constant optimizations)
+
+NETLIST VALIDATION:
+  ✓ Verilog file exists and is non-empty (~700 KB)
+  ✓ JSON file exists (~6 MB)
+  ✓ BLIF file exists (~2 MB)
+  ✓ Total cells: ~9,600-9,800
+  ✓ Flip-flops: ~1,450-1,480
+  ✓ Logic gates: diverse ($_AND_, $_OR_, $_MUX_, $_XOR_, etc.)
+
+EQUIVALENCE CHECK:
+  ✓ equiv_induct completes successfully (if run)
+  ✓ equiv_status reports PASS
+  ✓ Formal proof: RTL ≡ Gate-level netlist
+
+# ==============================================================================
+# Known Limitations and Assumptions
+# ==============================================================================
+
+LIMITATIONS:
+
+1. Untimed representation
+   - No timing information in AIGER
+   - Functional equivalence only
+
+2. Flat design
+   - All hierarchy removed
+   - Module boundaries lost
+   - Use symbols to map back to RTL structure
+
+3. Single clock domain
+   - Design is synchronous single-clock
+   - Multi-clock would require special handling
+
+4. No X/Z values
+   - Binary logic only (0 and 1)
+   - Uninitialized values become 0 (with -zinit)
+   - No high-impedance
+
+ASSUMPTIONS:
+
+1. SystemVerilog features
+   - Assumes Yosys 0.49+ for SV support
+   - Enums and typedefs handled natively
+   - No preprocessor needed
+
+2. Memory model
+   - Register file fits in flip-flops
+   - No actual memory blocks in target
+   - Suitable for verification, not for ASIC/FPGA synthesis
+
+3. Reset behavior
+   - Asynchronous reset (rst_n active-low)
+   - All latches reset to 0
+   - Matches RTL reset behavior
+
+# ==============================================================================
+# Integration Notes
+# ==============================================================================
+
+SYMBOL MAPPING:
+
+The symbol table maps AIGER variables to RTL signals:
+
+Input symbols (i0, i1, ...):
+  i0 = clk
+  i1 = rst_n
+  i2 = mem_rdata[0]
+  ...
+  i33 = mem_rdata[31]
+  i34 = mem_resp
+
+Output symbols (o0, o1, ...):
+  o0 = mem_wdata[0]
+  ...
+  o31 = mem_wdata[31]
+  o32 = mem_addr[0]
+  ...
+  o101 = pc[31]
+
+Latch symbols (l0, l1, ...):
+  l0 = regfile.data[0][0]
+  ...
+  l1023 = regfile.data[31][31]
+  l1024 = control.state_reg[0]
+  ...
+
+Use these mappings to correlate simulation results with RTL signals.
+
+# ==============================================================================
+# Revision History
+# ==============================================================================
+
+2025-12-05: Initial synthesis configuration
+  - One-hot FSM encoding selected
+  - Memory mapping to flip-flops configured
+  - Optimization level set for debuggability
+
+2025-12-13: Changed from AIGER to standard gate-level synthesis
+  - Removed AIGER-specific conversion (aigmap)
+  - Added standard techmap for rich gate library
+  - Targeting GlobalFoundries 180nm PDK
+  - Output formats: Verilog, JSON, BLIF
+  - Cell count reduced from ~52K to ~9.7K (richer library)
+
+# ==============================================================================

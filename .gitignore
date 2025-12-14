@@ -8,3 +8,6 @@ build/
 
 .*.swo
 .*.swp
+
+# Synthesis build artifacts
+synthesis/build/

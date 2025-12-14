@@ -1,0 +1,34 @@
+# Potato RISC-V Core - RTL File List
+# Files must be listed in dependency order for Yosys synthesis
+# Comment lines start with #
+
+# ============================================================================
+# Type definitions - handled via `include directive
+# ============================================================================
+# datatypes.sv is included by files that need it via `include "datatypes.sv"
+# The -I flag sets the include path to ../../rtl so includes work correctly
+# Do NOT read datatypes.sv directly as it would cause duplicate definitions
+
+# ============================================================================
+# Leaf modules (no instantiation dependencies)
+# ============================================================================
+../../rtl/program_register.sv
+../../rtl/regfile.sv
+../../rtl/mux4.sv
+../../rtl/alu/alu.sv
+../../rtl/byte_lane.sv
+../../rtl/csr_alu.sv
+../../rtl/csr_file.sv
+
+# ============================================================================
+# Control hierarchy
+# ============================================================================
+../../rtl/control/imm_gen.sv
+../../rtl/control/decoder.sv
+../../rtl/control/branch_eval.sv
+../../rtl/control.sv
+
+# ============================================================================
+# Top level
+# ============================================================================
+../../rtl/core_top.sv
