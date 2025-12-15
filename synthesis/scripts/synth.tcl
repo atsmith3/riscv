@@ -218,11 +218,15 @@ stat
 # 11. WRITE GATE-LEVEL NETLIST
 # ==============================================================================
 
-puts "\n=== Phase 11: Writing Gate-Level Netlist ==="
+puts "\n=== Phase 11: Writing Gate-Level Netlists ==="
 
-# Write Verilog netlist (primary output)
-puts "  Writing gate-level Verilog netlist..."
+# Write Verilog netlist with processes (behavioral - easier to read)
+puts "  Writing behavioral Verilog netlist (with always blocks)..."
 yosys write_verilog -noattr ../build/output/core_top_synth.v
+
+# Write Verilog netlist with only primitives (for ABC/PDK mapping)
+puts "  Writing gate-primitive Verilog netlist (for PDK mapping)..."
+yosys write_verilog -noattr -noexpr ../build/output/core_top_synth_gates.v
 
 # Write JSON for tool interoperability
 puts "  Writing JSON netlist..."

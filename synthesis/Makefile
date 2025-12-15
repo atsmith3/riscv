@@ -16,11 +16,13 @@ REPORT_DIR := $(BUILD_DIR)/reports
 # Scripts
 SYNTH_SCRIPT := $(SCRIPTS_DIR)/synth.tcl
 EQUIV_SCRIPT := $(SCRIPTS_DIR)/equiv_check.tcl
+PDK_MAP_SCRIPT := $(SCRIPTS_DIR)/pdk_map.tcl
 
 # Outputs
 VERILOG_NETLIST := $(OUTPUT_DIR)/core_top_synth.v
 JSON_NETLIST := $(OUTPUT_DIR)/core_top_synth.json
 BLIF_NETLIST := $(OUTPUT_DIR)/core_top_synth.blif
+GF180_NETLIST := $(OUTPUT_DIR)/core_top_gf180.v
 
 # Timestamped logs
 TIMESTAMP := $(shell date +%Y%m%d_%H%M%S)
@@ -37,7 +39,7 @@ COLOR_GREEN := \033[32m
 COLOR_BLUE := \033[34m
 COLOR_YELLOW := \033[33m
 
-.PHONY: all synth validate equiv reports clean help
+.PHONY: all synth validate equiv pdk-map reports clean help
 
 # ==============================================================================
 # Default target: run complete synthesis flow
@@ -131,6 +133,35 @@ equiv: $(VERILOG_NETLIST) | $(LOG_DIR)
 	else \
 		echo "$(COLOR_BOLD)$(COLOR_YELLOW)⚠ WARNING: Check equivalence log for details$(COLOR_RESET)"; \
 	fi
+	@echo ""
+
+# ==============================================================================
+# PDK Mapping: Map Yosys primitives to GF180 standard cells
+# ==============================================================================
+
+pdk-map: $(GF180_NETLIST)
+
+$(GF180_NETLIST): $(VERILOG_NETLIST) $(PDK_MAP_SCRIPT) | $(LOG_DIR) $(OUTPUT_DIR)
+	@echo ""
+	@echo "$(COLOR_BOLD)$(COLOR_BLUE)================================================================================$(COLOR_RESET)"
+	@echo "$(COLOR_BOLD)$(COLOR_BLUE)MAPPING TO GF180 PDK CELLS$(COLOR_RESET)"
+	@echo "$(COLOR_BOLD)$(COLOR_BLUE)================================================================================$(COLOR_RESET)"
+	@echo ""
+	@echo "PDK mapping script: $(PDK_MAP_SCRIPT)"
+	@echo "Input:              $(VERILOG_NETLIST)"
+	@echo "Output:             $(GF180_NETLIST)"
+	@echo ""
+	@echo "This will take 30-60 seconds..."
+	@echo ""
+	@cd $(SCRIPTS_DIR) && $(YOSYS) -c pdk_map.tcl 2>&1 | tee ../$(LOG_DIR)/pdk_map_$(TIMESTAMP).log
+	@echo ""
+	@echo "$(COLOR_GREEN)PDK mapping complete!$(COLOR_RESET)"
+	@echo ""
+	@echo "Output netlist:"
+	@ls -lh $(GF180_NETLIST)
+	@echo ""
+	@echo "Cell types used:"
+	@grep 'gf180mcu_fd_sc_mcu9t5v0__' $(GF180_NETLIST) | sed 's/(.*//g' | sort -u | head -20
 	@echo ""
 
 # ==============================================================================
