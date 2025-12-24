@@ -43,8 +43,14 @@ puts "  Using Liberty file: $liberty_file"
 #   - 200 MHz = -D 5000  (5ns period)
 
 puts "  Target clock period: 10ns (100 MHz)"
-puts "  Running ABC technology mapping..."
+puts "  Running two-pass technology mapping..."
 
+# First pass: Map flip-flops explicitly to GF180 cells
+puts "  Step 1: Mapping sequential elements (flip-flops)..."
+dfflibmap -liberty $liberty_file
+
+# Second pass: Map combinational logic to GF180 cells
+puts "  Step 2: Mapping combinational logic..."
 abc -liberty $liberty_file -D 10000
 
 # ==============================================================================
