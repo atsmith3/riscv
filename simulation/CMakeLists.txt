@@ -111,7 +111,7 @@ if(EXISTS ${GLS_NETLIST})
   verilate(verilated_gls COVERAGE TRACE
     PREFIX Vcore_top
     INCLUDE_DIRS ${RTL_ROOT}
-    VERILATOR_ARGS -O0 -x-assign 0 --bbox-unsup -Wno-UNOPTFLAT -Wno-IMPLICIT -Wno-MULTITOP --error-limit=0
+    VERILATOR_ARGS -O0 -x-assign 0 --bbox-unsup -Wno-UNOPTFLAT -Wno-IMPLICIT -Wno-MULTITOP -Wno-PINMISSING -error-limit 0
     SOURCES ${GLS_SOURCES}
   )
 
