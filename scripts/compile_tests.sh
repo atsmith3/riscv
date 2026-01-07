@@ -31,7 +31,7 @@ compile_test() {
   echo "Compiling $test_name..."
 
   docker run --rm \
-    -v "$test_dir:/workspace" \
+    -v "$test_dir:/workspace:z" \
     -w /workspace \
     riscv-toolchain:latest \
     bash -c "./compile.sh"
