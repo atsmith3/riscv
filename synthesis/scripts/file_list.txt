@@ -13,6 +13,7 @@
 # Leaf modules (no instantiation dependencies)
 # ============================================================================
 ../../rtl/program_register.sv
+../../rtl/dff_init.sv
 ../../rtl/regfile.sv
 ../../rtl/mux4.sv
 ../../rtl/alu/alu.sv

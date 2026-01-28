@@ -38,7 +38,7 @@ set(RTL_ROOT ${WORKSPACE}/rtl)
 set(SYNTHESIS_ROOT ${WORKSPACE}/synthesis)
 set(GLS_NETLIST ${SYNTHESIS_ROOT}/build/output/core_top_gf180.v)
 set(GF180_PDK_ROOT /home/andrew/prj/chip/gf180mcu-pdk)
-set(GF180_MODELS_LIST ${SYNTHESIS_ROOT}/scripts/gf180mcu_fd_sc_mcu9t5v0_with_udp.filelist)
+set(GF180_MODELS_LIST ${SYNTHESIS_ROOT}/scripts/gf180mcu_fd_sc_mcu9t5v0_verilator.filelist)
 
 # Function to load GF180 model files
 function(load_gf180_models OUTPUT_VAR)
@@ -112,7 +112,7 @@ if(EXISTS ${GLS_NETLIST})
   verilate(verilated_gls COVERAGE TRACE
     PREFIX Vcore_top
     INCLUDE_DIRS ${RTL_ROOT}
-    VERILATOR_ARGS -O0 -x-assign 0 --bbox-unsup -Wno-UNOPTFLAT -Wno-IMPLICIT -Wno-MULTITOP -Wno-PINMISSING -error-limit 0
+    VERILATOR_ARGS -O0 -x-assign 0 -Wno-UNOPTFLAT -Wno-IMPLICIT -Wno-MULTITOP -Wno-PINMISSING -error-limit 0
     SOURCES ${GLS_SOURCES}
   )
 
@@ -125,6 +125,40 @@ else()
   message(STATUS "  GLS netlist not found - skipping")
   message(STATUS "========================================")
   message(STATUS "Run: cd ${SYNTHESIS_ROOT} && make pdk-map")
+endif()
+
+#=============================================================================
+# Pre-Techmap Synth Verilated Library
+#=============================================================================
+set(SYNTH_NETLIST ${SYNTHESIS_ROOT}/build/output/core_top_synth.v)
+if(EXISTS ${SYNTH_NETLIST})
+  message(STATUS "========================================")
+  message(STATUS "  Creating Synth verilated library")
+  message(STATUS "========================================")
+  message(STATUS "Netlist: ${SYNTH_NETLIST}")
+
+  add_library(verilated_synth STATIC
+    memory_model.cpp
+    test_utils.cpp
+    test_runner.cpp
+  )
+
+  verilate(verilated_synth COVERAGE TRACE
+    PREFIX Vcore_top
+    INCLUDE_DIRS ${RTL_ROOT}
+    VERILATOR_ARGS -O0 -x-assign 0 -Wno-UNOPTFLAT -Wno-IMPLICIT -error-limit 0
+    SOURCES ${SYNTH_NETLIST}
+  )
+
+  target_include_directories(verilated_synth PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${Boost_INCLUDE_DIRS}
+  )
+else()
+  message(STATUS "========================================")
+  message(STATUS "  Pre-techmap synth netlist not found")
+  message(STATUS "========================================")
+  message(STATUS "Run: cd ${SYNTHESIS_ROOT} && make synth")
 endif()
 
 #=============================================================================
@@ -142,6 +176,22 @@ target_link_libraries(riscv_tests_rtl
 )
 
 #=============================================================================
+# Synth System Tests Executable (if netlist exists)
+#=============================================================================
+if(TARGET verilated_synth)
+  add_executable(riscv_tests_synth
+    tests/test_main.cpp
+    tests/system_tests.cpp
+    tests/csr_system_tests.cpp
+  )
+
+  target_link_libraries(riscv_tests_synth
+    verilated_synth
+    ${Boost_LIBRARIES}
+  )
+endif()
+
+#=============================================================================
 # GLS System Tests Executable (if netlist exists)
 #=============================================================================
 if(TARGET verilated_gls)
@@ -155,13 +205,21 @@ if(TARGET verilated_gls)
     verilated_gls
     ${Boost_LIBRARIES}
   )
+endif()
 
-  message(STATUS "Created test executables:")
-  message(STATUS "  - riscv_tests_rtl (RTL simulation)")
+#=============================================================================
+# Status messages for created executables
+#=============================================================================
+message(STATUS "Created test executables:")
+message(STATUS "  - riscv_tests_rtl (RTL simulation)")
+if(TARGET verilated_synth)
+  message(STATUS "  - riscv_tests_synth (Synth simulation)")
+else()
+  message(STATUS "  - riscv_tests_synth (skipped - no netlist)")
+endif()
+if(TARGET verilated_gls)
   message(STATUS "  - riscv_tests_gls (GLS simulation)")
 else()
-  message(STATUS "Created test executable:")
-  message(STATUS "  - riscv_tests_rtl (RTL simulation)")
   message(STATUS "  - riscv_tests_gls (skipped - no netlist)")
 endif()
 
@@ -171,6 +229,9 @@ add_custom_target(riscv_tests DEPENDS riscv_tests_rtl)
 # Enable CTest integration
 enable_testing()
 add_test(NAME SystemTests_RTL COMMAND riscv_tests_rtl)
+if(TARGET riscv_tests_synth)
+  add_test(NAME SystemTests_Synth COMMAND riscv_tests_synth)
+endif()
 if(TARGET riscv_tests_gls)
   add_test(NAME SystemTests_GLS COMMAND riscv_tests_gls)
 endif()
