@@ -57,6 +57,7 @@ endfunction()
 set(RTL_SRC
   ${RTL_ROOT}/core_top.sv
   ${RTL_ROOT}/program_register.sv
+  ${RTL_ROOT}/dff_init.sv
   ${RTL_ROOT}/regfile.sv
   ${RTL_ROOT}/mux4.sv
   ${RTL_ROOT}/control.sv
