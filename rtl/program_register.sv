@@ -34,23 +34,20 @@ module program_register (
 
   output wire [WIDTH-1:0] out;
 
-  reg [WIDTH-1:0] data;
-
-  assign out = data;
-
-  initial begin
-    data = 0;
-  end
-
-  always @ (posedge clk) begin
-    if (!rst_n) begin
-      data <= INIT;
+  // Generate single-bit DFFs for each bit position
+  // This allows Yosys to properly technology-map each bit with its
+  // individual reset value from the INIT parameter
+  genvar i;
+  generate
+    for (i = 0; i < WIDTH; i = i + 1) begin : gen_bits
+      dff_init #(.INIT(INIT[i])) u_bit (
+        .clk(clk),
+        .rst_n(rst_n),
+        .d(in[i]),
+        .load(load),
+        .q(out[i])
+      );
     end
-    else if (load) begin
-      data <= in;
-    end
-    else begin
-      data <= data;
-    end
-  end
+  endgenerate
+
 endmodule : program_register

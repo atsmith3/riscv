@@ -10,10 +10,11 @@ A clean, educational implementation of the RV32I base integer instruction set wi
 4. [Datapath Organization](#datapath-organization)
 5. [Test Infrastructure](#test-infrastructure)
 6. [Build System](#build-system)
-7. [Key Interfaces](#key-interfaces)
-8. [Adding New Tests](#adding-new-tests)
-9. [Performance Characteristics](#performance-characteristics)
-10. [File Structure](#file-structure)
+7. [Synthesis](#synthesis)
+8. [Key Interfaces](#key-interfaces)
+9. [Adding New Tests](#adding-new-tests)
+10. [Performance Characteristics](#performance-characteristics)
+11. [File Structure](#file-structure)
 
 ---
 
@@ -590,6 +591,44 @@ ctest
 # Run with verbose output
 ./riscv_tests --log_level=all
 ```
+
+---
+
+## Synthesis
+
+The design can be synthesized to AIGER format for formal verification and model checking.
+
+### Quick Start
+
+```bash
+cd synthesis
+make all
+```
+
+This runs the complete synthesis flow (~2-3 minutes):
+1. **Synthesis** - Convert RTL to AIGER using Yosys
+2. **Validation** - Check AIGER file structure and statistics
+3. **Equivalence Checking** - Formal proof of RTL ≡ gate-level
+4. **Reports** - Generate synthesis summary
+
+### Output Files
+
+```
+synthesis/build/output/
+├── core_top.aag           # ASCII AIGER with symbols (50-200 MB)
+├── core_top.aig           # Binary AIGER compressed (5-20 MB)
+├── core_top_synth.v       # Gate-level Verilog netlist
+└── *.map                  # Symbol mappings
+```
+
+### Use Cases
+
+- **Formal Verification** - Model checking, property proving
+- **Equivalence Checking** - Proving transformations preserve functionality
+- **Simulation** - Using formal verification tools (ABC, nuXmv)
+- **Circuit Analysis** - Structure analysis, optimization studies
+
+See `synthesis/README.md` for detailed documentation, build targets, and integration guide.
 
 ---
 
