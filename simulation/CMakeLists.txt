@@ -37,7 +37,6 @@ set(RTL_ROOT ${WORKSPACE}/rtl)
 #=============================================================================
 set(SYNTHESIS_ROOT ${WORKSPACE}/synthesis)
 set(GLS_NETLIST ${SYNTHESIS_ROOT}/build/output/core_top_gf180.v)
-set(GF180_PDK_ROOT /home/andrew/prj/chip/gf180mcu-pdk)
 set(GF180_MODELS_LIST ${SYNTHESIS_ROOT}/scripts/gf180mcu_fd_sc_mcu9t5v0_verilator.filelist)
 
 # Function to load GF180 model files
