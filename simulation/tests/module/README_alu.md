@@ -82,17 +82,17 @@ Based on `datatypes.sv`:
 | Operation | Code | Description |
 |-----------|------|-------------|
 | ADD       | 0    | Addition |
-| SUB       | 1    | Subtraction |
-| SLL       | 2    | Shift Left Logical |
-| SLT       | 3    | Set Less Than (signed) |
-| AND       | 4    | Bitwise AND |
-| OR        | 5    | Bitwise OR |
-| XOR       | 6    | Bitwise XOR |
-| SRL       | 7    | Shift Right Logical |
-| SLTU      | 8    | Set Less Than Unsigned |
-| SRA       | 9    | Shift Right Arithmetic |
-| COPY_A    | 10   | Pass-through of operand A |
-| COPY_B    | 13   | Pass-through of operand B |
+| SLL       | 1    | Shift Left Logical |
+| SLT       | 2    | Set Less Than (signed) |
+| SLTU      | 3    | Set Less Than Unsigned |
+| XOR       | 4    | Bitwise XOR |
+| SRL       | 5    | Shift Right Logical |
+| OR        | 6    | Bitwise OR |
+| AND       | 7    | Bitwise AND |
+| SUB       | 8    | Subtraction |
+| PASS_RS1  | 9    | Pass-through of operand A |
+| PASS_RS2  | 10   | Pass-through of operand B |
+| SRA       | 13   | Shift Right Arithmetic |
 
 ## Running the Tests
 

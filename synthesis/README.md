@@ -299,7 +299,7 @@ The synthesis script (`scripts/synth.tcl`) implements a 12-phase flow:
 2. `fsm_extract` - Extract FSM structure
 3. `fsm_opt` - Optimize FSM (reduce states, remove unreachable)
 4. `fsm_recode -encoding onehot` - **One-hot encoding**
-   - Creates 40 flip-flops for 40-state FSM
+   - Creates 36 flip-flops for 36-state FSM
    - Simpler next-state logic vs binary encoding
    - Better for formal verification
 5. `fsm_map` - Convert FSM to logic gates
@@ -740,13 +740,13 @@ Yosys 0.49+ natively handles SystemVerilog features used in this design:
 **Configuration**: `fsm_recode -encoding onehot`
 
 **Trade-off**:
-- **More flip-flops**: 40 FFs for 40-state FSM (vs ~6 for binary)
+- **More flip-flops**: 36 FFs for 36-state FSM (vs ~6 for binary)
 - **Simpler logic**: One FF per state, simple next-state
 - **Better for formal**: Easier to prove properties
 - **Faster synthesis**: Less optimization needed
 
 **Alternative**: Binary encoding (`-encoding binary`)
-- Fewer FFs (~6 for 40 states)
+- Fewer FFs (~6 for 36 states)
 - More complex next-state logic
 - Harder formal verification
 

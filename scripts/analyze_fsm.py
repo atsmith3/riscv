@@ -42,7 +42,7 @@ class FSMAnalyzer:
             'alu': ('lightgreen', ['REG_REG', 'REG_IMM', 'LUI_0', 'AUIPC_0']),
             'control': ('lightcoral', [
                 'BRANCH_0', 'BRANCH_T', 'PC_INC', 'JAL_0', 'JAL_1', 'JALR_0',
-                'JALR_1'
+                'JALR_1', 'FENCE_0'
             ]),
             'memory': ('lightyellow', [
                 'LD_0', 'LD_1', 'LD_2', 'LD_3', 'LD_4', 'ST_0', 'ST_1', 'ST_2',
@@ -80,7 +80,7 @@ class FSMAnalyzer:
             'LUI_0', 'AUIPC_0', 'JALR_0', 'JALR_1', 'LD_0', 'LD_1', 'LD_2',
             'LD_3', 'LD_4', 'ST_0', 'ST_1', 'ST_2', 'ST_3', 'CSR_0', 'CSR_1',
             'TRAP_ENTRY_0', 'TRAP_ENTRY_1', 'TRAP_ENTRY_2', 'TRAP_ENTRY_3',
-            'TRAP_ENTRY_4', 'MRET_0', 'ERROR_INVALID_OPCODE',
+            'TRAP_ENTRY_4', 'MRET_0', 'FENCE_0', 'ERROR_INVALID_OPCODE',
             'ERROR_OPCODE_NOT_IMPLEMENTED'
         ]
 
@@ -163,6 +163,10 @@ class FSMAnalyzer:
             # MRET
             ('MRET_0', 'FETCH_0', ''),
 
+            # FENCE (architectural NOP)
+            ('DECODE', 'FENCE_0', 'FENCE'),
+            ('FENCE_0', 'PC_INC', ''),
+
             # Error states (halt)
             ('ERROR_INVALID_OPCODE', 'ERROR_INVALID_OPCODE', ''),
             ('ERROR_OPCODE_NOT_IMPLEMENTED', 'ERROR_OPCODE_NOT_IMPLEMENTED',
@@ -217,7 +221,7 @@ class FSMAnalyzer:
             # Title
             f.write('  labelloc="t";\n')
             f.write(
-                '  label="RISC-V Control FSM\\n37 States, Multi-Cycle Architecture";\n'
+                '  label="RISC-V Control FSM\\n36 States, Multi-Cycle Architecture";\n'
             )
             f.write('  fontsize=16;\n')
             f.write('  \n')

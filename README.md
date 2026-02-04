@@ -118,7 +118,7 @@ output [3:0]  mem_be       // Byte enables
 
 **Location**: `/rtl/control.sv`
 
-**FSM States** (47 states total):
+**FSM States** (36 states total):
 ```
 Instruction Fetch (4+ cycles):
   FETCH_0: MAR <- PC, initiate read
@@ -454,6 +454,9 @@ LOOP:
 - `test_prime_program`: Prime number test
 - `test_byte_load_simple_program`: Byte load verification
 - `test_halfword_program`: Halfword access verification
+- `test_fence_basic_program`: Basic FENCE instruction execution
+- `test_fence_i_program`: FENCE.I instruction execution
+- `test_fence_ordering_program`: Memory ordering verification
 
 **Boost.Test Integration:**
 ```cpp
