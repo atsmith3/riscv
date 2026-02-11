@@ -21,6 +21,7 @@ read_verilog -sv $rtl_dir/control/imm_gen.sv
 read_verilog -sv $rtl_dir/control/decoder.sv
 read_verilog -sv $rtl_dir/control.sv
 read_verilog -sv $rtl_dir/core_top.sv
+read_verilog -sv bram_memory.sv
 read_verilog -sv emu_top.sv
 
 # Read constraints

@@ -10,23 +10,33 @@ PART    := xc7s50csga324-1
 TOP     := emu_top
 RTL_DIR := ../../../rtl
 XDC_DIR := xdc
+TEST    ?= add
+TEST_INI := ../../../test/$(TEST)/$(TEST).ini
+HEX_FILE := build/$(TEST).hex
 
 # Timestamp evaluated once per make invocation so all targets share it.
 TIMESTAMP := $(shell date +%Y%m%d_%H%M%S)
 BUILD_DIR  = build/$(TIMESTAMP)
 
 # ── Phony targets ────────────────────────────────────────────────────────────
-.PHONY: all lint synth opt place route bitstream clean help
+.PHONY: all lint synth opt place route bitstream clean help hex
 
 # ── Default target ───────────────────────────────────────────────────────────
 all: lint synth opt place route bitstream
 
+# ── Hex conversion (ini → readmemh) ─────────────────────────────────────────
+hex: $(HEX_FILE)
+
+$(HEX_FILE): $(TEST_INI)
+	@mkdir -p build
+	python3 scripts/ini2hex.py $< $@
+
 # ── Lint (RTL elaboration) ───────────────────────────────────────────────────
-lint:
+lint: $(HEX_FILE)
 	@mkdir -p $(BUILD_DIR)/lint
 	@ln -sfn $(TIMESTAMP) build/latest
 	@echo "=== Lint  [$(BUILD_DIR)/lint] ==="
-	vivado -mode batch -source scripts/lint.tcl \
+	vivado -mode batch -nolog -nojournal -source scripts/lint.tcl \
 	  -tclargs $(BUILD_DIR)/lint $(RTL_DIR) $(PART) $(XDC_DIR) \
 	  2>&1 | tee $(BUILD_DIR)/lint/lint.log
 
@@ -38,12 +48,12 @@ define check_latest
 	fi
 endef
 
-# ── Synthesis (out-of-context) ───────────────────────────────────────────────
-synth:
+# ── Synthesis ────────────────────────────────────────────────────────────────
+synth: $(HEX_FILE)
 	$(check_latest)
 	@mkdir -p build/latest/synth
 	@echo "=== Synth [build/latest/synth] ==="
-	vivado -mode batch -source scripts/synth.tcl \
+	vivado -mode batch -nolog -nojournal -source scripts/synth.tcl \
 	  -tclargs build/latest/synth $(RTL_DIR) $(PART) $(XDC_DIR) \
 	  2>&1 | tee build/latest/synth/synth.log
 
@@ -52,7 +62,7 @@ opt:
 	$(check_latest)
 	@mkdir -p build/latest/opt
 	@echo "=== Opt   [build/latest/opt] ==="
-	vivado -mode batch -source scripts/opt.tcl \
+	vivado -mode batch -nolog -nojournal -source scripts/opt.tcl \
 	  -tclargs build/latest/opt build/latest/synth/post_synth.dcp \
 	  2>&1 | tee build/latest/opt/opt.log
 
@@ -61,7 +71,7 @@ place:
 	$(check_latest)
 	@mkdir -p build/latest/place
 	@echo "=== Place [build/latest/place] ==="
-	vivado -mode batch -source scripts/place.tcl \
+	vivado -mode batch -nolog -nojournal -source scripts/place.tcl \
 	  -tclargs build/latest/place build/latest/opt/post_opt.dcp \
 	  2>&1 | tee build/latest/place/place.log
 
@@ -70,7 +80,7 @@ route:
 	$(check_latest)
 	@mkdir -p build/latest/route
 	@echo "=== Route [build/latest/route] ==="
-	vivado -mode batch -source scripts/route.tcl \
+	vivado -mode batch -nolog -nojournal -source scripts/route.tcl \
 	  -tclargs build/latest/route build/latest/place/post_place.dcp \
 	  2>&1 | tee build/latest/route/route.log
 
@@ -79,7 +89,7 @@ bitstream:
 	$(check_latest)
 	@mkdir -p build/latest/bitstream
 	@echo "=== Bitstream [build/latest/bitstream] ==="
-	vivado -mode batch -source scripts/bitstream.tcl \
+	vivado -mode batch -nolog -nojournal -source scripts/bitstream.tcl \
 	  -tclargs build/latest/bitstream build/latest/route/post_route.dcp $(TOP) \
 	  2>&1 | tee build/latest/bitstream/bitstream.log
 

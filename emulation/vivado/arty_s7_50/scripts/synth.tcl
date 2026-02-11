@@ -21,13 +21,14 @@ read_verilog -sv $rtl_dir/control/imm_gen.sv
 read_verilog -sv $rtl_dir/control/decoder.sv
 read_verilog -sv $rtl_dir/control.sv
 read_verilog -sv $rtl_dir/core_top.sv
+read_verilog -sv bram_memory.sv
 read_verilog -sv emu_top.sv
 
 # Read constraints
 read_xdc $xdc_dir/Arty-S7-50-Master.xdc
 
-# Out-of-context synthesis — no pin assignments required
-synth_design -top emu_top -part $part -mode out_of_context -include_dirs $rtl_dir
+# Full synthesis with pin constraints
+synth_design -top emu_top -part $part -include_dirs $rtl_dir
 
 # Reports
 report_utilization    -file $output_dir/utilization.rpt
