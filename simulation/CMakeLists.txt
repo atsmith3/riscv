@@ -244,15 +244,6 @@ verilate(verilated_alu COVERAGE TRACE
   SOURCES ${RTL_ROOT}/alu/alu.sv
 )
 
-# Module-level tests for Branch Evaluator
-add_library(verilated_branch_eval STATIC)
-verilate(verilated_branch_eval COVERAGE TRACE
-  PREFIX Vbranch_eval
-  INCLUDE_DIRS ${RTL_ROOT}
-  VERILATOR_ARGS -O0
-  SOURCES ${RTL_ROOT}/control/branch_eval.sv ${RTL_ROOT}/datatypes.sv
-)
-
 # Module-level tests for Instruction Decoder
 add_library(verilated_decoder STATIC)
 verilate(verilated_decoder COVERAGE TRACE
@@ -301,7 +292,6 @@ verilate(verilated_csr_alu COVERAGE TRACE
 add_executable(module_tests
   tests/test_main.cpp
   tests/module/alu_test.cpp
-  tests/module/branch_eval_test.cpp
   tests/module/decoder_test.cpp
   tests/module/imm_gen_test.cpp
   tests/module/byte_lane_test.cpp
@@ -311,7 +301,6 @@ add_executable(module_tests
 
 target_link_libraries(module_tests
   verilated_alu
-  verilated_branch_eval
   verilated_decoder
   verilated_imm_gen
   verilated_byte_lane

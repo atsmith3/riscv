@@ -19,7 +19,6 @@ read_verilog -sv $rtl_dir/csr_alu.sv
 read_verilog -sv $rtl_dir/csr_file.sv
 read_verilog -sv $rtl_dir/control/imm_gen.sv
 read_verilog -sv $rtl_dir/control/decoder.sv
-read_verilog -sv $rtl_dir/control/branch_eval.sv
 read_verilog -sv $rtl_dir/control.sv
 read_verilog -sv $rtl_dir/core_top.sv
 read_verilog -sv emu_top.sv
@@ -32,9 +31,5 @@ synth_design -rtl -top emu_top -part $part -include_dirs $rtl_dir
 
 # Lint diagnostics
 report_compile_order -file $output_dir/compile_order.rpt
-report_methodology   -file $output_dir/methodology.rpt
 
-# Save checkpoint
-write_checkpoint -force $output_dir/post_lint.dcp
-
-puts "=== Lint complete. Checkpoint: $output_dir/post_lint.dcp ==="
+puts "=== Lint complete ==="

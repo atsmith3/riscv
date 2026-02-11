@@ -19,7 +19,6 @@ read_verilog -sv $rtl_dir/csr_alu.sv
 read_verilog -sv $rtl_dir/csr_file.sv
 read_verilog -sv $rtl_dir/control/imm_gen.sv
 read_verilog -sv $rtl_dir/control/decoder.sv
-read_verilog -sv $rtl_dir/control/branch_eval.sv
 read_verilog -sv $rtl_dir/control.sv
 read_verilog -sv $rtl_dir/core_top.sv
 read_verilog -sv emu_top.sv
@@ -33,6 +32,7 @@ synth_design -top emu_top -part $part -mode out_of_context -include_dirs $rtl_di
 # Reports
 report_utilization    -file $output_dir/utilization.rpt
 report_timing_summary -file $output_dir/timing_summary.rpt
+report_methodology    -file $output_dir/methodology.rpt
 
 # Save checkpoint
 write_checkpoint -force $output_dir/post_synth.dcp

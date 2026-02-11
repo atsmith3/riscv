@@ -24,8 +24,13 @@ module emu_top (
   output logic [31:0] pc
 );
 
+  logic clk_ibuf, clk;
+
+  IBUF u_ibuf (.I(CLK12MHZ), .O(clk_ibuf));
+  BUFG u_bufg (.I(clk_ibuf), .O(clk));
+
   core_top u_core_top (
-    .clk       (CLK12MHZ),
+    .clk       (clk),
     .rst_n     (1'b1),
     .mem_rdata (mem_rdata),
     .mem_resp  (mem_resp),

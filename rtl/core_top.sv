@@ -229,8 +229,6 @@ control u_control (
   .bsr({beq, blt, bltu}),
   .ir(ir_out),
   .immediate(imm),
-  .rs1_val(rs1_out),
-  .rs2_val(rs2_out),
   .rs1(rs1),
   .rs2(rs2),
   .rd(rd),

@@ -24,7 +24,7 @@ make help       # Show all targets
 
 | Target | Description | Input | Output |
 |---|---|---|---|
-| `lint` | RTL elaboration — syntax, hierarchy, connectivity | RTL sources | `post_lint.dcp` |
+| `lint` | RTL elaboration — syntax, hierarchy, connectivity | RTL sources | `compile_order.rpt` |
 | `synth` | Out-of-context synthesis | RTL sources | `post_synth.dcp` |
 | `opt` | Logic optimization (`opt_design`) | `post_synth.dcp` | `post_opt.dcp` |
 | `place` | Placement (`place_design`) | `post_opt.dcp` | `post_place.dcp` |
@@ -44,14 +44,13 @@ build/
 └── 20260209_143022/
     ├── lint/
     │   ├── lint.log
-    │   ├── post_lint.dcp
-    │   ├── compile_order.rpt
-    │   └── methodology.rpt
+    │   └── compile_order.rpt
     ├── synth/
     │   ├── synth.log
     │   ├── post_synth.dcp
     │   ├── utilization.rpt
-    │   └── timing_summary.rpt
+    │   ├── timing_summary.rpt
+    │   └── methodology.rpt
     ├── opt/
     │   ├── opt.log
     │   ├── post_opt.dcp

@@ -11,7 +11,7 @@
 `include "datatypes.sv"
 
 module imm_gen_32 (
-  input logic [31:0] ir,
+  input logic [31:7] ir,
   input logic [2:0] instr_type,
   output logic [31:0] imm
 );

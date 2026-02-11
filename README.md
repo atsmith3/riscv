@@ -495,7 +495,7 @@ BOOST_AUTO_TEST_SUITE_END()
    - Integrated with CTest
 
 3. **Module test libraries**:
-   - verilated_alu, verilated_branch_eval, verilated_decoder, etc.
+   - verilated_alu, verilated_decoder, etc.
    - Each module separately verilated for unit testing
 
 4. **module_tests** (executable):
@@ -892,8 +892,7 @@ rtl/
 │   └── alu.sv               # Arithmetic logic unit
 └── control/
     ├── decoder.sv           # Instruction decoder
-    ├── imm_gen.sv           # Immediate generator
-    └── branch_eval.sv       # Branch evaluator
+    └── imm_gen.sv           # Immediate generator
 ```
 
 ### Simulation Infrastructure

@@ -51,7 +51,7 @@ assign arithmetic = ir[30];
 assign ebreak = ir[20];
 
 imm_gen_32 u_imm_gen (
-  .ir(ir),
+  .ir(ir[31:7]),
   .instr_type(instr_type),
   .imm(immediate)
 );
