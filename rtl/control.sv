@@ -48,8 +48,6 @@ module control
   input logic mem_resp,
   input logic [2:0] bsr,
   input logic [31:0] ir,
-  input logic [31:0] rs1_val,
-  input logic [31:0] rs2_val,
   output logic [31:0] immediate,
   // CSR interface
   output logic [2:0] funct3_out,  // Instruction funct3 field for CSR operations

@@ -66,7 +66,7 @@ module regfile (
 
   always_ff @ (posedge clk) begin
     if (!rst_n) begin
-      for (int i = 0; i < DEPTH; i = i+1) begin
+      for (int i = 1; i < DEPTH; i = i+1) begin
         data[i] <= 0;
       end
     end
