@@ -2,7 +2,7 @@
 
 FPGA build flow for the RISC-V 32I core (`core_top`) targeting the Digilent Arty S7-50 board (`xc7s50csga324-1`).
 
-Uses Vivado **non-project mode** with checkpoint-based stages. Out-of-context synthesis is used to evaluate resource utilization and timing without pin assignments.
+Uses Vivado **non-project mode** with checkpoint-based stages. The design is self-contained with on-chip BRAM, button-driven reset, and LED-based pass/fail reporting.
 
 ## Prerequisites
 
@@ -24,8 +24,9 @@ make help       # Show all targets
 
 | Target | Description | Input | Output |
 |---|---|---|---|
+| `hex` | Convert test `.ini` to `$readmemh` format | `test/<name>/<name>.ini` | `build/<name>.hex` |
 | `lint` | RTL elaboration — syntax, hierarchy, connectivity | RTL sources | `compile_order.rpt` |
-| `synth` | Out-of-context synthesis | RTL sources | `post_synth.dcp` |
+| `synth` | Synthesis | RTL sources | `post_synth.dcp` |
 | `opt` | Logic optimization (`opt_design`) | `post_synth.dcp` | `post_opt.dcp` |
 | `place` | Placement (`place_design`) | `post_opt.dcp` | `post_place.dcp` |
 | `route` | Routing (`route_design`) | `post_place.dcp` | `post_route.dcp` |
@@ -85,13 +86,16 @@ vivado build/latest/route/post_route.dcp
 
 ## Architecture
 
-### Emulation Wrapper (`emu_top.sv`)
+![emu top](emu_top.png)
 
-`emu_top` wraps `core_top` for FPGA targeting:
+### Sub-blocks
 
-- Maps the board's 12 MHz clock (`CLK12MHZ`) to `core_top.clk`
-- Ties `rst_n` to `1'b1` (reset inactive)
-- Exposes all memory interface ports and `pc` at the top level for OOC synthesis
+- **Clock path** — `CLK12MHZ` passes through an `IBUF` → `BUFG` chain to produce `clk`.
+- **Reset** — `btn[0]` (active-high on the Arty S7) is synchronized with a 2-FF chain and inverted to produce `rst_n`.
+- **core_top (DUT)** — The RISC-V 32I core under test, connected to memory via a simple read/write interface.
+- **bram_memory** — 16 KB (4096 × 32-bit words) BRAM initialized with `$readmemh`. Provides 1-cycle read latency and byte-enable writes. The hex file is generated from a test `.ini` file by `scripts/ini2hex.py` (the `make hex` target).
+- **Magic address detector** — A write to any address matching `0xDEAD_xxxx` captures the test result: `wdata == 1` sets `pass_flag`, anything else sets `fail_flag`.
+- **LED mapping** — `led[0]` = pass, `led[1]` = fail, `led[3:2]` = `pc[13:12]` (activity indicator).
 
 ### RTL Compilation Order
 
@@ -99,4 +103,4 @@ Source files are read in dependency order. `datatypes.sv` is not read directly �
 
 ### Constraints
 
-The XDC file (`xdc/Arty-S7-50-Master.xdc`) defines the 12 MHz clock on pin F14 with an 83.333 ns period. All other board I/O constraints are commented out.
+The XDC file (`xdc/Arty-S7-50-Master.xdc`) defines the 12 MHz clock on pin F14 with an 83.333 ns period. LED and button pin assignments are active; unused board I/O constraints are commented out.
