@@ -86,6 +86,8 @@ vivado build/latest/route/post_route.dcp
 
 ## Architecture
 
+![emu top](emu_top.png)
+
 ### Sub-blocks
 
 - **Clock path** — `CLK12MHZ` passes through an `IBUF` → `BUFG` chain to produce `clk`.
