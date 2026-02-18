@@ -20,6 +20,11 @@ constexpr uint8_t INSTR_U = 4;
 constexpr uint8_t INSTR_J = 5;
 constexpr uint8_t INSTR_ERR = 6;
 
+// Strip bits [6:0] (opcode) to match the [31:7] Verilator port mapping
+static inline uint32_t to_ir(uint32_t instruction) {
+    return instruction >> 7;
+}
+
 /**
  * Reference model for immediate generation
  * Matches the logic in imm_gen.sv
@@ -131,32 +136,32 @@ BOOST_AUTO_TEST_CASE(imm_gen_i_type) {
   dut->instr_type = INSTR_I;
 
   // Positive immediate: 100 (0x064)
-  dut->ir = construct_i_type(100);
+  dut->ir = to_ir(construct_i_type(100));
   dut->eval();
   BOOST_CHECK_EQUAL(dut->imm, 100);
 
   // Negative immediate: -100 (0xF9C as 12-bit)
-  dut->ir = construct_i_type(0xF9C);
+  dut->ir = to_ir(construct_i_type(0xF9C));
   dut->eval();
   BOOST_CHECK_EQUAL(dut->imm, static_cast<uint32_t>(-100));
 
   // Zero immediate
-  dut->ir = construct_i_type(0);
+  dut->ir = to_ir(construct_i_type(0));
   dut->eval();
   BOOST_CHECK_EQUAL(dut->imm, 0);
 
   // Max positive 12-bit: 2047 (0x7FF)
-  dut->ir = construct_i_type(0x7FF);
+  dut->ir = to_ir(construct_i_type(0x7FF));
   dut->eval();
   BOOST_CHECK_EQUAL(dut->imm, 2047);
 
   // Max negative 12-bit: -2048 (0x800)
-  dut->ir = construct_i_type(0x800);
+  dut->ir = to_ir(construct_i_type(0x800));
   dut->eval();
   BOOST_CHECK_EQUAL(dut->imm, static_cast<uint32_t>(-2048));
 
   // All ones: -1
-  dut->ir = construct_i_type(0xFFF);
+  dut->ir = to_ir(construct_i_type(0xFFF));
   dut->eval();
   BOOST_CHECK_EQUAL(dut->imm, static_cast<uint32_t>(-1));
 
@@ -170,34 +175,35 @@ BOOST_AUTO_TEST_CASE(imm_gen_s_type) {
   dut->instr_type = INSTR_S;
 
   // Positive immediate: 100
-  dut->ir = construct_s_type(100);
+  dut->ir = to_ir(construct_s_type(100));
   dut->eval();
   BOOST_CHECK_EQUAL(dut->imm, 100);
 
   // Negative immediate: -100
-  dut->ir = construct_s_type(0xF9C);
+  dut->ir = to_ir(construct_s_type(0xF9C));
   dut->eval();
   BOOST_CHECK_EQUAL(dut->imm, static_cast<uint32_t>(-100));
 
   // Zero immediate
-  dut->ir = construct_s_type(0);
+  dut->ir = to_ir(construct_s_type(0));
   dut->eval();
   BOOST_CHECK_EQUAL(dut->imm, 0);
 
   // Max positive: 2047
-  dut->ir = construct_s_type(0x7FF);
+  dut->ir = to_ir(construct_s_type(0x7FF));
   dut->eval();
   BOOST_CHECK_EQUAL(dut->imm, 2047);
 
   // Max negative: -2048
-  dut->ir = construct_s_type(0x800);
+  dut->ir = to_ir(construct_s_type(0x800));
   dut->eval();
   BOOST_CHECK_EQUAL(dut->imm, static_cast<uint32_t>(-2048));
 
   // Different bit patterns to test field extraction
-  dut->ir = construct_s_type(0x555); // Alternating bits
+  uint32_t s_instr = construct_s_type(0x555);
+  dut->ir = to_ir(s_instr);
   dut->eval();
-  uint32_t expected_555 = ref_imm_gen(dut->ir, INSTR_S);
+  uint32_t expected_555 = ref_imm_gen(s_instr, INSTR_S);
   BOOST_CHECK_EQUAL(dut->imm, expected_555);
 
   delete dut;
@@ -210,36 +216,36 @@ BOOST_AUTO_TEST_CASE(imm_gen_b_type) {
   dut->instr_type = INSTR_B;
 
   // Positive branch offset: +8
-  dut->ir = construct_b_type(8);
+  dut->ir = to_ir(construct_b_type(8));
   dut->eval();
   BOOST_CHECK_EQUAL(dut->imm, 8);
   BOOST_CHECK_EQUAL(dut->imm & 1, 0); // LSB must be 0
 
   // Negative branch offset: -8
-  dut->ir = construct_b_type(static_cast<uint32_t>(-8));
+  dut->ir = to_ir(construct_b_type(static_cast<uint32_t>(-8)));
   dut->eval();
   BOOST_CHECK_EQUAL(dut->imm, static_cast<uint32_t>(-8));
   BOOST_CHECK_EQUAL(dut->imm & 1, 0); // LSB must be 0
 
   // Zero offset
-  dut->ir = construct_b_type(0);
+  dut->ir = to_ir(construct_b_type(0));
   dut->eval();
   BOOST_CHECK_EQUAL(dut->imm, 0);
 
   // Max positive: 4094 (0xFFE)
-  dut->ir = construct_b_type(0xFFE);
+  dut->ir = to_ir(construct_b_type(0xFFE));
   dut->eval();
   BOOST_CHECK_EQUAL(dut->imm, 4094);
 
   // Max negative: -4096 (0x1000)
-  dut->ir = construct_b_type(0x1000);
+  dut->ir = to_ir(construct_b_type(0x1000));
   dut->eval();
   BOOST_CHECK_EQUAL(dut->imm, static_cast<uint32_t>(-4096));
 
   // Verify LSB is always 0 for various values
   for (int i = 0; i < 10; i++) {
     uint32_t offset_bits = (i * 100) & 0x1FFE; // Ensure bit 0 is 0
-    dut->ir = construct_b_type(offset_bits);
+    dut->ir = to_ir(construct_b_type(offset_bits));
     dut->eval();
     BOOST_CHECK_EQUAL(dut->imm & 1, 0);
   }
@@ -254,28 +260,28 @@ BOOST_AUTO_TEST_CASE(imm_gen_u_type) {
   dut->instr_type = INSTR_U;
 
   // Upper immediate: 0x12345 -> 0x12345000
-  dut->ir = construct_u_type(0x12345);
+  dut->ir = to_ir(construct_u_type(0x12345));
   dut->eval();
   BOOST_CHECK_EQUAL(dut->imm, 0x12345000);
 
   // Zero upper immediate
-  dut->ir = construct_u_type(0);
+  dut->ir = to_ir(construct_u_type(0));
   dut->eval();
   BOOST_CHECK_EQUAL(dut->imm, 0);
 
   // All ones upper: 0xFFFFF -> 0xFFFFF000
-  dut->ir = construct_u_type(0xFFFFF);
+  dut->ir = to_ir(construct_u_type(0xFFFFF));
   dut->eval();
   BOOST_CHECK_EQUAL(dut->imm, 0xFFFFF000);
 
   // Verify lower 12 bits are always 0
-  dut->ir = construct_u_type(0xABCDE);
+  dut->ir = to_ir(construct_u_type(0xABCDE));
   dut->eval();
   BOOST_CHECK_EQUAL(dut->imm & 0xFFF, 0);
   BOOST_CHECK_EQUAL(dut->imm, 0xABCDE000);
 
   // Test that only upper 20 bits are used (extra bits ignored)
-  dut->ir = 0xFFFFF123; // Extra bits in lower 12
+  dut->ir = to_ir(0xFFFFF123);
   dut->eval();
   BOOST_CHECK_EQUAL(dut->imm, 0xFFFFF000);
 
@@ -289,36 +295,36 @@ BOOST_AUTO_TEST_CASE(imm_gen_j_type) {
   dut->instr_type = INSTR_J;
 
   // Positive jump offset: +8
-  dut->ir = construct_j_type(8);
+  dut->ir = to_ir(construct_j_type(8));
   dut->eval();
   BOOST_CHECK_EQUAL(dut->imm, 8);
   BOOST_CHECK_EQUAL(dut->imm & 1, 0); // LSB must be 0
 
   // Negative jump offset: -100
-  dut->ir = construct_j_type(static_cast<uint32_t>(-100));
+  dut->ir = to_ir(construct_j_type(static_cast<uint32_t>(-100)));
   dut->eval();
   BOOST_CHECK_EQUAL(dut->imm, static_cast<uint32_t>(-100));
   BOOST_CHECK_EQUAL(dut->imm & 1, 0); // LSB must be 0
 
   // Zero offset
-  dut->ir = construct_j_type(0);
+  dut->ir = to_ir(construct_j_type(0));
   dut->eval();
   BOOST_CHECK_EQUAL(dut->imm, 0);
 
   // Large positive offset: 0x7FFFE (max positive 21-bit, mult of 2)
-  dut->ir = construct_j_type(0xFFFFE);
+  dut->ir = to_ir(construct_j_type(0xFFFFE));
   dut->eval();
   BOOST_CHECK_EQUAL(dut->imm, 0x000FFFFE);
 
   // Large negative offset
-  dut->ir = construct_j_type(0x100000); // Bit 20 set (sign bit)
+  dut->ir = to_ir(construct_j_type(0x100000)); // Bit 20 set (sign bit)
   dut->eval();
   BOOST_CHECK_EQUAL(dut->imm, static_cast<uint32_t>(-1048576));
 
   // Verify LSB is always 0
   for (int i = 0; i < 10; i++) {
     uint32_t offset_bits = (i * 1000) & 0x1FFFFE;
-    dut->ir = construct_j_type(offset_bits);
+    dut->ir = to_ir(construct_j_type(offset_bits));
     dut->eval();
     BOOST_CHECK_EQUAL(dut->imm & 1, 0);
   }
@@ -331,11 +337,11 @@ BOOST_AUTO_TEST_CASE(imm_gen_r_type) {
   Vimm_gen_32 *dut = new Vimm_gen_32();
 
   dut->instr_type = INSTR_R;
-  dut->ir = 0xFFFFFFFF; // All bits set, shamt = 0x1F (31)
+  dut->ir = to_ir(0xFFFFFFFF); // All bits set, shamt = 0x1F (31)
   dut->eval();
   BOOST_CHECK_EQUAL(dut->imm, 0x1F);
 
-  dut->ir = 0x12345678; // bits[24:20] = 0x03
+  dut->ir = to_ir(0x12345678); // bits[24:20] = 0x03
   dut->eval();
   BOOST_CHECK_EQUAL(dut->imm, 0x03);
 
@@ -347,7 +353,7 @@ BOOST_AUTO_TEST_CASE(imm_gen_error_type) {
   Vimm_gen_32 *dut = new Vimm_gen_32();
 
   dut->instr_type = INSTR_ERR;
-  dut->ir = 0xFFFFFFFF;
+  dut->ir = to_ir(0xFFFFFFFF);
   dut->eval();
   BOOST_CHECK_EQUAL(dut->imm, 0);
 
@@ -361,13 +367,15 @@ BOOST_AUTO_TEST_CASE(imm_gen_real_instructions) {
   // ADDI x5, x0, 10  (I-type: imm=10)
   // Format: imm[11:0] | rs1[4:0] | 000 | rd[4:0] | 0010011
   dut->instr_type = INSTR_I;
-  dut->ir = (10 << 20) | (0 << 15) | (0 << 12) | (5 << 7) | 0b0010011;
+  uint32_t addi_instr = (10 << 20) | (0 << 15) | (0 << 12) | (5 << 7) | 0b0010011;
+  dut->ir = to_ir(addi_instr);
   dut->eval();
   BOOST_CHECK_EQUAL(dut->imm, 10);
 
   // LUI x10, 0x12345  (U-type: imm=0x12345000)
   dut->instr_type = INSTR_U;
-  dut->ir = (0x12345 << 12) | (10 << 7) | 0b0110111;
+  uint32_t lui_instr = (0x12345 << 12) | (10 << 7) | 0b0110111;
+  dut->ir = to_ir(lui_instr);
   dut->eval();
   BOOST_CHECK_EQUAL(dut->imm, 0x12345000);
 
@@ -377,22 +385,25 @@ BOOST_AUTO_TEST_CASE(imm_gen_real_instructions) {
   uint32_t sw_upper = (sw_imm >> 5) & 0x7F;
   uint32_t sw_lower = sw_imm & 0x1F;
   dut->instr_type = INSTR_S;
-  dut->ir = (sw_upper << 25) | (5 << 20) | (2 << 15) | (0b010 << 12) |
+  uint32_t sw_instr = (sw_upper << 25) | (5 << 20) | (2 << 15) | (0b010 << 12) |
             (sw_lower << 7) | 0b0100011;
+  dut->ir = to_ir(sw_instr);
   dut->eval();
   BOOST_CHECK_EQUAL(dut->imm, 100);
 
   // BEQ x1, x2, -8  (B-type: imm=-8)
   dut->instr_type = INSTR_B;
-  dut->ir = construct_b_type(static_cast<uint32_t>(-8));
-  dut->ir |= (2 << 20) | (1 << 15) | (0b000 << 12) | 0b1100011;
+  uint32_t beq_instr = construct_b_type(static_cast<uint32_t>(-8));
+  beq_instr |= (2 << 20) | (1 << 15) | (0b000 << 12) | 0b1100011;
+  dut->ir = to_ir(beq_instr);
   dut->eval();
   BOOST_CHECK_EQUAL(dut->imm, static_cast<uint32_t>(-8));
 
   // JAL x1, 2048  (J-type: imm=2048)
   dut->instr_type = INSTR_J;
-  dut->ir = construct_j_type(2048);
-  dut->ir |= (1 << 7) | 0b1101111;
+  uint32_t jal_instr = construct_j_type(2048);
+  jal_instr |= (1 << 7) | 0b1101111;
+  dut->ir = to_ir(jal_instr);
   dut->eval();
   BOOST_CHECK_EQUAL(dut->imm, 2048);
 
@@ -405,25 +416,25 @@ BOOST_AUTO_TEST_CASE(imm_gen_sign_extension) {
 
   // I-type: negative value should have upper bits set
   dut->instr_type = INSTR_I;
-  dut->ir = construct_i_type(0xFFF); // -1
+  dut->ir = to_ir(construct_i_type(0xFFF)); // -1
   dut->eval();
   BOOST_CHECK_EQUAL(dut->imm, 0xFFFFFFFF);
 
   // S-type: negative value
   dut->instr_type = INSTR_S;
-  dut->ir = construct_s_type(0xFFF); // -1
+  dut->ir = to_ir(construct_s_type(0xFFF)); // -1
   dut->eval();
   BOOST_CHECK_EQUAL(dut->imm, 0xFFFFFFFF);
 
   // B-type: negative value
   dut->instr_type = INSTR_B;
-  dut->ir = construct_b_type(0x1FFE); // All bits set except LSB
+  dut->ir = to_ir(construct_b_type(0x1FFE)); // All bits set except LSB
   dut->eval();
   BOOST_CHECK_EQUAL(dut->imm, 0xFFFFFFFE); // -2 (sign extended, LSB=0)
 
   // J-type: negative value
   dut->instr_type = INSTR_J;
-  dut->ir = construct_j_type(0x1FFFFE); // All bits set except LSB
+  dut->ir = to_ir(construct_j_type(0x1FFFFE)); // All bits set except LSB
   dut->eval();
   BOOST_CHECK_EQUAL(dut->imm, 0xFFFFFFFE); // -2 (sign extended, LSB=0)
 
@@ -445,7 +456,7 @@ BOOST_AUTO_TEST_CASE(imm_gen_reference_model) {
 
   for (uint32_t pattern : test_patterns) {
     for (uint8_t type : instr_types) {
-      dut->ir = pattern;
+      dut->ir = to_ir(pattern);
       dut->instr_type = type;
       dut->eval();
 

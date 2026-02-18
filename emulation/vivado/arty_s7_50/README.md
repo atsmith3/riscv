@@ -4,6 +4,8 @@ FPGA build flow for the RISC-V 32I core (`core_top`) targeting the Digilent Arty
 
 Uses Vivado **non-project mode** with checkpoint-based stages. The design is self-contained with on-chip BRAM, button-driven reset, and LED-based pass/fail reporting.
 
+Shared build scripts and common RTL (e.g. `bram_memory.sv`) live in `../common/`. This board directory contains only board-specific files: `emu_top.sv`, XDC constraints, and a thin `Makefile` that sets board variables and includes the shared build rules.
+
 ## Prerequisites
 
 - Vivado (with Spartan-7 device support)
@@ -93,13 +95,13 @@ vivado build/latest/route/post_route.dcp
 - **Clock path** — `CLK12MHZ` passes through an `IBUF` → `BUFG` chain to produce `clk`.
 - **Reset** — `btn[0]` (active-high on the Arty S7) is synchronized with a 2-FF chain and inverted to produce `rst_n`.
 - **core_top (DUT)** — The RISC-V 32I core under test, connected to memory via a simple read/write interface.
-- **bram_memory** — 16 KB (4096 × 32-bit words) BRAM initialized with `$readmemh`. Provides 1-cycle read latency and byte-enable writes. The hex file is generated from a test `.ini` file by `scripts/ini2hex.py` (the `make hex` target).
+- **bram_memory** — 16 KB (4096 × 32-bit words) BRAM initialized with `$readmemh`. Provides 1-cycle read latency and byte-enable writes. The hex file is generated from a test `.ini` file by `../common/scripts/ini2hex.py` (the `make hex` target). The module source lives at `../common/rtl/bram_memory.sv`.
 - **Magic address detector** — A write to any address matching `0xDEAD_xxxx` captures the test result: `wdata == 1` sets `pass_flag`, anything else sets `fail_flag`.
 - **LED mapping** — `led[0]` = pass, `led[1]` = fail, `led[3:2]` = `pc[13:12]` (activity indicator).
 
 ### RTL Compilation Order
 
-Source files are read in dependency order. `datatypes.sv` is not read directly — it is pulled in via `` `include `` directives, with the include path set to `rtl/`.
+Source files are read in dependency order by the Tcl scripts in `../common/scripts/`. `datatypes.sv` is not read directly — it is pulled in via `` `include `` directives, with the include path set to `rtl/`.
 
 ### Constraints
 
