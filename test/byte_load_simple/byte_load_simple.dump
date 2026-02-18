@@ -5,14 +5,14 @@ byte_load_simple.elf:     file format elf32-littleriscv
 Disassembly of section .text:
 
 00001000 <__start>:
-    1000:	00005137          	lui	sp,0x5
+    1000:	00020137          	lui	sp,0x20
     1004:	008000ef          	jal	ra,100c <main>
 
 00001008 <LOOP>:
     1008:	0000006f          	j	1008 <LOOP>
 
 0000100c <main>:
-    100c:	fe010113          	addi	sp,sp,-32 # 4fe0 <main+0x3fd4>
+    100c:	fe010113          	addi	sp,sp,-32 # 1ffe0 <main+0x1efd4>
     1010:	00812e23          	sw	s0,28(sp)
     1014:	02010413          	addi	s0,sp,32
     1018:	12efd7b7          	lui	a5,0x12efd

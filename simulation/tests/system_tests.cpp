@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(test_bitops_program) {
   TestResult result = runner.run(100000);
 
   BOOST_CHECK_EQUAL(result, TestResult::PASS);
-  BOOST_CHECK_LT(runner.get_cycle_count(), 15000);
+  BOOST_CHECK_LT(runner.get_cycle_count(), 20000);
 
   std::cout << "BITOPS test completed in " << runner.get_cycle_count()
             << " cycles\n";
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE(test_bubble_sort_program) {
   TestResult result = runner.run(100000);
 
   BOOST_CHECK_EQUAL(result, TestResult::PASS);
-  BOOST_CHECK_LT(runner.get_cycle_count(), 20000);
+  BOOST_CHECK_LT(runner.get_cycle_count(), 25000);
 
   std::cout << "BUBBLE_SORT test completed in " << runner.get_cycle_count()
             << " cycles\n";
@@ -204,7 +204,7 @@ BOOST_AUTO_TEST_CASE(test_factorial_program) {
   TestResult result = runner.run(100000);
 
   BOOST_CHECK_EQUAL(result, TestResult::PASS);
-  BOOST_CHECK_LT(runner.get_cycle_count(), 50000);
+  BOOST_CHECK_LT(runner.get_cycle_count(), 55000);
 
   std::cout << "FACTORIAL test completed in " << runner.get_cycle_count()
             << " cycles\n";
@@ -223,7 +223,7 @@ BOOST_AUTO_TEST_CASE(test_prime_program) {
   TestResult result = runner.run(200000);
 
   BOOST_CHECK_EQUAL(result, TestResult::PASS);
-  BOOST_CHECK_LT(runner.get_cycle_count(), 70000);
+  BOOST_CHECK_LT(runner.get_cycle_count(), 80000);
 
   std::cout << "PRIME test completed in " << runner.get_cycle_count()
             << " cycles\n";

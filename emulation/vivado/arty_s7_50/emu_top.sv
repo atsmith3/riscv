@@ -61,20 +61,22 @@ module emu_top #(
     .mem_resp  (mem_resp)
   );
 
-  // Magic address detection: write to 0xDEAD_xxxx signals test result
-  logic pass_flag, fail_flag;
+  // Magic address detection: last write to 0xDEAD_xxxx determines result
+  logic magic_written;
+  logic [31:0] magic_value;
 
   always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
-      pass_flag <= 1'b0;
-      fail_flag <= 1'b0;
+      magic_written <= 1'b0;
+      magic_value   <= 32'd0;
     end else if (mem_write && mem_addr[31:16] == 16'hDEAD) begin
-      if (mem_wdata == 32'd1)
-        pass_flag <= 1'b1;
-      else
-        fail_flag <= 1'b1;
+      magic_written <= 1'b1;
+      magic_value   <= mem_wdata;
     end
   end
+
+  wire pass_flag = magic_written && (magic_value == 32'd1);
+  wire fail_flag = magic_written && (magic_value != 32'd1);
 
   // LED outputs
   assign led[0] = pass_flag;          // pass

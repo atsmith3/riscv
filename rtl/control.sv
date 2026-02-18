@@ -463,9 +463,9 @@ module control
       case (state)
       FETCH_0: begin
         load_mar = 1'b1;
-        mem_read = 1'b1;
       end
       FETCH_1: begin
+        mem_read = 1'b1;
       end
       FETCH_2: begin
         load_mdr = 1'b1;

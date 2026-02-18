@@ -5,14 +5,14 @@ prime.elf:     file format elf32-littleriscv
 Disassembly of section .text:
 
 00001000 <__start>:
-    1000:	00005137          	lui	sp,0x5
+    1000:	00020137          	lui	sp,0x20
     1004:	190000ef          	jal	ra,1194 <main>
 
 00001008 <LOOP>:
     1008:	0000006f          	j	1008 <LOOP>
 
 0000100c <square>:
-    100c:	fd010113          	addi	sp,sp,-48 # 4fd0 <main+0x3e3c>
+    100c:	fd010113          	addi	sp,sp,-48 # 1ffd0 <main+0x1ee3c>
     1010:	02812623          	sw	s0,44(sp)
     1014:	03010413          	addi	s0,sp,48
     1018:	fca42e23          	sw	a0,-36(s0)

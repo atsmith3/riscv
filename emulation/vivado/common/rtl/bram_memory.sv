@@ -1,7 +1,7 @@
 /* bram_memory.sv
  *
  * Synthesizable BRAM memory for FPGA emulation of the RISC-V 32I core.
- * 16KB (4096 x 32-bit words), initialized via $readmemh.
+ * 128KB (32768 x 32-bit words), initialized via $readmemh.
  * 1-cycle read latency with byte-enable support for sub-word stores.
  */
 
@@ -21,9 +21,9 @@ module bram_memory #(
   output logic        mem_resp
 );
 
-  // 16KB = 4096 x 32-bit words, covers byte addresses 0x0000–0x3FFF
-  localparam ADDR_BITS = 12;  // 2^12 = 4096 words
-  localparam ADDR_MAX  = 32'h3FFF;
+  // 128KB = 32768 x 32-bit words, covers byte addresses 0x0000–0x1FFFF
+  localparam ADDR_BITS = 15;  // 2^15 = 32768 words
+  localparam ADDR_MAX  = 32'h1FFFF;
 
   logic [31:0] mem [0:2**ADDR_BITS-1];
 
@@ -73,19 +73,21 @@ module bram_memory #(
   end
 
   // Read data (on registered cycle)
+  // Hold last read value until next valid read — the CPU captures mem_rdata
+  // one cycle after mem_resp, so clearing early would zero out all loads.
   always_ff @(posedge clk) begin
     if (read_pending && addr_valid_reg)
       mem_rdata <= mem[addr_reg];
-    else
-      mem_rdata <= 32'h0;
   end
 
-  // Response signal: asserted one cycle after a valid read or write
+  // Response signal: asserted one cycle after any read or write request.
+  // Out-of-range accesses still get a response (so the CPU FSM advances),
+  // but the actual read/write blocks are gated by addr_valid_reg.
   always_ff @(posedge clk or negedge rst_n) begin
     if (!rst_n)
       mem_resp <= 1'b0;
     else
-      mem_resp <= (read_pending || write_pending) && addr_valid_reg;
+      mem_resp <= read_pending || write_pending;
   end
 
 endmodule
