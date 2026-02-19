@@ -25,8 +25,10 @@ read_verilog -sv $rtl_dir/core_top.sv
 read_verilog -sv $common_rtl_dir/bram_memory.sv
 read_verilog -sv emu_top.sv
 
-# Read constraints
-read_xdc $xdc_dir/Arty-S7-50-Master.xdc
+# Read constraints (all *.xdc files in the board's xdc directory)
+foreach xdc_file [glob $xdc_dir/*.xdc] {
+  read_xdc $xdc_file
+}
 
 # RTL-only elaboration — validates syntax, hierarchy, and connectivity
 synth_design -rtl -top emu_top -part $part -include_dirs $rtl_dir

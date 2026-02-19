@@ -1,21 +1,23 @@
-# Vivado Emulation — Arty S7-50
+# Vivado Emulation — EK-SCU35-G
 
-FPGA build flow for the RISC-V 32I core (`core_top`) targeting the Digilent Arty S7-50 board (`xc7s50csga324-1`).
+FPGA build flow for the RISC-V 32I core (`core_top`) targeting the AMD EK-SCU35-G evaluation board (`xcsu35p-sbvb625-2-e`, Spartan UltraScale+).
 
 Uses Vivado **non-project mode** with checkpoint-based stages. The design is self-contained with on-chip BRAM, button-driven reset, and LED-based pass/fail reporting.
 
 Shared build scripts and common RTL (e.g. `bram_memory.sv`) live in `../common/`. This board directory contains only board-specific files: `emu_top.sv`, XDC constraints, and a thin `Makefile` that sets board variables and includes the shared build rules.
 
+> **Part string note:** If synthesis fails with an unrecognized part, verify the exact string by running `get_parts *xcsu35p*` in a Vivado Tcl session.
+
 ## Prerequisites
 
-- Vivado (with Spartan-7 device support)
+- Vivado (with **Spartan UltraScale+** device support)
 - `vivado` on `$PATH`
 - GNU Make
 
 ## Quick Start
 
 ```bash
-cd emulation/vivado/arty_s7_50
+cd emulation/vivado/ek_scu35_g
 
 make all        # Full flow: lint → synth → opt → place → route → bitstream
 make lint       # Just validate RTL syntax and hierarchy
@@ -92,12 +94,21 @@ vivado build/latest/route/post_route.dcp
 
 ### Sub-blocks
 
-- **Clock path** — `CLK12MHZ` passes through an `IBUF` → `BUFG` chain to produce `clk`.
-- **Reset** — `btn[0]` (active-high on the Arty S7) is synchronized with a 2-FF chain and inverted to produce `rst_n`.
+- **Clock path** — `SYSTEM_R_CLK_P/N` (200 MHz differential, Bank 46, 1.8 V LVDS) feeds an `IBUFDS` → `MMCME4_BASE` → `BUFG` chain to produce a 12 MHz core clock. MMCM configuration: VCO = 200 MHz × 6 / 1 = 1200 MHz; CLKOUT0 = 1200 / 100 = 12 MHz. The feedback path runs through a dedicated `BUFG`.
+- **Reset** — Three sources, any of which asserts reset:
+  1. `CPU_RESET_B = 0` — dedicated reset button (active-low, Bank 66, 3.3 V)
+  2. `GPIO_SW_C = 1` — center pushbutton (active-high, Bank 45)
+  3. `mmcm_locked = 0` — core held in reset until MMCM clock is stable
+
+  Architecture: async-assert / sync-deassert (2-FF synchronizer, positive-edge).
 - **core_top (DUT)** — The RISC-V 32I core under test, connected to memory via a simple read/write interface.
 - **bram_memory** — 128 KB (32768 × 32-bit words) BRAM initialized with `$readmemh`. Provides 1-cycle read latency and byte-enable writes. The hex file is generated from a test `.ini` file by `../common/scripts/ini2hex.py` (the `make hex` target). The module source lives at `../common/rtl/bram_memory.sv`.
 - **Magic address detector** — A write to any address matching `0xDEAD_xxxx` captures the test result: `wdata == 1` sets `pass_flag`, anything else sets `fail_flag`.
-- **LED mapping** — `led[0]` = pass, `led[1]` = fail, `led[3:2]` = `pc[13:12]` (activity indicator).
+- **LED mapping** (Bank 45, individual named outputs):
+  - `LED0_GREEN` — pass
+  - `LED1_RED` — fail
+  - `LED2_BLUE` — PC[12] activity
+  - `LED3_BLUE` — PC[13] activity
 
 ### RTL Compilation Order
 
@@ -105,8 +116,21 @@ Source files are read in dependency order by the Tcl scripts in `../common/scrip
 
 ### Constraints
 
-The XDC file (`xdc/Arty-S7-50-Master.xdc`) defines the 12 MHz clock on pin F14 with an 83.333 ns period. LED and button pin assignments are active; unused board I/O constraints are commented out. The build system uses a glob (`$xdc_dir/*.xdc`) to pick up all XDC files in the board's `xdc/` directory automatically.
+The design XDC (`xdc/ek_scu35_g.xdc`) constrains only the pins actually used by `emu_top`. The build system uses a glob (`$xdc_dir/*.xdc`) to pick up all XDC files in the board's `xdc/` directory.
 
-### Optional Tools
+Key pin assignments:
 
-**`ila_opt.tcl`** — A post-synthesis Tcl script for inserting a Vivado ILA (Integrated Logic Analyzer) debug core. When sourced during the opt stage it probes key signals (`mem_addr`, `mem_rdata`, `mem_read`, `mem_write`, `mem_resp`, and the PC) with a 1024-sample depth. Use this for in-system signal capture via Vivado Hardware Manager. It is not loaded by the default build flow.
+| Signal | Pin | Bank | I/O Standard |
+|---|---|---|---|
+| `SYSTEM_R_CLK_P` | F23 | 46 | LVDS (1.8 V) |
+| `SYSTEM_R_CLK_N` | E23 | 46 | LVDS (1.8 V) |
+| `CPU_RESET_B` | F3 | 66 | LVCMOS33 |
+| `GPIO_SW_C` | Y22 | 45 | LVCMOS33 |
+| `LED0_GREEN` | AB18 | 45 | LVCMOS33 |
+| `LED1_RED` | V18 | 45 | LVCMOS33 |
+| `LED2_BLUE` | AA21 | 45 | LVCMOS33 |
+| `LED3_BLUE` | U21 | 45 | LVCMOS33 |
+
+The vendor master file (`xdc/reference/EK_SCU35_Rev3B.xdc`) is included for pin reference only and is **not** loaded during the build.
+
+> **Bank 45 voltage note:** LEDs and `GPIO_SW_C` are in Bank 45, which is powered by the adjustable regulator `VR_VCCO_45_46_ADJ`. The eval-kit default is 3.3 V, matching the `LVCMOS33` standard above. If LEDs do not illuminate, verify the regulator setting against the board schematic.
