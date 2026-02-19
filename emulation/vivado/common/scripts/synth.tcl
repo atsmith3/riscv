@@ -26,8 +26,10 @@ read_verilog -sv $rtl_dir/core_top.sv
 read_verilog -sv $common_rtl_dir/bram_memory.sv
 read_verilog -sv emu_top.sv
 
-# Read constraints
-read_xdc $xdc_dir/Arty-S7-50-Master.xdc
+# Read constraints (all *.xdc files in the board's xdc directory)
+foreach xdc_file [glob $xdc_dir/*.xdc] {
+  read_xdc $xdc_file
+}
 
 # Full synthesis with pin constraints
 synth_design -top emu_top -part $part -include_dirs $rtl_dir -flatten_hierarchy none \
