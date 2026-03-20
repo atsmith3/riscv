@@ -3,9 +3,21 @@
 # Maps Yosys gate primitives to GF180 standard cells
 # ==============================================================================
 # Usage: yosys -c pdk_map.tcl
+# Version: 1.0.0
 # ==============================================================================
 
 yosys -import
+
+# ==============================================================================
+# Configuration
+# ==============================================================================
+
+# Target clock period (picoseconds)
+# Adjust based on your target frequency:
+#   - 100 MHz = 10000 (10ns period)
+#   -  50 MHz = 20000 (20ns period)
+#   - 200 MHz = 5000  (5ns period)
+set -clock_period 10000
 
 # ==============================================================================
 # 1. READ GATE-LEVEL NETLIST
@@ -16,6 +28,7 @@ puts "GF180 PDK TECHNOLOGY MAPPING"
 puts "================================================================================"
 
 puts "\n=== Phase 1: Reading Gate-Level Netlist ==="
+
 # Read from JSON format to preserve internal cell types
 read_json ../build/output/core_top_synth.json
 
@@ -32,15 +45,37 @@ puts "\n=== Phase 2: Mapping to GF180 Standard Cells ==="
 if {[file exists "gf180mcu_fd_sc_mcu9t5v0__tt_025C_3v30.lib"]} {
     # Use the fixed concatenated typical corner file
     set liberty_file "gf180mcu_fd_sc_mcu9t5v0__tt_025C_3v30.lib"
+    set corner_name "typical"
+} elseif {[file exists "gf180mcu_fd_sc_mcu9t5v0__tt_025C_1v80.lib"]} {
+    # Fallback to fast corner
+    set liberty_file "gf180mcu_fd_sc_mcu9t5v0__tt_025C_1v80.lib"
+    set corner_name "fast"
+} elseif {[file exists "gf180mcu_fd_sc_mcu9t5v0__ss_125C_1v62.lib"]} {
+    # Fallback to slow corner
+    set liberty_file "gf180mcu_fd_sc_mcu9t5v0__ss_125C_1v62.lib"
+    set corner_name "slow"
+} else {
+    puts "ERROR: No Liberty file found!"
+    puts "Required Liberty files:"
+    puts "  - gf180mcu_fd_sc_mcu9t5v0__tt_025C_3v30.lib (typical)"
+    puts "  - gf180mcu_fd_sc_mcu9t5v0__tt_025C_1v80.lib (fast)"
+    puts "  - gf180mcu_fd_sc_mcu9t5v0__ss_125C_1v62.lib (slow)"
+    puts ""
+    puts "Download from: https://github.com/google/gf180mcu-pdk"
+    exit 1
 }
-puts "  Using Liberty file: $liberty_file"
+
+puts "  Using Liberty file: $liberty_file (corner: $corner_name)"
+
+# Verify the liberty file is readable
+if {[file size $liberty_file] == 0} {
+    puts "ERROR: Liberty file is empty!"
+    puts "File: $liberty_file"
+    exit 1
+}
 
 # Map to GF180 cells using ABC
 # -D sets target delay in picoseconds (10000ps = 10ns = 100MHz clock)
-# Adjust -D value based on your target frequency:
-#   - 100 MHz = -D 10000 (10ns period)
-#   -  50 MHz = -D 20000 (20ns period)
-#   - 200 MHz = -D 5000  (5ns period)
 
 puts "  Target clock period: 10ns (100 MHz)"
 puts "  Running two-pass technology mapping..."
@@ -73,15 +108,17 @@ puts "\n=== Phase 5: Writing GF180-Mapped Netlist ==="
 write_verilog -noattr ../build/output/core_top_gf180.v
 puts "  Written: ../build/output/core_top_gf180.v"
 
-# Also write SDF for timing simulation (if you need it later)
-# write_sdf ../build/output/core_top_gf180.sdf
+# ==============================================================================
+# 5. SUMMARY
+# ==============================================================================
 
 puts "\n================================================================================"
 puts "GF180 PDK MAPPING COMPLETE"
 puts "================================================================================"
 puts "\nOutput Netlist: ../build/output/core_top_gf180.v"
 puts "\nNext Steps:"
-puts "  1. Review cell types used: grep 'gf180mcu_fd_sc_mcu9t5v0__' core_top_gf180.v | sed 's/(.*//g' | sort -u"
+puts "  1. Review cell types used:"
+puts "     grep 'gf180mcu_fd_sc_mcu9t5v0__' core_top_gf180.v | sed 's/(.*//g' | sort -u"
 puts "  2. Run timing analysis with OpenSTA"
 puts "  3. Proceed to place & route with OpenROAD"
 puts "\n================================================================================"

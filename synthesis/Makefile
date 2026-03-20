@@ -1,9 +1,12 @@
 # ==============================================================================
 # Makefile for Potato RISC-V Core Synthesis to AIGER
 # ==============================================================================
+# Version: 1.0.0
+# ==============================================================================
 
-# Tools
-YOSYS := /home/andrew/software/yosys/yosys/yosys
+# Tools - Use PATH if available, fallback to absolute path
+YOSYS ?= yosys
+YOSYS := $(shell which yosys 2>/dev/null || echo "/home/andrew/software/yosys/yosys/yosys")
 PYTHON := python3
 
 # Directories
@@ -28,6 +31,7 @@ GF180_NETLIST := $(OUTPUT_DIR)/core_top_gf180.v
 TIMESTAMP := $(shell date +%Y%m%d_%H%M%S)
 SYNTH_LOG := $(LOG_DIR)/synthesis_$(TIMESTAMP).log
 EQUIV_LOG := $(LOG_DIR)/equiv_check_$(TIMESTAMP).log
+PDK_MAP_LOG := $(LOG_DIR)/pdk_map_$(TIMESTAMP).log
 
 # Summary report
 SUMMARY_REPORT := $(REPORT_DIR)/synthesis_summary.txt
@@ -39,7 +43,7 @@ COLOR_GREEN := \033[32m
 COLOR_BLUE := \033[34m
 COLOR_YELLOW := \033[33m
 
-.PHONY: all synth validate equiv pdk-map reports clean help
+.PHONY: all synth validate equiv pdk-map reports clean help version
 
 # ==============================================================================
 # Default target: run complete synthesis flow
@@ -53,7 +57,6 @@ all: synth validate equiv reports
 	@echo ""
 	@echo "Output files:"
 	@echo "  - Verilog netlist: $(VERILOG_NETLIST)"
-	@echo "  - Symbol map:      $(SYMBOL_MAP)"
 	@echo ""
 	@echo "Reports:"
 	@echo "  - Summary:         $(SUMMARY_REPORT)"
@@ -66,6 +69,11 @@ all: synth validate equiv reports
 synth: $(VERILOG_NETLIST)
 
 $(VERILOG_NETLIST): $(SYNTH_SCRIPT) $(SCRIPTS_DIR)/file_list.txt | $(LOG_DIR) $(OUTPUT_DIR)
+	@# Verify Yosys is available
+	@test -f $(YOSYS) || (echo "$(COLOR_BOLD)ERROR: Yosys not found at $(YOSYS)$(COLOR_RESET)" && echo "Install from https://github.com/YosysHQ/yosys" && exit 1)
+	@# Verify required scripts exist
+	@test -f $(SYNTH_SCRIPT) || (echo "$(COLOR_BOLD)ERROR: Synthesis script not found: $(SYNTH_SCRIPT)$(COLOR_RESET)" && exit 1)
+	@test -f $(SCRIPTS_DIR)/file_list.txt || (echo "$(COLOR_BOLD)ERROR: File list not found: $(SCRIPTS_DIR)/file_list.txt$(COLOR_RESET)" && exit 1)
 	@echo ""
 	@echo "$(COLOR_BOLD)$(COLOR_BLUE)================================================================================$(COLOR_RESET)"
 	@echo "$(COLOR_BOLD)$(COLOR_BLUE)RUNNING YOSYS SYNTHESIS$(COLOR_RESET)"
@@ -132,7 +140,13 @@ equiv: $(VERILOG_NETLIST) | $(LOG_DIR)
 		echo "  RTL and gate-level netlist are formally equivalent"; \
 	else \
 		echo "$(COLOR_BOLD)$(COLOR_YELLOW)⚠ WARNING: Check equivalence log for details$(COLOR_RESET)"; \
-	fi
+		echo "  Log file: $(EQUIV_LOG)"; \
+		echo "  Common issues:"; \
+		echo "    - RTL and gate-level use different file lists"; \
+		echo "    - Synthesis warnings may indicate problems"; \
+		echo "    - Yosys version mismatch"; \
+		echo "  Run: cat $(EQUIV_LOG) | grep -i 'error\|warning'"; \
+		fi
 	@echo ""
 
 # ==============================================================================
@@ -153,7 +167,7 @@ $(GF180_NETLIST): $(VERILOG_NETLIST) $(PDK_MAP_SCRIPT) | $(LOG_DIR) $(OUTPUT_DIR
 	@echo ""
 	@echo "This will take 30-60 seconds..."
 	@echo ""
-	@cd $(SCRIPTS_DIR) && $(YOSYS) -c pdk_map.tcl 2>&1 | tee ../$(LOG_DIR)/pdk_map_$(TIMESTAMP).log
+	@cd $(SCRIPTS_DIR) && $(YOSYS) -c pdk_map.tcl 2>&1 | tee ../$(PDK_MAP_LOG)
 	@echo ""
 	@echo "$(COLOR_GREEN)PDK mapping complete!$(COLOR_RESET)"
 	@echo ""
@@ -227,6 +241,9 @@ clean:
 	@mkdir -p $(LOG_DIR) $(OUTPUT_DIR) $(REPORT_DIR)
 	@echo "$(COLOR_GREEN)Done$(COLOR_RESET)"
 	@echo ""
+	@echo "To verify Yosys installation:"
+	@echo "  $(YOSYS) --version"
+	@echo ""
 
 # ==============================================================================
 # Help: Display usage information
@@ -234,7 +251,7 @@ clean:
 
 help:
 	@echo ""
-	@echo "$(COLOR_BOLD)Potato RISC-V Core - Synthesis to AIGER$(COLOR_RESET)"
+	@echo "$(COLOR_BOLD)Potato RISC-V Core - Synthesis Flow$(COLOR_RESET)"
 	@echo ""
 	@echo "$(COLOR_BOLD)Usage:$(COLOR_RESET)"
 	@echo "  make [target]"
@@ -243,16 +260,20 @@ help:
 	@echo "  $(COLOR_BOLD)all$(COLOR_RESET)       Run complete synthesis flow (default)"
 	@echo "             synth → validate → equiv → reports"
 	@echo ""
-	@echo "  $(COLOR_BOLD)synth$(COLOR_RESET)     Run Yosys synthesis to generate AIGER files"
+	@echo "  $(COLOR_BOLD)synth$(COLOR_RESET)     Run Yosys synthesis to generate gate-level netlist"
 	@echo "             Runtime: 60-120 seconds"
-	@echo "             Outputs: .aag, .aig, _synth.v, .map"
+	@echo "             Outputs: .v, .json, .blif"
 	@echo ""
-	@echo "  $(COLOR_BOLD)validate$(COLOR_RESET)  Validate AIGER file structure and statistics"
-	@echo "             Checks format, I/O counts, latch/gate counts"
+	@echo "  $(COLOR_BOLD)validate$(COLOR_RESET)  Validate gate-level netlist structure"
+	@echo "             Checks format, file existence, logic presence"
 	@echo ""
 	@echo "  $(COLOR_BOLD)equiv$(COLOR_RESET)     Run equivalence checking (formal proof)"
 	@echo "             Runtime: 30-60 seconds"
 	@echo "             Proves RTL ≡ gate-level netlist"
+	@echo ""
+	@echo "  $(COLOR_BOLD)pdk-map$(COLOR_RESET)   Map Yosys primitives to GF180 PDK cells"
+	@echo "             Runtime: 30-60 seconds"
+	@echo "             Outputs: core_top_gf180.v"
 	@echo ""
 	@echo "  $(COLOR_BOLD)reports$(COLOR_RESET)   Generate synthesis summary reports"
 	@echo "             Creates human-readable statistics"
@@ -261,6 +282,8 @@ help:
 	@echo "             Preserves source scripts"
 	@echo ""
 	@echo "  $(COLOR_BOLD)help$(COLOR_RESET)      Display this help message"
+	@echo ""
+	@echo "  $(COLOR_BOLD)version$(COLOR_RESET)   Display version and environment information"
 	@echo ""
 	@echo "$(COLOR_BOLD)Output Locations:$(COLOR_RESET)"
 	@echo "  Logs:    $(LOG_DIR)/"
@@ -279,14 +302,26 @@ help:
 	@echo ""
 
 # ==============================================================================
-# Directory creation
+# Version Information
 # ==============================================================================
 
-$(LOG_DIR):
-	@mkdir -p $(LOG_DIR)
-
-$(OUTPUT_DIR):
-	@mkdir -p $(OUTPUT_DIR)
-
-$(REPORT_DIR):
-	@mkdir -p $(REPORT_DIR)
+version:
+	@echo ""
+	@echo "$(COLOR_BOLD)Potato RISC-V Core - Synthesis Flow$(COLOR_RESET)"
+	@echo ""
+	@echo "Version: 1.0.0"
+	@echo ""
+	@echo "Yosys: $(YOSYS)"
+	@echo "  $(shell $(YOSYS) --version 2>&1 | head -1)"
+	@echo ""
+	@echo "Python: $(PYTHON)"
+	@echo "  $(shell $(PYTHON) --version)"
+	@echo ""
+	@echo "Build directories:"
+	@echo "  Logs:    $(LOG_DIR)"
+	@echo "  Output:  $(OUTPUT_DIR)"
+	@echo "  Reports: $(REPORT_DIR)"
+	@echo ""
+	@echo "$(COLOR_BOLD)Recent Build Logs:$(COLOR_RESET)"
+	@ls -lt $(LOG_DIR)/ 2>/dev/null | head -5 || echo "  No build logs found"
+	@echo ""

@@ -1,20 +1,28 @@
 # ==============================================================================
 # Yosys Synthesis Script for Potato RISC-V Core
 # ==============================================================================
-# Target: AIGER format for formal verification and simulation
+# Target: Gate-level netlist for formal verification and PDK mapping
 # Design: Multi-cycle in-order RISC-V 32I processor
-# Date: 2025-12-05
+# Version: 1.0.3 - Fixed for Yosys 0.49+
+# Date: 2026-03-20
 # ==============================================================================
 
 # Import Yosys commands into TCL namespace
 yosys -import
 
 # ==============================================================================
+# Configuration
+# ==============================================================================
+
+# Debug mode: preserves intermediate signals for better debuggability
+set debug_mode 1
+
+# ==============================================================================
 # 1. READ RTL SOURCES
 # ==============================================================================
 
 puts "\n================================================================================"
-puts "POTATO RISC-V CORE - YOSYS SYNTHESIS TO AIGER"
+puts "POTATO RISC-V CORE - YOSYS SYNTHESIS"
 puts "================================================================================"
 
 # Set include path for SystemVerilog includes
@@ -85,8 +93,15 @@ opt_expr
 opt_clean
 
 # Run optimization (handle DFF, FSM, etc.)
-puts "  Running general optimizations..."
-opt -nodffe -nosdff
+# -nodffe: Don't optimize flip-flops (preserves RTL structure for debugging)
+# -nosdff: Don't optimize sequential cells
+if {$debug_mode} {
+    puts "  Running optimization (debug mode - preserves intermediate signals)..."
+    opt -nodffe -nosdff
+} else {
+    puts "  Running optimization (production mode - aggressive)..."
+    opt
+}
 
 # ==============================================================================
 # 4. FSM OPTIMIZATION (CRITICAL FOR CONTROL UNIT)
@@ -105,7 +120,8 @@ puts "  Optimizing FSM..."
 fsm_opt
 
 # Encode FSM states (automatic encoding selection)
-puts "  Encoding FSM states..."
+# Note: onehot encoding not supported in Yosys 0.49+, using automatic encoding
+puts "  Encoding FSM states (automatic)..."
 fsm_recode
 
 # Convert FSM to logic
@@ -170,9 +186,9 @@ opt_clean
 # ==============================================================================
 
 puts "\n=== Phase 8: Flattening Design Hierarchy ==="
-puts "  (AIGER requires completely flat design)"
+puts "  (Gate-level netlist requires completely flat design)"
 
-# AIGER requires completely flat design - no hierarchy
+# AIGER/gate-level requires completely flat design - no hierarchy
 flatten
 opt_clean
 
@@ -259,6 +275,7 @@ puts "SYNTHESIS COMPLETE"
 puts "================================================================================"
 puts "\nOutput Files:"
 puts "  - Verilog netlist:    ../build/output/core_top_synth.v"
+puts "  - Gate-level Verilog: ../build/output/core_top_synth_gates.v"
 puts "  - JSON netlist:       ../build/output/core_top_synth.json"
 puts "  - BLIF netlist:       ../build/output/core_top_synth.blif"
 puts "\nReports:"
