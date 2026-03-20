@@ -28,41 +28,57 @@ module control
 (
   input logic clk,
   input logic rst_n,
-  output logic load_mar,
-  output logic load_pc,
-  output logic load_ir,
-  output logic load_mdr,
-  output logic load_reg,
-  output logic load_imm_reg,     // Load immediate register
-  output logic load_alu_reg,     // Load ALU output register
-  output logic mdr_mux_sel,
-  output rs1_mux_sel_t  rs1_mux_sel,
-  output rs2_mux_sel_t  rs2_mux_sel,
-  output alu_op_t alu_op,
-  output databus_mux_sel_t databus_mux_sel,
-  output logic mem_write,
-  output logic mem_read,
-  output mem_size_t mem_size,
-  output logic load_unsigned,
-  output logic [4:0] rs1,
-  output logic [4:0] rs2,
-  output logic [4:0] rd,
-  input logic mem_resp,
-  input logic [2:0] bsr,
-  input logic [31:0] ir,
-  output logic [31:0] immediate,
+
+  // Register load enables
+  output logic load_mar,         // Load Memory Address Register
+  output logic load_pc,          // Load Program Counter
+  output logic load_ir,          // Load Instruction Register
+  output logic load_mdr,         // Load Memory Data Register
+  output logic load_reg,         // Load register file (write enable)
+
+  // Pipeline register loads
+  output logic load_imm_reg,     // Load immediate register (breaks IMM gen critical path)
+  output logic load_alu_reg,     // Load ALU output register (breaks ALU->databus critical path)
+
+  // Multiplexer selects
+  output logic mdr_mux_sel,      // Select source for MDR input
+  output rs1_mux_sel_t  rs1_mux_sel,  // Select source for RS1 input to ALU
+  output rs2_mux_sel_t  rs2_mux_sel,  // Select source for RS2 input to ALU
+  output alu_op_t alu_op,        // Select ALU operation
+  output databus_mux_sel_t databus_mux_sel,  // Select source for shared databus
+
+  // Memory interface
+  output logic mem_write,        // Memory write enable
+  output logic mem_read,         // Memory read enable
+  output mem_size_t mem_size,    // Memory access size (byte/halfword/word)
+  output logic load_unsigned,    // Zero-extend for unsigned loads
+
+  // Register indices
+  output logic [4:0] rs1,        // RS1 register index
+  output logic [4:0] rs2,        // RS2 register index
+  output logic [4:0] rd,         // RD register index
+
+  // Inputs
+  input logic mem_resp,          // Memory response (read/write complete)
+  input logic [2:0] bsr,         // Branch status register (beq, blt, bltu)
+  input logic [31:0] ir,         // Instruction register
+
+  // Immediate output
+  output logic [31:0] immediate, // Sign/zero-extended immediate value
+
   // CSR interface
-  output logic [2:0] funct3_out,  // Instruction funct3 field for CSR operations
+  output logic [2:0] funct3_out, // Instruction funct3 field for CSR operations
   output logic csr_access,       // High when accessing CSR
-  output logic csr_write,         // High when writing to CSR (for instret increment)
-  input logic csr_valid,          // CSR address valid signal
+  output logic csr_write,        // High when writing to CSR (for instret increment)
+  input logic csr_valid,         // CSR address valid signal
+
   // Trap handling interface
-  output logic trap_entry,        // High during trap entry (write mepc, mcause, mtval)
-  output logic load_pc_from_csr,  // High when loading PC from CSR (mtvec or mepc)
-  output logic load_mepc,         // High when writing current PC to mepc
-  output logic load_mcause,       // High when writing mcause
-  output logic load_mtval,        // High when writing mtval
-  output logic [31:0] mcause_val  // Value to write to mcause
+  output logic trap_entry,       // High during trap entry (write mepc, mcause, mtval)
+  output logic load_pc_from_csr, // High when loading PC from CSR (mtvec or mepc)
+  output logic load_mepc,        // High when writing current PC to mepc
+  output logic load_mcause,      // High when writing mcause
+  output logic load_mtval,       // High when writing mtval
+  output logic [31:0] mcause_val // Value to write to mcause
 );
 
   logic [2:0] instr_type;
