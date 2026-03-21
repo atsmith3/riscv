@@ -12,15 +12,20 @@
 
 `include "datatypes.sv"
 
-module csr_alu (
-  input  logic [31:0] csr_rdata,      // Current CSR value (from csr_file)
-  input  logic [31:0] rs1_or_zimm,    // RS1 value or zero-extended immediate
-  input  logic [2:0]  funct3,         // CSR operation (from instruction[14:12])
-  input  logic        rs1_is_zero,    // True if rs1=x0 or zimm=0
+module csr_alu
+    (input logic [31 : 0] csr_rdata,
+     // Current CSR value (from csr_file)
+     input logic [31 : 0] rs1_or_zimm,
+     // RS1 value or zero-extended immediate
+     input logic [2 : 0] funct3,
+     // CSR operation (from instruction[14:12])
+     input logic rs1_is_zero,
+     // True if rs1=x0 or zimm=0
 
-  output logic [31:0] csr_wdata,      // New CSR value to write
-  output logic        csr_we          // Write enable (0 if write suppressed)
-);
+     output logic [31 : 0] csr_wdata,
+     // New CSR value to write
+     output logic csr_we // Write enable (0 if write suppressed)
+    );
 
   // CSR operation encoding from datatypes.sv (csr_op_t enum)
   // Using enum values: CSR_RW, CSR_RS, CSR_RC, CSR_RWI, CSR_RSI, CSR_RCI
@@ -36,7 +41,7 @@ module csr_alu (
       // Write suppression: Never suppress for CSRRW (always writes)
       CSR_RW, CSR_RWI: begin
         csr_wdata = rs1_or_zimm;
-        csr_we = 1'b1;  // Always write for RW variants
+        csr_we = 1'b1; // Always write for RW variants
       end
 
       // CSRRS / CSRRSI: Atomic read and set bits
@@ -44,7 +49,7 @@ module csr_alu (
       // Write suppression: If rs1=x0 or zimm=0, don't write
       CSR_RS, CSR_RSI: begin
         csr_wdata = csr_rdata | rs1_or_zimm;
-        csr_we = ~rs1_is_zero;  // Write only if rs1 ≠ x0 (or zimm ≠ 0)
+        csr_we = ~rs1_is_zero; // Write only if rs1 ≠ x0 (or zimm ≠ 0)
       end
 
       // CSRRC / CSRRC I: Atomic read and clear bits
@@ -52,7 +57,7 @@ module csr_alu (
       // Write suppression: If rs1=x0 or zimm=0, don't write
       CSR_RC, CSR_RCI: begin
         csr_wdata = csr_rdata & ~rs1_or_zimm;
-        csr_we = ~rs1_is_zero;  // Write only if rs1 ≠ x0 (or zimm ≠ 0)
+        csr_we = ~rs1_is_zero; // Write only if rs1 ≠ x0 (or zimm ≠ 0)
       end
 
       default: begin
@@ -61,5 +66,4 @@ module csr_alu (
       end
     endcase
   end
-
 endmodule
