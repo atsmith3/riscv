@@ -11,3 +11,8 @@ build/
 
 # Synthesis build artifacts
 synthesis/build/
+
+# Test artifacts
+*.dump
+*.elf
+*.s

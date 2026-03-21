@@ -13,13 +13,8 @@
  * 20210612
  */
 
-module dff_init (
-  clk,
-  rst_n,
-  d,
-  load,
-  q
-);
+module dff_init
+    (clk, rst_n, d, load, q);
 
   parameter INIT = 1'b0;
 
@@ -38,14 +33,12 @@ module dff_init (
     data = 1'b0;
   end
 
-  always @ (posedge clk) begin
+  always @(posedge clk) begin
     if (!rst_n) begin
       data <= INIT;
-    end
-    else if (load) begin
+    end else if (load) begin
       data <= d;
-    end
-    else begin
+    end else begin
       data <= data;
     end
   end

@@ -21,9 +21,7 @@ constexpr uint8_t INSTR_J = 5;
 constexpr uint8_t INSTR_ERR = 6;
 
 // Strip bits [6:0] (opcode) to match the [31:7] Verilator port mapping
-static inline uint32_t to_ir(uint32_t instruction) {
-    return instruction >> 7;
-}
+static inline uint32_t to_ir(uint32_t instruction) { return instruction >> 7; }
 
 /**
  * Reference model for immediate generation
@@ -367,7 +365,8 @@ BOOST_AUTO_TEST_CASE(imm_gen_real_instructions) {
   // ADDI x5, x0, 10  (I-type: imm=10)
   // Format: imm[11:0] | rs1[4:0] | 000 | rd[4:0] | 0010011
   dut->instr_type = INSTR_I;
-  uint32_t addi_instr = (10 << 20) | (0 << 15) | (0 << 12) | (5 << 7) | 0b0010011;
+  uint32_t addi_instr =
+      (10 << 20) | (0 << 15) | (0 << 12) | (5 << 7) | 0b0010011;
   dut->ir = to_ir(addi_instr);
   dut->eval();
   BOOST_CHECK_EQUAL(dut->imm, 10);
@@ -386,7 +385,7 @@ BOOST_AUTO_TEST_CASE(imm_gen_real_instructions) {
   uint32_t sw_lower = sw_imm & 0x1F;
   dut->instr_type = INSTR_S;
   uint32_t sw_instr = (sw_upper << 25) | (5 << 20) | (2 << 15) | (0b010 << 12) |
-            (sw_lower << 7) | 0b0100011;
+                      (sw_lower << 7) | 0b0100011;
   dut->ir = to_ir(sw_instr);
   dut->eval();
   BOOST_CHECK_EQUAL(dut->imm, 100);

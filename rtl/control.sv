@@ -17,7 +17,8 @@
  *
  * Control Signals Generated:
  *   - Register load enables (load_pc, load_ir, load_mar, load_mdr, load_reg)
- *   - Multiplexer selects (rs1_mux_sel, rs2_mux_sel, databus_mux_sel, mdr_mux_sel)
+ *   - Multiplexer selects (rs1_mux_sel, rs2_mux_sel, databus_mux_sel,
+ * mdr_mux_sel)
  *   - ALU operation select (alu_op)
  *   - Memory interface signals (mem_read, mem_write)
  */
@@ -25,69 +26,100 @@
 `include "datatypes.sv"
 
 module control
-(
-  input logic clk,
-  input logic rst_n,
+    (input logic clk,
+     input logic rst_n,
 
-  // Register load enables
-  output logic load_mar,         // Load Memory Address Register
-  output logic load_pc,          // Load Program Counter
-  output logic load_ir,          // Load Instruction Register
-  output logic load_mdr,         // Load Memory Data Register
-  output logic load_reg,         // Load register file (write enable)
+     // Register load enables
+     output logic load_mar,
+     // Load Memory Address Register
+     output logic load_pc,
+     // Load Program Counter
+     output logic load_ir,
+     // Load Instruction Register
+     output logic load_mdr,
+     // Load Memory Data Register
+     output logic load_reg,
+     // Load register file (write enable)
 
-  // Pipeline register loads
-  output logic load_imm_reg,     // Load immediate register (breaks IMM gen critical path)
-  output logic load_alu_reg,     // Load ALU output register (breaks ALU->databus critical path)
+     // Pipeline register loads
+     output logic load_imm_reg,
+     // Load immediate register (breaks IMM gen critical path)
+     output logic load_alu_reg,
+     // Load ALU output register (breaks ALU->databus critical path)
 
-  // Multiplexer selects
-  output logic mdr_mux_sel,      // Select source for MDR input
-  output rs1_mux_sel_t  rs1_mux_sel,  // Select source for RS1 input to ALU
-  output rs2_mux_sel_t  rs2_mux_sel,  // Select source for RS2 input to ALU
-  output alu_op_t alu_op,        // Select ALU operation
-  output databus_mux_sel_t databus_mux_sel,  // Select source for shared databus
+     // Multiplexer selects
+     output logic mdr_mux_sel,
+     // Select source for MDR input
+     output rs1_mux_sel_t rs1_mux_sel,
+     // Select source for RS1 input to ALU
+     output rs2_mux_sel_t rs2_mux_sel,
+     // Select source for RS2 input to ALU
+     output alu_op_t alu_op,
+     // Select ALU operation
+     output databus_mux_sel_t databus_mux_sel,
+     // Select source for shared databus
 
-  // Memory interface
-  output logic mem_write,        // Memory write enable
-  output logic mem_read,         // Memory read enable
-  output mem_size_t mem_size,    // Memory access size (byte/halfword/word)
-  output logic load_unsigned,    // Zero-extend for unsigned loads
+     // Memory interface
+     output logic mem_write,
+     // Memory write enable
+     output logic mem_read,
+     // Memory read enable
+     output mem_size_t mem_size,
+     // Memory access size (byte/halfword/word)
+     output logic load_unsigned,
+     // Zero-extend for unsigned loads
 
-  // Register indices
-  output logic [4:0] rs1,        // RS1 register index
-  output logic [4:0] rs2,        // RS2 register index
-  output logic [4:0] rd,         // RD register index
+     // Register indices
+     output logic [4 : 0] rs1,
+     // RS1 register index
+     output logic [4 : 0] rs2,
+     // RS2 register index
+     output logic [4 : 0] rd,
+     // RD register index
 
-  // Inputs
-  input logic mem_resp,          // Memory response (read/write complete)
-  input logic [2:0] bsr,         // Branch status register (beq, blt, bltu)
-  input logic [31:0] ir,         // Instruction register
+     // Inputs
+     input logic mem_resp,
+     // Memory response (read/write complete)
+     input logic [2 : 0] bsr,
+     // Branch status register (beq, blt, bltu)
+     input logic [31 : 0] ir,
+     // Instruction register
 
-  // Immediate output
-  output logic [31:0] immediate, // Sign/zero-extended immediate value
+     // Immediate output
+     output logic [31 : 0] immediate,
+     // Sign/zero-extended immediate value
 
-  // CSR interface
-  output logic [2:0] funct3_out, // Instruction funct3 field for CSR operations
-  output logic csr_access,       // High when accessing CSR
-  output logic csr_write,        // High when writing to CSR (for instret increment)
-  input logic csr_valid,         // CSR address valid signal
+     // CSR interface
+     output logic [2 : 0] funct3_out,
+     // Instruction funct3 field for CSR operations
+     output logic csr_access,
+     // High when accessing CSR
+     output logic csr_write,
+     // High when writing to CSR (for instret increment)
+     input logic csr_valid,
+     // CSR address valid signal
 
-  // Trap handling interface
-  output logic trap_entry,       // High during trap entry (write mepc, mcause, mtval)
-  output logic load_pc_from_csr, // High when loading PC from CSR (mtvec or mepc)
-  output logic load_mepc,        // High when writing current PC to mepc
-  output logic load_mcause,      // High when writing mcause
-  output logic load_mtval,       // High when writing mtval
-  output logic [31:0] mcause_val // Value to write to mcause
-);
+     // Trap handling interface
+     output logic trap_entry,
+     // High during trap entry (write mepc, mcause, mtval)
+     output logic load_pc_from_csr,
+     // High when loading PC from CSR (mtvec or mepc)
+     output logic load_mepc,
+     // High when writing current PC to mepc
+     output logic load_mcause,
+     // High when writing mcause
+     output logic load_mtval,
+     // High when writing mtval
+     output logic [31 : 0] mcause_val // Value to write to mcause
+    );
 
-  logic [2:0] instr_type;
-  logic [6:0] opcode;
-  logic [6:0] funct7;
-  logic [2:0] funct3;
-  logic [3:0] fm;
-  logic [3:0] pred;
-  logic [3:0] succ;
+  logic [2 : 0] instr_type;
+  logic [6 : 0] opcode;
+  logic [6 : 0] funct7;
+  logic [2 : 0] funct3;
+  logic [3 : 0] fm;
+  logic [3 : 0] pred;
+  logic [3 : 0] succ;
   logic arithmetic;
   logic ebreak;
   logic branch;
@@ -98,111 +130,111 @@ module control
   assign bltu = bsr[0];
 
   // FSM State Definitions
-  // Each instruction execution is broken into multiple states for the multi-cycle design
+  // Each instruction execution is broken into multiple states for the
+  // multi-cycle design
   enum {
     // Instruction Fetch Sequence (4 cycles)
-    FETCH_0 = 0,                  // MAR <- PC, initiate memory read
-    FETCH_1,                      // Wait for memory response
-    FETCH_2,                      // MDR <- M[MAR] (capture instruction)
-    FETCH_3,                      // IR <- MDR (load instruction register)
+    FETCH_0 = 0, // MAR <- PC, initiate memory read
+    FETCH_1,     // Wait for memory response
+    FETCH_2,     // MDR <- M[MAR] (capture instruction)
+    FETCH_3,     // IR <- MDR (load instruction register)
 
     // Decode and Dispatch
-    DECODE,                       // Decode instruction and dispatch to appropriate state
+    DECODE, // Decode instruction and dispatch to appropriate state
 
     // Branch Instructions
-    BRANCH_0,                     // Evaluate branch condition (BEQ, BNE, BLT, BGE, BLTU, BGEU)
-    BRANCH_T,                     // Branch taken: compute PC+IMM, load alu_reg
-    BRANCH_T_WB,                  // Branch taken writeback: load PC from alu_reg
+    BRANCH_0,    // Evaluate branch condition (BEQ, BNE, BLT, BGE, BLTU, BGEU)
+    BRANCH_T,    // Branch taken: compute PC+IMM, load alu_reg
+    BRANCH_T_WB, // Branch taken writeback: load PC from alu_reg
 
     // Common States
-    PC_INC,                       // PC <- PC + 4 (compute in ALU, load alu_reg)
-    PC_INC_WB,                    // PC_INC writeback: load PC from alu_reg
+    PC_INC,    // PC <- PC + 4 (compute in ALU, load alu_reg)
+    PC_INC_WB, // PC_INC writeback: load PC from alu_reg
 
     // Jump Instructions
-    JAL_0,                        // JAL: RD <- PC + 4 (compute in ALU, load alu_reg)
-    JAL_0_WB,                     // JAL_0 writeback: load RD from alu_reg
-    JAL_1,                        // JAL: PC <- PC + IMM (compute in ALU, load alu_reg)
-    JAL_1_WB,                     // JAL_1 writeback: load PC from alu_reg
+    JAL_0,    // JAL: RD <- PC + 4 (compute in ALU, load alu_reg)
+    JAL_0_WB, // JAL_0 writeback: load RD from alu_reg
+    JAL_1,    // JAL: PC <- PC + IMM (compute in ALU, load alu_reg)
+    JAL_1_WB, // JAL_1 writeback: load PC from alu_reg
 
     // ALU Instructions
-    REG_REG,                      // R-type: compute RS1 op RS2, load alu_reg
-    REG_REG_WB,                   // R-type writeback: load RD from alu_reg
-    REG_IMM,                      // I-type: compute RS1 op IMM, load alu_reg
-    REG_IMM_WB,                   // I-type writeback: load RD from alu_reg
+    REG_REG,    // R-type: compute RS1 op RS2, load alu_reg
+    REG_REG_WB, // R-type writeback: load RD from alu_reg
+    REG_IMM,    // I-type: compute RS1 op IMM, load alu_reg
+    REG_IMM_WB, // I-type writeback: load RD from alu_reg
 
     // Upper Immediate Instructions
-    LUI_0,                        // LUI: compute IMM, load alu_reg
-    LUI_1,                        // LUI writeback: load RD from alu_reg
-    AUIPC_0,                      // AUIPC: compute PC+IMM, load alu_reg
-    AUIPC_1,                      // AUIPC writeback: load RD from alu_reg
+    LUI_0,   // LUI: compute IMM, load alu_reg
+    LUI_1,   // LUI writeback: load RD from alu_reg
+    AUIPC_0, // AUIPC: compute PC+IMM, load alu_reg
+    AUIPC_1, // AUIPC writeback: load RD from alu_reg
 
     // Jump and Link Register
-    JALR_0,                       // JALR: RD <- PC + 4 (compute in ALU, load alu_reg)
-    JALR_0_WB,                    // JALR_0 writeback: load RD from alu_reg
-    JALR_1,                       // JALR: PC <- RS1 + IMM (compute in ALU, load alu_reg)
-    JALR_1_WB,                    // JALR_1 writeback: load PC from alu_reg
+    JALR_0,    // JALR: RD <- PC + 4 (compute in ALU, load alu_reg)
+    JALR_0_WB, // JALR_0 writeback: load RD from alu_reg
+    JALR_1,    // JALR: PC <- RS1 + IMM (compute in ALU, load alu_reg)
+    JALR_1_WB, // JALR_1 writeback: load PC from alu_reg
 
     // Load Instructions (Memory Read)
-    LD_0,                         // MAR <- RS1 + IMM (compute in ALU, load alu_reg)
-    LD_0_WB,                      // LD_0 writeback: load MAR from alu_reg
-    LD_1,                         // Initiate memory read
-    LD_2,                         // Wait for memory response
-    LD_3,                         // MDR <- M[MAR] (capture loaded data)
-    LD_4,                         // RD <- MDR (write to destination register)
+    LD_0,    // MAR <- RS1 + IMM (compute in ALU, load alu_reg)
+    LD_0_WB, // LD_0 writeback: load MAR from alu_reg
+    LD_1,    // Initiate memory read
+    LD_2,    // Wait for memory response
+    LD_3,    // MDR <- M[MAR] (capture loaded data)
+    LD_4,    // RD <- MDR (write to destination register)
 
     // Store Instructions (Memory Write)
-    ST_0,                         // MAR <- RS1 + IMM (compute in ALU, load alu_reg)
-    ST_0_WB,                      // ST_0 writeback: load MAR from alu_reg
-    ST_1,                         // MDR <- RS2 (compute in ALU, load alu_reg)
-    ST_1_WB,                      // ST_1 writeback: load MDR from alu_reg
-    ST_2,                         // Initiate memory write
-    ST_3,                         // Wait for memory write completion
+    ST_0,    // MAR <- RS1 + IMM (compute in ALU, load alu_reg)
+    ST_0_WB, // ST_0 writeback: load MAR from alu_reg
+    ST_1,    // MDR <- RS2 (compute in ALU, load alu_reg)
+    ST_1_WB, // ST_1 writeback: load MDR from alu_reg
+    ST_2,    // Initiate memory write
+    ST_3,    // Wait for memory write completion
 
     // CSR Instructions
-    CSR_0,                        // Read CSR, compute new value
-    CSR_1,                        // Write old CSR value to RD, update CSR
+    CSR_0, // Read CSR, compute new value
+    CSR_1, // Write old CSR value to RD, update CSR
 
     // Trap Handling
-    TRAP_ENTRY_0,                 // Save PC to mepc
-    TRAP_ENTRY_1,                 // Set mcause
-    TRAP_ENTRY_2,                 // Set mtval
-    TRAP_ENTRY_3,                 // Load trap vector from mtvec
-    TRAP_ENTRY_4,                 // Jump to trap handler (load PC from mtvec)
-    MRET_0,                       // MRET: Load mepc into PC
+    TRAP_ENTRY_0, // Save PC to mepc
+    TRAP_ENTRY_1, // Set mcause
+    TRAP_ENTRY_2, // Set mtval
+    TRAP_ENTRY_3, // Load trap vector from mtvec
+    TRAP_ENTRY_4, // Jump to trap handler (load PC from mtvec)
+    MRET_0,       // MRET: Load mepc into PC
 
     // FENCE Instructions (NOPs in single-core, no-cache architecture)
-    FENCE_0,                      // FENCE/FENCE.I: architectural NOP, proceed to PC_INC
+    FENCE_0, // FENCE/FENCE.I: architectural NOP, proceed to PC_INC
 
     // Error States
-    ERROR_INVALID_OPCODE,         // Invalid instruction opcode detected
-    ERROR_OPCODE_NOT_IMPLEMENTED  // Valid but unimplemented instruction (CSR, FENCE, etc.)
-  } state, next_state;
+    ERROR_INVALID_OPCODE,        // Invalid instruction opcode detected
+    ERROR_OPCODE_NOT_IMPLEMENTED // Valid but unimplemented instruction (CSR,
+                                 // FENCE, etc.)
+  } state,
+      next_state;
 
-  always_ff @ (posedge clk) begin
+  always_ff @(posedge clk) begin
     if (!rst_n) begin
       state <= FETCH_0;
-    end
-    else begin
+    end else begin
       state <= next_state;
     end
   end
 
-  ir_decoder u_ir_decoder (
-    .ir(ir),
-    .instr_type(instr_type),
-    .opcode(opcode),
-    .rs1(rs1),
-    .rs2(rs2),
-    .rd(rd),
-    .funct7(funct7),
-    .funct3(funct3),
-    .fm(fm),
-    .pred(pred),
-    .succ(succ),
-    .arithmetic(arithmetic),
-    .ebreak(ebreak),
-    .immediate(immediate));
-
+  ir_decoder u_ir_decoder(.ir(ir),
+                          .instr_type(instr_type),
+                          .opcode(opcode),
+                          .rs1(rs1),
+                          .rs2(rs2),
+                          .rd(rd),
+                          .funct7(funct7),
+                          .funct3(funct3),
+                          .fm(fm),
+                          .pred(pred),
+                          .succ(succ),
+                          .arithmetic(arithmetic),
+                          .ebreak(ebreak),
+                          .immediate(immediate));
 
   // Next State Logic
   // Determines the next FSM state based on current state and instruction type
@@ -213,62 +245,63 @@ module control
     case (state)
       // ==== INSTRUCTION FETCH SEQUENCE ====
       // Four-cycle sequence to fetch instruction from memory
-      FETCH_0 : begin
-        next_state = FETCH_1;  // Always proceed to wait state
+      FETCH_0: begin
+        next_state = FETCH_1; // Always proceed to wait state
       end
-      FETCH_1 : begin
-        next_state = FETCH_1;  // Wait here until memory responds
+      FETCH_1: begin
+        next_state = FETCH_1; // Wait here until memory responds
         if (mem_resp) begin
-          next_state = FETCH_2;  // Memory ready, capture data
+          next_state = FETCH_2; // Memory ready, capture data
         end
       end
-      FETCH_2 : begin
-        next_state = FETCH_3;  // Data captured in MDR, load IR next
+      FETCH_2: begin
+        next_state = FETCH_3; // Data captured in MDR, load IR next
       end
-      FETCH_3 : begin
-        next_state = DECODE;  // IR loaded, proceed to decode
+      FETCH_3: begin
+        next_state = DECODE; // IR loaded, proceed to decode
       end
 
       // ==== DECODE AND DISPATCH ====
       // Examine opcode and branch to appropriate execution sequence
-      DECODE : begin
+      DECODE: begin
         next_state = ERROR_INVALID_OPCODE;
         case (opcode)
-          LUI : begin
+          LUI: begin
             next_state = LUI_0;
           end
-          AUIPC : begin
+          AUIPC: begin
             next_state = AUIPC_0;
           end
-          JAL : begin
+          JAL: begin
             next_state = JAL_0;
           end
-          JALR : begin
+          JALR: begin
             next_state = JALR_0;
           end
-          BRANCH : begin
+          BRANCH: begin
             next_state = BRANCH_0;
           end
-          LD : begin
+          LD: begin
             next_state = LD_0;
           end
-          ST : begin
+          ST: begin
             next_state = ST_0;
           end
-          ALUI : begin
+          ALUI: begin
             next_state = REG_IMM;
           end
-          ALU : begin
+          ALU: begin
             next_state = REG_REG;
           end
-          FENCE : begin
+          FENCE: begin
             next_state = FENCE_0;
           end
-          ECSR : begin
-            // Distinguish CSR instructions (funct3 != 0) from ECALL/EBREAK/MRET (funct3 == 0)
+          ECSR: begin
+            // Distinguish CSR instructions (funct3 != 0) from ECALL/EBREAK/MRET
+            // (funct3 == 0)
             if (funct3 == 3'b000) begin
               // Check immediate field to distinguish ECALL/EBREAK/MRET
-              if (immediate[11:0] == 12'h302) begin
+              if (immediate[11 : 0] == 12'h302) begin
                 // MRET instruction
                 next_state = MRET_0;
               end else begin
@@ -276,219 +309,230 @@ module control
                 next_state = TRAP_ENTRY_0;
               end
             end else begin
-              next_state = CSR_0;  // CSR instruction
+              next_state = CSR_0; // CSR instruction
             end
           end
-          default : begin
+          default: begin
             next_state = ERROR_OPCODE_NOT_IMPLEMENTED;
           end
         endcase
       end
       // ==== BRANCH INSTRUCTIONS ====
       // Evaluate condition and branch if taken
-      BRANCH_0 : begin
-        next_state = PC_INC;  // Default: branch not taken, increment PC
+      BRANCH_0: begin
+        next_state = PC_INC; // Default: branch not taken, increment PC
         case (funct3)
-          BEQ : begin
-            if ( beq ) next_state = BRANCH_T;  // Branch if equal
+          BEQ: begin
+            if (beq)
+              next_state = BRANCH_T; // Branch if equal
           end
-          BNE : begin
-            if ( ~beq ) next_state = BRANCH_T;  // Branch if not equal
+          BNE: begin
+            if (~beq)
+              next_state = BRANCH_T; // Branch if not equal
           end
-          BLT : begin
-            if ( blt ) next_state = BRANCH_T;  // Branch if less than (signed)
+          BLT: begin
+            if (blt)
+              next_state = BRANCH_T; // Branch if less than (signed)
           end
-          BGE : begin
-            if ( ~blt ) next_state = BRANCH_T;  // Branch if greater/equal (signed)
+          BGE: begin
+            if (~blt)
+              next_state = BRANCH_T; // Branch if greater/equal (signed)
           end
-          BLTU : begin
-            if ( bltu ) next_state = BRANCH_T;  // Branch if less than (unsigned)
+          BLTU: begin
+            if (bltu)
+              next_state = BRANCH_T; // Branch if less than (unsigned)
           end
-          BGEU : begin
-            if ( ~bltu ) next_state = BRANCH_T;  // Branch if greater/equal (unsigned)
+          BGEU: begin
+            if (~bltu)
+              next_state = BRANCH_T; // Branch if greater/equal (unsigned)
           end
-          default : begin
+          default: begin
           end
         endcase
       end
-      BRANCH_T : begin  // Branch taken: compute PC+IMM, load alu_reg
+      BRANCH_T: begin // Branch taken: compute PC+IMM, load alu_reg
         next_state = BRANCH_T_WB;
       end
-      BRANCH_T_WB : begin  // Branch taken writeback: load PC from alu_reg
+      BRANCH_T_WB: begin // Branch taken writeback: load PC from alu_reg
         next_state = FETCH_0;
       end
 
       // ==== COMMON STATES ====
-      PC_INC : begin  // PC <- PC + 4 (compute in ALU, load alu_reg)
+      PC_INC: begin // PC <- PC + 4 (compute in ALU, load alu_reg)
         next_state = PC_INC_WB;
       end
-      PC_INC_WB : begin  // PC_INC writeback: load PC from alu_reg
+      PC_INC_WB: begin // PC_INC writeback: load PC from alu_reg
         next_state = FETCH_0;
       end
 
       // ==== JUMP AND LINK (JAL) ====
-      JAL_0 : begin  // Save return address (PC+4) to rd (compute in ALU, load alu_reg)
+      JAL_0: begin // Save return address (PC+4) to rd (compute in ALU, load
+                   // alu_reg)
         next_state = JAL_0_WB;
       end
-      JAL_0_WB : begin  // JAL_0 writeback: load RD from alu_reg
+      JAL_0_WB: begin // JAL_0 writeback: load RD from alu_reg
         next_state = JAL_1;
       end
-      JAL_1 : begin  // Update PC with target address (compute in ALU, load alu_reg)
+      JAL_1: begin // Update PC with target address (compute in ALU, load
+                   // alu_reg)
         next_state = JAL_1_WB;
       end
-      JAL_1_WB : begin  // JAL_1 writeback: load PC from alu_reg
+      JAL_1_WB: begin // JAL_1 writeback: load PC from alu_reg
         next_state = FETCH_0;
       end
 
       // ==== REGISTER-REGISTER ALU OPERATIONS ====
-      REG_REG : begin  // R-type: compute RS1 op RS2, load alu_reg
+      REG_REG: begin // R-type: compute RS1 op RS2, load alu_reg
         next_state = REG_REG_WB;
       end
-      REG_REG_WB : begin  // R-type writeback: load RD from alu_reg
+      REG_REG_WB: begin // R-type writeback: load RD from alu_reg
         next_state = PC_INC;
       end
 
       // ==== REGISTER-IMMEDIATE ALU OPERATIONS ====
-      REG_IMM : begin  // I-type: compute RS1 op IMM, load alu_reg
+      REG_IMM: begin // I-type: compute RS1 op IMM, load alu_reg
         next_state = REG_IMM_WB;
       end
-      REG_IMM_WB : begin  // I-type writeback: load RD from alu_reg
+      REG_IMM_WB: begin // I-type writeback: load RD from alu_reg
         next_state = PC_INC;
       end
 
       // ==== LOAD UPPER IMMEDIATE ====
-      LUI_0 : begin  // Load immediate into rd (compute in ALU, load alu_reg)
+      LUI_0: begin // Load immediate into rd (compute in ALU, load alu_reg)
         next_state = LUI_1;
       end
-      LUI_1 : begin  // LUI writeback: load RD from alu_reg
+      LUI_1: begin // LUI writeback: load RD from alu_reg
         next_state = PC_INC;
       end
 
       // ==== ADD UPPER IMMEDIATE TO PC ====
-      AUIPC_0 : begin  // Compute PC+imm (in ALU, load alu_reg)
+      AUIPC_0: begin // Compute PC+imm (in ALU, load alu_reg)
         next_state = AUIPC_1;
       end
-      AUIPC_1 : begin  // AUIPC writeback: load RD from alu_reg
+      AUIPC_1: begin // AUIPC writeback: load RD from alu_reg
         next_state = PC_INC;
       end
 
       // ==== JUMP AND LINK REGISTER (JALR) ====
-      JALR_0 : begin  // Save return address (PC+4) to rd (compute in ALU, load alu_reg)
+      JALR_0: begin // Save return address (PC+4) to rd (compute in ALU, load
+                    // alu_reg)
         next_state = JALR_0_WB;
       end
-      JALR_0_WB : begin  // JALR_0 writeback: load RD from alu_reg
+      JALR_0_WB: begin // JALR_0 writeback: load RD from alu_reg
         next_state = JALR_1;
       end
-      JALR_1 : begin  // Update PC with computed address (compute in ALU, load alu_reg)
+      JALR_1: begin // Update PC with computed address (compute in ALU, load
+                    // alu_reg)
         next_state = JALR_1_WB;
       end
-      JALR_1_WB : begin  // JALR_1 writeback: load PC from alu_reg
+      JALR_1_WB: begin // JALR_1 writeback: load PC from alu_reg
         next_state = FETCH_0;
       end
 
       // ==== LOAD WORD ====
       // Multi-cycle memory read sequence
-      LD_0 : begin  // Compute effective address (rs1+imm, load alu_reg)
+      LD_0: begin // Compute effective address (rs1+imm, load alu_reg)
         next_state = LD_0_WB;
       end
-      LD_0_WB : begin  // LD_0 writeback: load MAR from alu_reg
+      LD_0_WB: begin // LD_0 writeback: load MAR from alu_reg
         next_state = LD_1;
       end
-      LD_1 : begin  // Initiate memory read
+      LD_1: begin // Initiate memory read
         next_state = LD_2;
       end
-      LD_2 : begin  // Wait for memory response
+      LD_2: begin // Wait for memory response
         next_state = LD_2;
         if (mem_resp) begin
-          next_state = LD_3;  // Memory ready, capture data
+          next_state = LD_3; // Memory ready, capture data
         end
       end
-      LD_3 : begin  // Data captured in MDR
+      LD_3: begin // Data captured in MDR
         next_state = LD_4;
       end
-      LD_4 : begin  // Write data from MDR to rd, then increment PC
+      LD_4: begin // Write data from MDR to rd, then increment PC
         next_state = PC_INC;
       end
 
       // ==== STORE WORD ====
       // Multi-cycle memory write sequence
-      ST_0 : begin  // Compute effective address (rs1+imm, load alu_reg)
+      ST_0: begin // Compute effective address (rs1+imm, load alu_reg)
         next_state = ST_0_WB;
       end
-      ST_0_WB : begin  // ST_0 writeback: load MAR from alu_reg
+      ST_0_WB: begin // ST_0 writeback: load MAR from alu_reg
         next_state = ST_1;
       end
-      ST_1 : begin  // Prepare data from rs2 in MDR (compute in ALU, load alu_reg)
+      ST_1: begin // Prepare data from rs2 in MDR (compute in ALU, load alu_reg)
         next_state = ST_1_WB;
       end
-      ST_1_WB : begin  // ST_1 writeback: load MDR from alu_reg
+      ST_1_WB: begin // ST_1 writeback: load MDR from alu_reg
         next_state = ST_2;
       end
-      ST_2 : begin  // Initiate memory write
+      ST_2: begin // Initiate memory write
         next_state = ST_3;
       end
-      ST_3 : begin  // Wait for memory write completion
+      ST_3: begin // Wait for memory write completion
         next_state = ST_3;
         if (mem_resp) begin
-          next_state = PC_INC;  // Write complete, increment PC
+          next_state = PC_INC; // Write complete, increment PC
         end
       end
 
       // ==== CSR INSTRUCTIONS ====
       // Atomic read-modify-write for Control and Status Registers
-      CSR_0 : begin  // Read CSR, compute new value
+      CSR_0: begin // Read CSR, compute new value
         if (!csr_valid) begin
-          next_state = ERROR_OPCODE_NOT_IMPLEMENTED;  // Invalid CSR address
+          next_state = ERROR_OPCODE_NOT_IMPLEMENTED; // Invalid CSR address
         end else begin
           next_state = CSR_1;
         end
       end
-      CSR_1 : begin  // Write old CSR value to rd, update CSR
+      CSR_1: begin // Write old CSR value to rd, update CSR
         next_state = PC_INC;
       end
 
       // ==== TRAP HANDLING ====
       // Trap entry sequence for ECALL/EBREAK
-      TRAP_ENTRY_0 : begin
+      TRAP_ENTRY_0: begin
         // Save PC to mepc
         next_state = TRAP_ENTRY_1;
       end
-      TRAP_ENTRY_1 : begin
+      TRAP_ENTRY_1: begin
         // Set mcause
         next_state = TRAP_ENTRY_2;
       end
-      TRAP_ENTRY_2 : begin
+      TRAP_ENTRY_2: begin
         // Set mtval
         next_state = TRAP_ENTRY_3;
       end
-      TRAP_ENTRY_3 : begin
+      TRAP_ENTRY_3: begin
         // Read mtvec CSR to get trap vector
         next_state = TRAP_ENTRY_4;
       end
-      TRAP_ENTRY_4 : begin
+      TRAP_ENTRY_4: begin
         // Load PC from mtvec (jump to trap handler)
         next_state = FETCH_0;
       end
 
       // ==== MRET (Machine Return) ====
-      MRET_0 : begin
+      MRET_0: begin
         // Load PC from mepc (return from trap)
         next_state = FETCH_0;
       end
 
       // ==== FENCE Instructions ====
-      FENCE_0 : begin
+      FENCE_0: begin
         // FENCE/FENCE.I: architectural NOP for single-core, no-cache design
         // Proceed to increment PC
         next_state = PC_INC;
       end
 
       // ==== ERROR STATES ====
-      ERROR_INVALID_OPCODE : begin
-        next_state = ERROR_INVALID_OPCODE;  // Halt: invalid opcode
+      ERROR_INVALID_OPCODE: begin
+        next_state = ERROR_INVALID_OPCODE; // Halt: invalid opcode
       end
-      ERROR_OPCODE_NOT_IMPLEMENTED : begin
-        next_state = ERROR_OPCODE_NOT_IMPLEMENTED;  // Halt: unimplemented instruction
+      ERROR_OPCODE_NOT_IMPLEMENTED: begin
+        next_state =
+            ERROR_OPCODE_NOT_IMPLEMENTED; // Halt: unimplemented instruction
       end
       default:
         next_state = FETCH_0;
@@ -530,305 +574,302 @@ module control
       load_reg = 1'b0;
       mem_read = 1'b0;
       mem_write = 1'b0;
-    end
-    else begin
+    end else begin
       case (state)
-      FETCH_0: begin
-        load_mar = 1'b1;
-      end
-      FETCH_1: begin
-        mem_read = 1'b1;
-      end
-      FETCH_2: begin
-        load_mdr = 1'b1;
-      end
-      FETCH_3: begin
-        load_ir = 1'b1;
-        databus_mux_sel = DATABUS_MDR;
-      end
-      DECODE: begin
-        load_imm_reg = 1'b1;  // Capture immediate value for use in subsequent states
-      end
-      BRANCH_0 : begin
-      end
-      BRANCH_T : begin
-        load_alu_reg = 1'b1;
-        rs1_mux_sel = RS1_PC;
-        rs2_mux_sel = RS2_IMM;
-      end
-      BRANCH_T_WB : begin
-        load_pc = 1'b1;
-        databus_mux_sel = DATABUS_ALU;
-      end
-      PC_INC : begin
-        load_alu_reg = 1'b1;
-        rs1_mux_sel = RS1_4;
-        rs2_mux_sel = RS2_PC;
-      end
-      PC_INC_WB : begin
-        load_pc = 1'b1;
-        databus_mux_sel = DATABUS_ALU;
-      end
-      JAL_0 : begin
-        load_alu_reg = 1'b1;
-        rs1_mux_sel = RS1_4;
-        rs2_mux_sel = RS2_PC;
-      end
-      JAL_0_WB : begin
-        load_reg = 1'b1;
-        databus_mux_sel = DATABUS_ALU;
-      end
-      JAL_1 : begin
-        load_alu_reg = 1'b1;
-        rs1_mux_sel = RS1_PC;
-        rs2_mux_sel = RS2_IMM;
-      end
-      JAL_1_WB : begin
-        load_pc = 1'b1;
-        databus_mux_sel = DATABUS_ALU;
-      end
-      REG_REG : begin
-        load_alu_reg = 1'b1;
-        /*
-        alu_op = {1'b0,funct3};
-        if (funct3 == 3'b001 || funct3 == 3'b101 || funct3 == 3'b000) begin
-          alu_op = {arithmetic,funct3};
+        FETCH_0: begin
+          load_mar = 1'b1;
         end
-        */
-        case(funct3)
-          3'b000:begin
-            if(arithmetic) begin
-              alu_op = ALU_SUB;
+        FETCH_1: begin
+          mem_read = 1'b1;
+        end
+        FETCH_2: begin
+          load_mdr = 1'b1;
+        end
+        FETCH_3: begin
+          load_ir = 1'b1;
+          databus_mux_sel = DATABUS_MDR;
+        end
+        DECODE: begin
+          load_imm_reg =
+              1'b1; // Capture immediate value for use in subsequent states
+        end
+        BRANCH_0: begin
+        end
+        BRANCH_T: begin
+          load_alu_reg = 1'b1;
+          rs1_mux_sel = RS1_PC;
+          rs2_mux_sel = RS2_IMM;
+        end
+        BRANCH_T_WB: begin
+          load_pc = 1'b1;
+          databus_mux_sel = DATABUS_ALU;
+        end
+        PC_INC: begin
+          load_alu_reg = 1'b1;
+          rs1_mux_sel = RS1_4;
+          rs2_mux_sel = RS2_PC;
+        end
+        PC_INC_WB: begin
+          load_pc = 1'b1;
+          databus_mux_sel = DATABUS_ALU;
+        end
+        JAL_0: begin
+          load_alu_reg = 1'b1;
+          rs1_mux_sel = RS1_4;
+          rs2_mux_sel = RS2_PC;
+        end
+        JAL_0_WB: begin
+          load_reg = 1'b1;
+          databus_mux_sel = DATABUS_ALU;
+        end
+        JAL_1: begin
+          load_alu_reg = 1'b1;
+          rs1_mux_sel = RS1_PC;
+          rs2_mux_sel = RS2_IMM;
+        end
+        JAL_1_WB: begin
+          load_pc = 1'b1;
+          databus_mux_sel = DATABUS_ALU;
+        end
+        REG_REG: begin
+          load_alu_reg = 1'b1;
+          /*
+          alu_op = {1'b0,funct3};
+          if (funct3 == 3'b001 || funct3 == 3'b101 || funct3 == 3'b000) begin
+            alu_op = {arithmetic,funct3};
+          end
+          */
+          case (funct3)
+            3'b000: begin
+              if (arithmetic) begin
+                alu_op = ALU_SUB;
+              end else begin
+                alu_op = ALU_ADD;
+              end
             end
-            else begin
+            3'b001: begin
+              if (arithmetic) begin
+                alu_op = ALU_PASS_RS1;
+              end else begin
+                alu_op = ALU_SLL;
+              end
+            end
+            3'b010: begin
+              alu_op = ALU_SLT;
+            end
+            3'b011: begin
+              alu_op = ALU_SLTU;
+            end
+            3'b100: begin
+              alu_op = ALU_XOR;
+            end
+            3'b101: begin
+              if (arithmetic) begin
+                alu_op = ALU_SRA;
+              end else begin
+                alu_op = ALU_SRL;
+              end
+            end
+            3'b110:
+              alu_op = ALU_OR;
+            3'b111:
+              alu_op = ALU_AND;
+          endcase
+        end
+        REG_REG_WB: begin
+          load_reg = 1'b1;
+          databus_mux_sel = DATABUS_ALU;
+        end
+        REG_IMM: begin
+          load_alu_reg = 1'b1;
+          rs2_mux_sel = RS2_IMM;
+          /*
+          alu_op = {1'b0,funct3};
+          if (funct3 == 3'b001 || funct3 == 3'b101) begin
+            alu_op = {arithmetic,funct3};
+          end
+          */
+          case (funct3)
+            3'b000: begin
               alu_op = ALU_ADD;
             end
-          end
-          3'b001:begin
-            if(arithmetic) begin
-              alu_op = ALU_PASS_RS1;
+            3'b001: begin
+              if (arithmetic) begin
+                alu_op = ALU_PASS_RS1;
+              end else begin
+                alu_op = ALU_SLL;
+              end
             end
-            else begin
-              alu_op = ALU_SLL;
+            3'b010: begin
+              alu_op = ALU_SLT;
             end
-          end
-          3'b010:begin
-            alu_op = ALU_SLT;
-          end
-          3'b011:begin
-            alu_op = ALU_SLTU;
-          end
-          3'b100:begin
-            alu_op = ALU_XOR;
-          end
-          3'b101:begin
-            if(arithmetic) begin
-              alu_op = ALU_SRA;
+            3'b011: begin
+              alu_op = ALU_SLTU;
             end
-            else begin
-              alu_op = ALU_SRL;
+            3'b100: begin
+              alu_op = ALU_XOR;
             end
-          end
-          3'b110: alu_op = ALU_OR;
-          3'b111: alu_op = ALU_AND;
-        endcase
-      end
-      REG_REG_WB : begin
-        load_reg = 1'b1;
-        databus_mux_sel = DATABUS_ALU;
-      end
-      REG_IMM : begin
-        load_alu_reg = 1'b1;
-        rs2_mux_sel = RS2_IMM;
-        /*
-        alu_op = {1'b0,funct3};
-        if (funct3 == 3'b001 || funct3 == 3'b101) begin
-          alu_op = {arithmetic,funct3};
+            3'b101: begin
+              if (arithmetic) begin
+                alu_op = ALU_SRA;
+              end else begin
+                alu_op = ALU_SRL;
+              end
+            end
+            3'b110: begin
+              alu_op = ALU_OR;
+            end
+            3'b111: begin
+              alu_op = ALU_AND;
+            end
+          endcase
         end
-        */
-        case(funct3)
-          3'b000:begin
-            alu_op = ALU_ADD;
-          end
-          3'b001:begin
-            if(arithmetic) begin
-              alu_op = ALU_PASS_RS1;
-            end
-            else begin
-              alu_op = ALU_SLL;
-            end
-          end
-          3'b010:begin
-            alu_op = ALU_SLT;
-          end
-          3'b011:begin
-            alu_op = ALU_SLTU;
-          end
-          3'b100:begin
-            alu_op = ALU_XOR;
-          end
-          3'b101:begin
-            if(arithmetic) begin
-              alu_op = ALU_SRA;
-            end
-            else begin
-              alu_op = ALU_SRL;
-            end
-          end
-          3'b110:begin
-            alu_op = ALU_OR;
-          end
-          3'b111:begin
-            alu_op = ALU_AND;
-          end
-        endcase
-      end
-      REG_IMM_WB : begin
-        load_reg = 1'b1;
-        databus_mux_sel = DATABUS_ALU;
-      end
-      LUI_0 : begin
-        load_alu_reg = 1'b1;
-        rs2_mux_sel = RS2_IMM;
-        alu_op = ALU_PASS_RS2;
-      end
-      LUI_1 : begin
-        load_reg = 1'b1;
-        databus_mux_sel = DATABUS_ALU;
-      end
-      AUIPC_0 : begin
-        load_alu_reg = 1'b1;
-        rs2_mux_sel = RS2_IMM;
-        rs1_mux_sel = RS1_PC;
-      end
-      AUIPC_1 : begin
-        load_reg = 1'b1;
-        databus_mux_sel = DATABUS_ALU;
-      end
-      JALR_0 : begin
-        load_alu_reg = 1'b1;
-        rs1_mux_sel = RS1_4;
-        rs2_mux_sel = RS2_PC;
-      end
-      JALR_0_WB : begin
-        load_reg = 1'b1;
-        databus_mux_sel = DATABUS_ALU;
-      end
-      JALR_1 : begin
-        load_alu_reg = 1'b1;
-        rs2_mux_sel = RS2_IMM;
-      end
-      JALR_1_WB : begin
-        load_pc = 1'b1;
-        databus_mux_sel = DATABUS_ALU;
-      end
-      LD_0 : begin
-        load_alu_reg = 1'b1;
-        rs2_mux_sel = RS2_IMM;
-      end
-      LD_0_WB : begin
-        load_mar = 1'b1;
-        databus_mux_sel = DATABUS_ALU;
-      end
-      LD_1 : begin
-        mem_read = 1'b1;
-      end
-      LD_2 : begin
-      end
-      LD_3 : begin
-        load_mdr = 1'b1;
-      end
-      LD_4 : begin
-        databus_mux_sel = DATABUS_MDR;
-        load_reg = 1'b1;
-      end
-      ST_0 : begin
-        load_alu_reg = 1'b1;
-        rs2_mux_sel = RS2_IMM;
-      end
-      ST_0_WB : begin
-        load_mar = 1'b1;
-        databus_mux_sel = DATABUS_ALU;
-      end
-      ST_1 : begin
-        load_alu_reg = 1'b1;
-        alu_op = ALU_PASS_RS2;
-      end
-      ST_1_WB : begin
-        load_mdr = 1'b1;
-        databus_mux_sel = DATABUS_ALU;
-        mdr_mux_sel = 1'b1;
-      end
-      ST_2 : begin
-        mem_write = 1'b1;
-      end
-      ST_3 : begin
-      end
-      CSR_0 : begin
-        // Read CSR and compute new value
-        // CSR read data will be captured and used in CSR_1
-        csr_access = 1'b1;
-      end
-      CSR_1 : begin
-        // Write old CSR value to rd
-        // CSR module handles the actual register write
-        load_reg = 1'b1;
-        databus_mux_sel = DATABUS_CSR;
-        csr_access = 1'b1;
-        csr_write = 1'b1;
-      end
-      TRAP_ENTRY_0 : begin
-        // Save current PC to mepc
-        trap_entry = 1'b1;
-        load_mepc = 1'b1;
-      end
-      TRAP_ENTRY_1 : begin
-        // Set mcause based on ebreak signal
-        trap_entry = 1'b1;
-        load_mcause = 1'b1;
-        // mcause: 11 for ECALL, 3 for EBREAK
-        mcause_val = ebreak ? 32'h00000003 : 32'h0000000B;
-      end
-      TRAP_ENTRY_2 : begin
-        // Set mtval (unused for ECALL/EBREAK, set to 0)
-        trap_entry = 1'b1;
-        load_mtval = 1'b1;
-      end
-      TRAP_ENTRY_3 : begin
-        // Access mtvec CSR to read trap vector
-        trap_entry = 1'b1;
-        csr_access = 1'b1;
-        // Note: CSR address will be set by core_top for mtvec (0x305)
-      end
-      TRAP_ENTRY_4 : begin
-        // Load PC from CSR (mtvec)
-        trap_entry = 1'b1;
-        load_pc = 1'b1;
-        load_pc_from_csr = 1'b1;
-        databus_mux_sel = DATABUS_CSR;
-      end
-      MRET_0 : begin
-        // Load PC from mepc (return from trap)
-        load_pc = 1'b1;
-        load_pc_from_csr = 1'b1;
-        csr_access = 1'b1;
-        databus_mux_sel = DATABUS_CSR;
-        // Note: CSR address will be set by core_top for mepc (0x341)
-      end
-      FENCE_0 : begin
-        // FENCE/FENCE.I: architectural NOP
-        // No control signals needed - just transition to PC_INC
-        // All defaults remain (no loads, no memory access, no CSR access)
-      end
-      AUIPC_0 : begin
-        load_reg = 1'b1;
-        rs2_mux_sel = RS2_IMM;
-        rs1_mux_sel = RS1_PC;
-        databus_mux_sel = DATABUS_ALU;
-      end
+        REG_IMM_WB: begin
+          load_reg = 1'b1;
+          databus_mux_sel = DATABUS_ALU;
+        end
+        LUI_0: begin
+          load_alu_reg = 1'b1;
+          rs2_mux_sel = RS2_IMM;
+          alu_op = ALU_PASS_RS2;
+        end
+        LUI_1: begin
+          load_reg = 1'b1;
+          databus_mux_sel = DATABUS_ALU;
+        end
+        AUIPC_0: begin
+          load_alu_reg = 1'b1;
+          rs2_mux_sel = RS2_IMM;
+          rs1_mux_sel = RS1_PC;
+        end
+        AUIPC_1: begin
+          load_reg = 1'b1;
+          databus_mux_sel = DATABUS_ALU;
+        end
+        JALR_0: begin
+          load_alu_reg = 1'b1;
+          rs1_mux_sel = RS1_4;
+          rs2_mux_sel = RS2_PC;
+        end
+        JALR_0_WB: begin
+          load_reg = 1'b1;
+          databus_mux_sel = DATABUS_ALU;
+        end
+        JALR_1: begin
+          load_alu_reg = 1'b1;
+          rs2_mux_sel = RS2_IMM;
+        end
+        JALR_1_WB: begin
+          load_pc = 1'b1;
+          databus_mux_sel = DATABUS_ALU;
+        end
+        LD_0: begin
+          load_alu_reg = 1'b1;
+          rs2_mux_sel = RS2_IMM;
+        end
+        LD_0_WB: begin
+          load_mar = 1'b1;
+          databus_mux_sel = DATABUS_ALU;
+        end
+        LD_1: begin
+          mem_read = 1'b1;
+        end
+        LD_2: begin
+        end
+        LD_3: begin
+          load_mdr = 1'b1;
+        end
+        LD_4: begin
+          databus_mux_sel = DATABUS_MDR;
+          load_reg = 1'b1;
+        end
+        ST_0: begin
+          load_alu_reg = 1'b1;
+          rs2_mux_sel = RS2_IMM;
+        end
+        ST_0_WB: begin
+          load_mar = 1'b1;
+          databus_mux_sel = DATABUS_ALU;
+        end
+        ST_1: begin
+          load_alu_reg = 1'b1;
+          alu_op = ALU_PASS_RS2;
+        end
+        ST_1_WB: begin
+          load_mdr = 1'b1;
+          databus_mux_sel = DATABUS_ALU;
+          mdr_mux_sel = 1'b1;
+        end
+        ST_2: begin
+          mem_write = 1'b1;
+        end
+        ST_3: begin
+        end
+        CSR_0: begin
+          // Read CSR and compute new value
+          // CSR read data will be captured and used in CSR_1
+          csr_access = 1'b1;
+        end
+        CSR_1: begin
+          // Write old CSR value to rd
+          // CSR module handles the actual register write
+          load_reg = 1'b1;
+          databus_mux_sel = DATABUS_CSR;
+          csr_access = 1'b1;
+          csr_write = 1'b1;
+        end
+        TRAP_ENTRY_0: begin
+          // Save current PC to mepc
+          trap_entry = 1'b1;
+          load_mepc = 1'b1;
+        end
+        TRAP_ENTRY_1: begin
+          // Set mcause based on ebreak signal
+          trap_entry = 1'b1;
+          load_mcause = 1'b1;
+          // mcause: 11 for ECALL, 3 for EBREAK
+          mcause_val = ebreak ? 32'h00000003 : 32'h0000000B;
+        end
+        TRAP_ENTRY_2: begin
+          // Set mtval (unused for ECALL/EBREAK, set to 0)
+          trap_entry = 1'b1;
+          load_mtval = 1'b1;
+        end
+        TRAP_ENTRY_3: begin
+          // Access mtvec CSR to read trap vector
+          trap_entry = 1'b1;
+          csr_access = 1'b1;
+          // Note: CSR address will be set by core_top for mtvec (0x305)
+        end
+        TRAP_ENTRY_4: begin
+          // Load PC from CSR (mtvec)
+          trap_entry = 1'b1;
+          load_pc = 1'b1;
+          load_pc_from_csr = 1'b1;
+          databus_mux_sel = DATABUS_CSR;
+        end
+        MRET_0: begin
+          // Load PC from mepc (return from trap)
+          load_pc = 1'b1;
+          load_pc_from_csr = 1'b1;
+          csr_access = 1'b1;
+          databus_mux_sel = DATABUS_CSR;
+          // Note: CSR address will be set by core_top for mepc (0x341)
+        end
+        FENCE_0: begin
+          // FENCE/FENCE.I: architectural NOP
+          // No control signals needed - just transition to PC_INC
+          // All defaults remain (no loads, no memory access, no CSR access)
+        end
+        AUIPC_0: begin
+          load_reg = 1'b1;
+          rs2_mux_sel = RS2_IMM;
+          rs1_mux_sel = RS1_PC;
+          databus_mux_sel = DATABUS_ALU;
+        end
       endcase
-    end  // end else (not in reset)
-  end  // end always_comb
+    end // end else (not in reset)
+  end // end always_comb
 
   // Decode funct3 for memory size and sign extension
   always_comb begin
@@ -837,32 +878,33 @@ module control
     load_unsigned = 1'b0;
 
     // CRITICAL: During FETCH states, always use WORD size for instruction fetch
-    // This prevents corruption of instruction fetches by byte/halfword load settings
-    // from previous data load instructions
-    if (state == FETCH_0 || state == FETCH_1 || state == FETCH_2 || state == FETCH_3) begin
+    // This prevents corruption of instruction fetches by byte/halfword load
+    // settings from previous data load instructions
+    if (state == FETCH_0 || state == FETCH_1 || state == FETCH_2 ||
+        state == FETCH_3) begin
       mem_size = MEM_SIZE_WORD;
       load_unsigned = 1'b0;
     end
     // Only decode for load/store operations during data memory access
     else if (opcode == LD) begin
       case (funct3)
-        3'b000: begin  // LB - load byte (signed)
+        3'b000: begin // LB - load byte (signed)
           mem_size = MEM_SIZE_BYTE;
           load_unsigned = 1'b0;
         end
-        3'b001: begin  // LH - load halfword (signed)
+        3'b001: begin // LH - load halfword (signed)
           mem_size = MEM_SIZE_HALF;
           load_unsigned = 1'b0;
         end
-        3'b010: begin  // LW - load word
+        3'b010: begin // LW - load word
           mem_size = MEM_SIZE_WORD;
           load_unsigned = 1'b0;
         end
-        3'b100: begin  // LBU - load byte unsigned
+        3'b100: begin // LBU - load byte unsigned
           mem_size = MEM_SIZE_BYTE;
           load_unsigned = 1'b1;
         end
-        3'b101: begin  // LHU - load halfword unsigned
+        3'b101: begin // LHU - load halfword unsigned
           mem_size = MEM_SIZE_HALF;
           load_unsigned = 1'b1;
         end
@@ -873,13 +915,13 @@ module control
       endcase
     end else if (opcode == ST) begin
       case (funct3)
-        3'b000: begin  // SB - store byte
+        3'b000: begin // SB - store byte
           mem_size = MEM_SIZE_BYTE;
         end
-        3'b001: begin  // SH - store halfword
+        3'b001: begin // SH - store halfword
           mem_size = MEM_SIZE_HALF;
         end
-        3'b010: begin  // SW - store word
+        3'b010: begin // SW - store word
           mem_size = MEM_SIZE_WORD;
         end
         default: begin
@@ -891,5 +933,4 @@ module control
 
   // Export funct3 for CSR ALU
   assign funct3_out = funct3;
-
 endmodule

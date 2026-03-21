@@ -28,4 +28,4 @@ repos:
       entry: clang-format
       args: [-i]
       language: system
-      files: \.(c|cpp|hpp|h)$
+      files: \.(c|cpp|hpp|h|sv|v)$

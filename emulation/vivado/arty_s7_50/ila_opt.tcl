@@ -26,9 +26,9 @@ create_debug_port u_ila_0 probe3
 set_property port_width [llength $data] [get_debug_ports u_ila_0/probe3]
 connect_debug_port u_ila_0/probe3 $data
 
-#set_property mark_debug true 
-#set_property mark_debug true 
-#set_property mark_debug true 
+#set_property mark_debug true
+#set_property mark_debug true
+#set_property mark_debug true
 
 set data [get_nets [list {mem_rdata[2]} {mem_rdata[0]} {mem_rdata[22]} {mem_rdata[24]} {mem_rdata[25]} {mem_rdata[23]} {mem_rdata[18]} {mem_rdata[20]} {mem_rdata[21]} {mem_rdata[19]} {mem_rdata[14]} {mem_rdata[16]} {mem_rdata[17]} {mem_rdata[15]} {mem_rdata[1]} {mem_rdata[3]} {mem_rdata[4]} {mem_rdata[5]} {mem_rdata[6]} {mem_rdata[7]} {mem_rdata[8]} {mem_rdata[9]} {mem_rdata[10]} {mem_rdata[12]} {mem_rdata[30]} {mem_rdata[31]} {mem_rdata[26]} {mem_rdata[28]} {mem_rdata[29]} {mem_rdata[27]} {mem_rdata[13]} {mem_rdata[11]}]]
 create_debug_port u_ila_0 probe4
