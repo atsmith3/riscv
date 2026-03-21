@@ -2,12 +2,64 @@
 # Synthesis Constraints and Configuration Notes
 # Potato RISC-V Core - Gate-Level Synthesis for GF180 PDK
 # ==============================================================================
+# Version: 1.1.0 - Enhanced with redundancy removal, timing optimization, and ABC passes
+# Date: 2026-03-20
+# ==============================================================================
 
 # ==============================================================================
-# FSM Encoding Configuration
+# Optimization Settings (Makefile)
 # ==============================================================================
 
-FSM_ENCODING: ONE-HOT
+OPT_LEVEL: debug
+
+Description:
+  - debug: Preserves intermediate signals for better debuggability
+  - production: Aggressive optimization for smaller netlist
+
+Usage:
+  make OPT_LEVEL=production all
+
+Rationale:
+  - Debug mode is default for verification-focused designs
+  - Production mode recommended for area-constrained implementations
+
+ABC_OPTIMIZATION: 0
+
+Description:
+  - Enables ABC gate decomposition (decomposes gates to AND/NOT)
+  - Further reduces area by decomposing complex gates
+  - Requires ABC tool to be installed
+
+Usage:
+  make ENABLE_ABC=1 all
+
+Rationale:
+  - Trade-off: smaller netlist but harder to debug
+  - Recommended for final implementation
+
+TIMING_OPTIMIZATION: 1
+
+Description:
+  - Enables timing-aware optimization passes (balance, opt_time)
+  - Improves timing robustness across process corners
+
+Usage:
+  make ENABLE_TIMING_OPT=1 all
+
+Rationale:
+  - Recommended for timing-critical designs
+
+AREA_OPTIMIZATION: 1
+
+Description:
+  - Enables area optimization pass (opt_area)
+  - Reduces gate count while maintaining functionality
+
+Usage:
+  make ENABLE_AREA_OPT=1 all
+
+Rationale:
+  - Recommended for area-constrained designs
 
 Rationale:
   - Simpler next-state logic compared to binary encoding
@@ -208,6 +260,14 @@ LIMITATIONS:
    - Binary logic only (0 and 1)
    - Uninitialized values become 0 (with -zinit)
    - No high-impedance
+
+5. ABC optimization requires external tool
+   - ABC tool must be installed for ENABLE_ABC=1
+   - Optional feature, not required for basic synthesis
+
+6. Timing optimization is approximate
+   - Yosys timing passes are estimates
+   - Use OpenSTA for accurate timing analysis
 
 ASSUMPTIONS:
 

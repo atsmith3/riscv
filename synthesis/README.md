@@ -2,20 +2,25 @@
 
 This directory contains the synthesis infrastructure for converting the Potato RISC-V RV32I core from SystemVerilog RTL to gate-level netlists suitable for ASIC implementation targeting the GlobalFoundries 180nm PDK.
 
+## Version
+
+**Version 1.0.0** - Updated synthesis flow with improved error handling, timeout protection, and helper utilities.
+
 ## Table of Contents
 
 1. [Quick Start](#quick-start)
 2. [Overview](#overview)
 3. [Directory Structure](#directory-structure)
 4. [Build Targets](#build-targets)
-5. [Interface Documentation](#interface-documentation)
-6. [Expected Statistics](#expected-statistics)
-7. [Synthesis Flow Details](#synthesis-flow-details)
-8. [Equivalence Checking](#equivalence-checking)
-9. [Output Files](#output-files)
-10. [Integration Guide](#integration-guide)
-11. [Troubleshooting](#troubleshooting)
-12. [Technical Notes](#technical-notes)
+5. [New Features](#new-features)
+6. [Interface Documentation](#interface-documentation)
+7. [Expected Statistics](#expected-statistics)
+8. [Synthesis Flow Details](#synthesis-flow-details)
+9. [Equivalence Checking](#equivalence-checking)
+10. [Output Files](#output-files)
+11. [Integration Guide](#integration-guide)
+12. [Troubleshooting](#troubleshooting)
+13. [Technical Notes](#technical-notes)
 
 ---
 
@@ -93,16 +98,73 @@ This synthesis flow generates three formats:
 
 ---
 
+## New Features
+
+### Version Tracking
+
+The synthesis flow now includes version tracking:
+- `VERSION` file with version information
+- `make version` target to display version and environment info
+- Script versions tracked in `synth.tcl`, `equiv_check.tcl`, and `pdk_map.tcl`
+
+### Helper Utilities
+
+Located in `scripts/utils/`:
+
+**check_dependencies.sh** - Pre-flight dependency checker
+```bash
+cd synthesis
+./scripts/utils/check_dependencies.sh
+```
+Checks for:
+- Yosys installation
+- Python 3
+- Required scripts
+- PDK Liberty files
+- RTL source files
+
+**analyze_netlist.py** - Netlist analysis tool
+```bash
+cd synthesis
+./scripts/utils/analyze_netlist.py build/output/core_top_synth.v
+./scripts/utils/analyze_netlist.py build/output/core_top_synth.json
+```
+Provides:
+- Cell type distribution
+- Flip-flop type breakdown
+- Module and port counts
+- Design statistics
+
+### Improved Error Handling
+
+- **Makefile**: Validates Yosys path and script existence before synthesis
+- **synth.tcl**: Configuration-based optimization (debug vs production mode)
+- **equiv_check.tcl**: Timeout protection (300s default) with error reporting
+- **pdk_map.tcl**: Liberty file existence and size validation
+
+### Enhanced Logging
+
+- Separate log file for PDK mapping (`pdk_map_*.log`)
+- Better error messages with common causes
+- Detailed troubleshooting hints on failure
+
+---
+
 ## Directory Structure
 
 ```
 synthesis/
 ├── README.md                    # This file
+├── VERSION                      # Version information
 ├── Makefile                     # Build automation
 ├── scripts/
 │   ├── synth.tcl               # Main Yosys synthesis script
 │   ├── equiv_check.tcl         # Equivalence checking script
-│   └── file_list.txt           # RTL files in dependency order
+│   ├── pdk_map.tcl             # GF180 PDK mapping script
+│   ├── file_list.txt           # RTL files in dependency order
+│   └── utils/                  # Helper utilities
+│       ├── check_dependencies.sh  # Dependency checker
+│       └── analyze_netlist.py     # Netlist analyzer
 ├── build/                       # Generated outputs (gitignored)
 │   ├── logs/                   # Timestamped synthesis logs
 │   ├── reports/                # Statistics and summary reports
@@ -663,6 +725,15 @@ for net_name, net_data in module['netnames'].items():
 - System resources (RAM, CPU)
 - Yosys version (newer versions are faster)
 - Use `-O0` flag to disable aggressive optimization (already in script)
+
+### Parallel Build Support
+
+**Enable parallel make**:
+```bash
+make -j$(nproc) all
+```
+
+**Note**: Some synthesis steps are inherently sequential (Yosys TCL scripts), so parallelism is limited.
 
 ---
 

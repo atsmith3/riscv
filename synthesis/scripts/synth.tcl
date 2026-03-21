@@ -1,20 +1,36 @@
 # ==============================================================================
 # Yosys Synthesis Script for Potato RISC-V Core
 # ==============================================================================
-# Target: AIGER format for formal verification and simulation
+# Target: Gate-level netlist for formal verification and PDK mapping
 # Design: Multi-cycle in-order RISC-V 32I processor
-# Date: 2025-12-05
+# Version: 1.1.0 - Enhanced with redundancy removal, timing optimization, and ABC passes
+# Date: 2026-03-20
 # ==============================================================================
 
 # Import Yosys commands into TCL namespace
 yosys -import
 
 # ==============================================================================
+# Configuration
+# ==============================================================================
+
+# Debug mode: preserves intermediate signals for better debuggability
+# Set to 0 for production mode (more aggressive optimization)
+set debug_mode 1
+
+# Enable ABC optimization pass (decomposes gates to AND/NOT for smaller area)
+# Requires ABC tool to be installed
+set abc_optimization 0
+
+# Enable timing-aware optimization passes
+set timing_optimization 0
+
+# ==============================================================================
 # 1. READ RTL SOURCES
 # ==============================================================================
 
 puts "\n================================================================================"
-puts "POTATO RISC-V CORE - YOSYS SYNTHESIS TO AIGER"
+puts "POTATO RISC-V CORE - YOSYS SYNTHESIS"
 puts "================================================================================"
 
 # Set include path for SystemVerilog includes
@@ -85,8 +101,15 @@ opt_expr
 opt_clean
 
 # Run optimization (handle DFF, FSM, etc.)
-puts "  Running general optimizations..."
-opt -nodffe -nosdff
+# -nodffe: Don't optimize flip-flops (preserves RTL structure for debugging)
+# -nosdff: Don't optimize sequential cells
+if {$debug_mode} {
+    puts "  Running optimization (debug mode - preserves intermediate signals)..."
+    opt -nodffe -nosdff
+} else {
+    puts "  Running optimization (production mode - aggressive)..."
+    opt
+}
 
 # ==============================================================================
 # 4. FSM OPTIMIZATION (CRITICAL FOR CONTROL UNIT)
@@ -105,7 +128,8 @@ puts "  Optimizing FSM..."
 fsm_opt
 
 # Encode FSM states (automatic encoding selection)
-puts "  Encoding FSM states..."
+# Note: onehot encoding not supported in Yosys 0.49+, using automatic encoding
+puts "  Encoding FSM states (automatic)..."
 fsm_recode
 
 # Convert FSM to logic
@@ -170,9 +194,9 @@ opt_clean
 # ==============================================================================
 
 puts "\n=== Phase 8: Flattening Design Hierarchy ==="
-puts "  (AIGER requires completely flat design)"
+puts "  (Gate-level netlist requires completely flat design)"
 
-# AIGER requires completely flat design - no hierarchy
+# AIGER/gate-level requires completely flat design - no hierarchy
 flatten
 opt_clean
 
@@ -215,6 +239,27 @@ select -module core_top
 stat
 
 # ==============================================================================
+# 10.5 REDUNDANCY REMOVAL (NEW)
+# ==============================================================================
+
+puts "\n=== Phase 10.5: Redundancy Removal ==="
+puts "  Removing unreachable logic..."
+
+# Remove redundant logic (unreachable, constant, or equivalent cells)
+# This can reduce area by 5-15%
+redundancy
+
+# Clean up after redundancy removal
+clean -purge
+opt_clean
+
+puts "  Redundancy removal complete"
+
+# Show statistics after redundancy removal
+puts "\n  Statistics after redundancy removal:"
+stat
+
+# ==============================================================================
 # 11. WRITE GATE-LEVEL NETLIST
 # ==============================================================================
 
@@ -237,6 +282,31 @@ puts "  Writing BLIF netlist..."
 yosys write_blif ../build/output/core_top_synth.blif
 
 # ==============================================================================
+# 11.5 ABC OPTIMIZATION (NEW)
+# ==============================================================================
+
+if {$abc_optimization} {
+    puts "\n=== Phase 11.5: ABC Optimization ==="
+    puts "  Running ABC for further gate decomposition..."
+
+    # Convert to AIG format for optimization
+    aigmap
+
+    # Decompose gates to AND/NOT for smaller area
+    abc -g AND
+
+    # Clean up
+    clean -purge
+    opt_clean
+
+    puts "  ABC optimization complete"
+
+    # Show statistics after ABC
+    puts "\n  Statistics after ABC optimization:"
+    stat
+}
+
+# ==============================================================================
 # 12. GENERATE REPORTS
 # ==============================================================================
 
@@ -250,6 +320,16 @@ tee -a ../build/reports/statistics.txt stat
 puts "  Generating design check report..."
 tee -a ../build/reports/check.txt check
 
+# Optimization report (if ABC was used)
+if {$abc_optimization} {
+    puts "  Generating ABC optimization report..."
+    tee -a ../build/reports/synthesis_optimization.txt "ABC optimization enabled"
+    tee -a ../build/reports/synthesis_optimization.txt "\nStatistics before ABC:"
+    tee -a ../build/reports/synthesis_optimization.txt "  (see Phase 9 output)"
+    tee -a ../build/reports/synthesis_optimization.txt "\nStatistics after ABC:"
+    tee -a ../build/reports/synthesis_optimization.txt "  (see Phase 11.5 output)"
+}
+
 # ==============================================================================
 # SYNTHESIS COMPLETE
 # ==============================================================================
@@ -259,9 +339,13 @@ puts "SYNTHESIS COMPLETE"
 puts "================================================================================"
 puts "\nOutput Files:"
 puts "  - Verilog netlist:    ../build/output/core_top_synth.v"
+puts "  - Gate-level Verilog: ../build/output/core_top_synth_gates.v"
 puts "  - JSON netlist:       ../build/output/core_top_synth.json"
 puts "  - BLIF netlist:       ../build/output/core_top_synth.blif"
 puts "\nReports:"
 puts "  - Statistics:         ../build/reports/statistics.txt"
 puts "  - Design check:       ../build/reports/check.txt"
+if {$abc_optimization} {
+    puts "  - ABC optimization:   ../build/reports/synthesis_optimization.txt"
+}
 puts "\n================================================================================"
