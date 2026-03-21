@@ -67,8 +67,12 @@ wire load_pc;
 wire load_reg;
 wire load_mar;
 wire load_mdr;
+wire load_imm_reg;
+wire load_alu_reg;
 wire mdr_mux_sel;
 wire [31:0] imm;
+logic [31:0] imm_reg;
+logic [31:0] alu_reg;
 
 // Byte lane signals for sub-word memory access
 mem_size_t mem_size;
@@ -104,6 +108,24 @@ program_register #(.WIDTH(32), .INIT('h1000)) u_pc (.clk(clk), .rst_n(rst_n), .i
 program_register #(.WIDTH(32), .INIT(0)) u_mar (.clk(clk), .rst_n(rst_n), .in(databus), .out(mar_out), .load(load_mar));
 program_register #(.WIDTH(32), .INIT(0)) u_mdr (.clk(clk), .rst_n(rst_n), .in(mdr_in), .out(mdr_out), .load(load_mdr));
 
+// Immediate register - pipeline register to break IMM gen critical path
+always_ff @(posedge clk or negedge rst_n) begin
+  if (!rst_n) begin
+    imm_reg <= 32'b0;
+  end else if (load_imm_reg) begin
+    imm_reg <= imm;
+  end
+end
+
+// ALU output register - pipeline register to break ALU->databus critical path
+always_ff @(posedge clk or negedge rst_n) begin
+  if (!rst_n) begin
+    alu_reg <= 32'b0;
+  end else if (load_alu_reg) begin
+    alu_reg <= alu_out;
+  end
+end
+
 // Byte lane module for sub-word memory operations
 byte_lane u_byte_lane (
   // Load path: memory -> register file (with byte extraction and sign extension)
@@ -137,7 +159,7 @@ always_comb begin
     // Read mtvec (TRAP_ENTRY_4) or mepc (MRET_0)
     trap_csr_addr = trap_entry ? 12'h305 : 12'h341;  // mtvec or mepc
   end else begin
-    trap_csr_addr = imm[11:0];
+    trap_csr_addr = imm_reg[11:0];  // CSR address from immediate register
   end
 end
 
@@ -218,6 +240,8 @@ control u_control (
   .load_ir(load_ir),
   .load_mdr(load_mdr),
   .load_reg(load_reg),
+  .load_imm_reg(load_imm_reg),
+  .load_alu_reg(load_alu_reg),
   .mem_write(mem_write),
   .mem_read(mem_read),
   .mem_resp(mem_resp),
@@ -255,7 +279,7 @@ alu #(.WIDTH(32)) u_alu (
 mux8 #(.WIDTH(32)) u_databus_mux (
   .sel(databus_mux_sel),
   .a(pc_out),          // DATABUS_PC = 0
-  .b(alu_out),         // DATABUS_ALU = 1
+  .b(alu_reg),         // DATABUS_ALU = 1 (pipeline register)
   .c(mdr_out),         // DATABUS_MDR = 2
   .d('b0 /* mar_out */), // DATABUS_MAR = 3
   .e(csr_rdata),       // DATABUS_CSR = 4
@@ -282,7 +306,7 @@ mux4 #(.WIDTH(32)) u_rs2_mux (
   .sel(rs2_mux_sel),
   .a(rs2_out),
   .b('b0),
-  .c(imm),
+  .c(imm_reg),       // Use pipeline register for immediate
   .d(pc_out),
   .y(rs2_mux_out));
 
