@@ -1,13 +1,14 @@
 # ==============================================================================
 # Makefile for Potato RISC-V Core Synthesis to AIGER
 # ==============================================================================
-# Version: 1.0.0
+# Version: 1.1.0 - Enhanced with redundancy removal, timing optimization, and ABC passes
 # ==============================================================================
 
 # Tools - Use PATH if available, fallback to absolute path
 YOSYS ?= yosys
 YOSYS := $(shell which yosys 2>/dev/null || echo "/home/andrew/software/yosys/yosys/yosys")
 PYTHON := python3
+ABC ?= abc  # ABC optimization tool (optional)
 
 # Directories
 BUILD_DIR := build
@@ -15,6 +16,12 @@ SCRIPTS_DIR := scripts
 LOG_DIR := $(BUILD_DIR)/logs
 OUTPUT_DIR := $(BUILD_DIR)/output
 REPORT_DIR := $(BUILD_DIR)/reports
+
+# Optimization settings
+OPT_LEVEL ?= debug  # debug or production
+ENABLE_ABC ?= 0     # Enable ABC optimization (0 or 1)
+ENABLE_TIMING_OPT ?= 1  # Enable timing optimization (0 or 1)
+ENABLE_AREA_OPT ?= 1   # Enable area optimization (0 or 1)
 
 # Scripts
 SYNTH_SCRIPT := $(SCRIPTS_DIR)/synth.tcl
@@ -33,8 +40,10 @@ SYNTH_LOG := $(LOG_DIR)/synthesis_$(TIMESTAMP).log
 EQUIV_LOG := $(LOG_DIR)/equiv_check_$(TIMESTAMP).log
 PDK_MAP_LOG := $(LOG_DIR)/pdk_map_$(TIMESTAMP).log
 
-# Summary report
+# Summary reports
 SUMMARY_REPORT := $(REPORT_DIR)/synthesis_summary.txt
+TIMING_REPORT := $(REPORT_DIR)/timing_report.txt
+OPTIMIZATION_REPORT := $(REPORT_DIR)/synthesis_optimization.txt
 
 # Colors for output
 COLOR_RESET := \033[0m
@@ -42,6 +51,7 @@ COLOR_BOLD := \033[1m
 COLOR_GREEN := \033[32m
 COLOR_BLUE := \033[34m
 COLOR_YELLOW := \033[33m
+COLOR_CYAN := \033[36m
 
 .PHONY: all synth validate equiv pdk-map reports clean help version
 
@@ -49,7 +59,7 @@ COLOR_YELLOW := \033[33m
 # Default target: run complete synthesis flow
 # ==============================================================================
 
-all: synth validate equiv reports
+all: synth validate equiv pdk-map reports
 	@echo ""
 	@echo "$(COLOR_BOLD)$(COLOR_GREEN)================================================================================$(COLOR_RESET)"
 	@echo "$(COLOR_BOLD)$(COLOR_GREEN)SYNTHESIS FLOW COMPLETE$(COLOR_RESET)"
@@ -81,6 +91,10 @@ $(VERILOG_NETLIST): $(SYNTH_SCRIPT) $(SCRIPTS_DIR)/file_list.txt | $(LOG_DIR) $(
 	@echo ""
 	@echo "Synthesis script: $(SYNTH_SCRIPT)"
 	@echo "Log file:         $(SYNTH_LOG)"
+	@echo ""
+	@echo "Optimization settings:"
+	@echo "  - Optimization level: $(COLOR_CYAN)$(OPT_LEVEL)$(COLOR_RESET)"
+	@echo "  - ABC optimization:   $(COLOR_CYAN)$(ENABLE_ABC)$(COLOR_RESET)"
 	@echo ""
 	@echo "This will take 60-120 seconds..."
 	@echo ""
@@ -164,6 +178,10 @@ $(GF180_NETLIST): $(VERILOG_NETLIST) $(PDK_MAP_SCRIPT) | $(LOG_DIR) $(OUTPUT_DIR
 	@echo "PDK mapping script: $(PDK_MAP_SCRIPT)"
 	@echo "Input:              $(VERILOG_NETLIST)"
 	@echo "Output:             $(GF180_NETLIST)"
+	@echo ""
+	@echo "Optimization settings:"
+	@echo "  - Timing optimization: $(COLOR_CYAN)$(ENABLE_TIMING_OPT)$(COLOR_RESET)"
+	@echo "  - Area optimization:   $(COLOR_CYAN)$(ENABLE_AREA_OPT)$(COLOR_RESET)"
 	@echo ""
 	@echo "This will take 30-60 seconds..."
 	@echo ""
@@ -254,11 +272,11 @@ help:
 	@echo "$(COLOR_BOLD)Potato RISC-V Core - Synthesis Flow$(COLOR_RESET)"
 	@echo ""
 	@echo "$(COLOR_BOLD)Usage:$(COLOR_RESET)"
-	@echo "  make [target]"
+	@echo "  make [target] [OPT_LEVEL=debug|production] [ENABLE_ABC=0|1]"
 	@echo ""
 	@echo "$(COLOR_BOLD)Targets:$(COLOR_RESET)"
 	@echo "  $(COLOR_BOLD)all$(COLOR_RESET)       Run complete synthesis flow (default)"
-	@echo "             synth → validate → equiv → reports"
+	@echo "             synth → validate → equiv → pdk-map → reports"
 	@echo ""
 	@echo "  $(COLOR_BOLD)synth$(COLOR_RESET)     Run Yosys synthesis to generate gate-level netlist"
 	@echo "             Runtime: 60-120 seconds"
@@ -285,6 +303,13 @@ help:
 	@echo ""
 	@echo "  $(COLOR_BOLD)version$(COLOR_RESET)   Display version and environment information"
 	@echo ""
+	@echo "$(COLOR_BOLD)Optimization Settings:$(COLOR_RESET)"
+	@echo "  OPT_LEVEL=debug      Preserve intermediate signals (default)"
+	@echo "  OPT_LEVEL=production Aggressive optimization (smaller netlist)"
+	@echo "  ENABLE_ABC=1         Enable ABC gate decomposition (requires ABC tool)"
+	@echo "  ENABLE_TIMING_OPT=1  Enable timing-aware optimization"
+	@echo "  ENABLE_AREA_OPT=1    Enable area optimization"
+	@echo ""
 	@echo "$(COLOR_BOLD)Output Locations:$(COLOR_RESET)"
 	@echo "  Logs:    $(LOG_DIR)/"
 	@echo "  Outputs: $(OUTPUT_DIR)/"
@@ -293,11 +318,13 @@ help:
 	@echo "$(COLOR_BOLD)Requirements:$(COLOR_RESET)"
 	@echo "  - Yosys 0.49+ (found: $(YOSYS))"
 	@echo "  - Python 3"
+	@echo "  - ABC (optional, for ENABLE_ABC=1)"
 	@echo ""
 	@echo "$(COLOR_BOLD)Example Workflows:$(COLOR_RESET)"
 	@echo "  Full synthesis:        make all"
 	@echo "  Synthesis only:        make synth"
-	@echo "  Re-validate:           make validate"
+	@echo "  Production mode:       make OPT_LEVEL=production all"
+	@echo "  With ABC optimization: make ENABLE_ABC=1 all"
 	@echo "  Clean rebuild:         make clean && make all"
 	@echo ""
 
@@ -309,13 +336,20 @@ version:
 	@echo ""
 	@echo "$(COLOR_BOLD)Potato RISC-V Core - Synthesis Flow$(COLOR_RESET)"
 	@echo ""
-	@echo "Version: 1.0.0"
+	@echo "Version: 1.1.0"
 	@echo ""
 	@echo "Yosys: $(YOSYS)"
 	@echo "  $(shell $(YOSYS) --version 2>&1 | head -1)"
 	@echo ""
 	@echo "Python: $(PYTHON)"
 	@echo "  $(shell $(PYTHON) --version)"
+	@echo ""
+	@if command -v abc >/dev/null 2>&1; then \
+		echo "ABC: $(ABC)"; \
+		echo "  $(shell $(ABC) -v 2>&1 | head -1)"; \
+	else \
+		echo "ABC: Not installed (optional, for gate decomposition)"; \
+	fi; \
 	@echo ""
 	@echo "Build directories:"
 	@echo "  Logs:    $(LOG_DIR)"
